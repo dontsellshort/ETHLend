@@ -1,80 +1,201 @@
 FORMAT: 1A
-HOST: http://polls.apiblueprint.org/
+HOST: http://ethlend.herokuapps.com/
 
 # EthLend
 
-Polls is a simple API allowing consumers to view polls and vote in them.
+API description for EthLend project.
 
-## Questions Collection [/questions]
+## Users [/api/v1/users]
 
-### List All Questions [GET]
+### Create new user [POST /api/v1/users]
++ Request (application/json)
+
+        {
+            "email": "sample@email.com",
+            "pass": "123456"
+        }
+        
++ Response 200 (application/json)
+    + Body
+    
+                {
+                    shortId: '123456'
+                }
+
+### Get user data [GET /api/v1/users/{shortId}]
+        
++ Response 200 (application/json)
+    + Body
+    
+                {
+                    email: 'tony@chain.cloud',
+                    
+                    // how much Lending Request user can create
+                    // before creating LR he must pay us some fee (upfront)
+                    balance: 1
+                }
+
+### Increase User's Balance [POST /api/v1/users/{shortId}/balance]
+
+This method is here just for DEBUG. In next version we will have full functionality of ETH fees.
+Will increase 'balance' field
 
 + Response 200 (application/json)
 
-        [
-            {
-                "question": "Favourite programming language?",
-                "published_at": "2015-08-05T08:40:51.620Z",
-                "choices": [
-                    {
-                        "choice": "Swift",
-                        "votes": 2048
-                    }, {
-                        "choice": "Python",
-                        "votes": 1024
-                    }, {
-                        "choice": "Objective-C",
-                        "votes": 512
-                    }, {
-                        "choice": "Ruby",
-                        "votes": 256
-                    }
-                ]
-            }
-        ]
+### Validate user [POST /api/v1/users/{shortId}/validation{?sig}]
 
-### Create a New Question [POST]
++ Parameters
+    + shortId - User ID
+    
+    + sig (String) - Signature that is received in e-mail
+    
++ Response 200 (text/plain)
+    
+        "OK"
+            
 
-You may create your own question using this action. It takes a JSON
-object containing a question and a collection of answers in the
-form of choices.
+
+### Reset password [POST /api/v1/users/{email}/reset_password_request]
+Will send an e-mail with 'reset your password' link.
+
++ Response 200 (text/plain)
+    
+        "OK"
+
+### Set new password [PUT /api/v1/users/{shortId}/password{?sig}{?new_val}]
+Create new password (after reset was requested)
+
++ Parameters
+    + shortId - User ID
+    
+    + sig (String) - Signature that is received in e-mail
+    
+    + new_val (String) - New password 
+    
++ Response 200 (text/plain)
+    
+        "OK"
+
+### Login [POST /api/v1/login]
 
 + Request (application/json)
 
         {
-            "question": "Favourite programming language?",
-            "choices": [
-                "Swift",
-                "Python",
-                "Objective-C",
-                "Ruby"
-            ]
+            "email": "sample@email.com",
+            "pass": "123456"
+        }
+        
++ Response 200 (application/json)
+    + Body
+    
+                {
+                    // JWT token that should be then passed with 'Authorization: Bearer' header
+                    token: '23fjadlfja8r0938241kdafjldfja840923842', 
+                    
+                    shortId: '123456'
+                }
+
+## Lending Requests [/api/v1/users/{shortId}/lrs]
+
+### Get a list of Lending Requests for user [GET /api/v1/users/{shortId}/lrs]
+
+Get a list of LRs for a selected user. Returns a JSON list of IDs. 
+
++ Parameters
+    + shortId - User ID
+    
++ Response 200 (application/json)
+    
+        [
+            1234342344,
+            7879878789,
+            2423423423
+        ]
+        
+
+### Create new Lending Request [POST /api/v1/users/{shortId}/lrs]
+
+If user's *balance* is non-null -> user can Create new Lending Request.
+
++ Parameters
+    + shortId - User ID
+
++ Request (application/json)
+        
+        {
+            eth_count: 120,
+            token_amount: 10000,
+            token_name: 'Augur tokens',
+            token_smartcontract: 'https://etherscan.io/address/0xb533aae346245e2e05b23f420C140bCA2529b8a6#code',
+            token_infolink: 'www.augur.com',
+            borrower_account_address: '0xbd997cd2513c5f031b889d968de071eeafe07130',
+            borrower_id: 1234566,   // creator shortId
+            days_to_lend: 30,
+        }    
+
++ Response 200 (application/json)
+    
+        {
+            id: 123123123
         }
 
-+ Response 201 (application/json)
 
-    + Headers
+### Get a Lending Request [GET /api/v1/users/{shortId}/lrs/{id}]
 
-            Location: /questions/2
++ Parameters
+    + shortId - User ID
+    + id - Lending Request ID
+    
++ Response 200 (application/json)
+    
+        {
+            // 1 - waiting for tokens
+            // 2 - cancelled
+            // 3 - waiting for lender
+            // 4 - waiting for loan
+            // 5 - funded
+            // 6 - waiting for payback
+            // 7 - default
+            // 8 - payback received
+            // 9 - finished
+            current_state: 1,
+            
+            eth_count: 120,
+            token_amount: 10000,
+            token_name: 'Augur tokens',
+            token_smartcontract: 'https://etherscan.io/address/0xb533aae346245e2e05b23f420C140bCA2529b8a6#code',
+            token_infolink: 'www.augur.com',
+            borrower_account_address: '0xbd997cd2513c5f031b889d968de071eeafe07130',
+            lender_account_address: '0x6cc2d616e56e155d8a06e65542fdb9bd2d7f3c2e',
+            
+            borrower_id: 1234566,   // shortId
+            lender_id: 98232323,    // shortId
+            
+            date_created: 'TODO',
+            date_modified: 'TODO',
+            
+            days_to_lend: 30,
+            days_left: 0,
+        }
+        
+### Lend [POST /api/v1/users/{shortId}/lrs/{id}/lend]
 
-    + Body
+Lender can select any Lending Request and lend it.
+LR should move from 'waiting for lender' to 'waiting for loan' state.
 
-            {
-                "question": "Favourite programming language?",
-                "published_at": "2015-08-05T08:40:51.620Z",
-                "choices": [
-                    {
-                        "choice": "Swift",
-                        "votes": 0
-                    }, {
-                        "choice": "Python",
-                        "votes": 0
-                    }, {
-                        "choice": "Objective-C",
-                        "votes": 0
-                    }, {
-                        "choice": "Ruby",
-                        "votes": 0
-                    }
-                ]
-            }
++ Parameters
+    + shortId - User ID
+    + id - Lending Request ID
+
++ Request (application/json) 
+        
+        {
+        }
+    
++ Response 200 (application/json)
+
+        {
+            "address_to_send": "0xbd997cd2513c5f031b889d968de071eeafe07130",
+            "eth_count": 120,
+            "minutes_left": 1440    // 1 day left until this LR moves back to 'waiting for lender' state
+        }
