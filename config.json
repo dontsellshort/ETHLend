@@ -32,11 +32,11 @@
           "lang": "eng",
 
           "service":"yandex",
-          "user":"noreply@ethlend.ru",
-          "pass":"",
+          "user":"ethlend@chain.cloud",
+          "pass":"P@ssw0rd",
 
-          "reply_to":"support@ethlend.ru",
-          "send_copy_to":"support@ethlend.ru",
+          "reply_to":"ethlend@chain.cloud",
+          "send_copy_to":"tony@chain.cloud",
 
           "agreement_link":"http://www.ethlend.ru/agreement.html",
           "about_link":"http://www.ethlend.ru/about.html",

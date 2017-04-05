@@ -113,8 +113,10 @@ function disconnectDb(){
 }
 
 function removeDb(cb){
-     mongoose.connection.db.dropDatabase();
-     cb();
+     mongoose.connection.once('connected', () => {
+         mongoose.connection.db.dropDatabase();
+         cb();
+     });
 }
 
 // Exports:

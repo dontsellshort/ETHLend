@@ -101,7 +101,7 @@ describe('Users module',function(){
 
           var j = {
                email: 'anthony.akentiev@gmail.com',
-               pass: 'onetwo'
+               pass: '123456'
           };
           var data = JSON.stringify(j);
 
@@ -148,7 +148,7 @@ describe('Users module',function(){
           var url = '/users/' + email + '/login/v1';
 
           var j = {
-               pass: 'onetwo'
+               pass: '123456'
           };
           var data = JSON.stringify(j);
 
@@ -252,7 +252,7 @@ describe('Users module',function(){
           var url = '/users/' + email + '/login/v1';
 
           var j = {
-               pass: 'onetwo'
+               pass: '123456'
           };
           var data = JSON.stringify(j);
 
@@ -271,7 +271,7 @@ describe('Users module',function(){
           var url = '/users/' + email + '/login/v1';
 
           var j = {
-               pass: 'onetwo'
+               pass: '123456'
           };
           var data = JSON.stringify(j);
 
