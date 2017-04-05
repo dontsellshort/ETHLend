@@ -4,7 +4,8 @@
   "description": "Backend for ethlend project",
   "main": "main.js",
   "scripts": {
-    "test": "mocha --reporter spec -t 10000"
+    "test": "mocha --reporter spec -t 10000",
+    "start": "node main.js"
   },
   "dependencies": {
     "async": "^2.0.0-rc.3",
@@ -28,7 +29,11 @@
     "password-generator": "^2.0.2",
     "querystring": "^0.2.0",
     "toobusy": "^0.2.4",
-    "winston": "^2.2.0"
+    "winston": "^2.2.0",
+    "solc": "^0.4.8",
+    "web3": "^0.18.2",
+    "ethereumjs-abi": "^0.6.4",
+    "ethereumjs-testrpc": "^3.0.3"
   },
   "engines": {
     "node": "*",
