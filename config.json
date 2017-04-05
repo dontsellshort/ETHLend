@@ -1,0 +1,60 @@
+{
+     "service_name":"EthLend",
+
+     "log_file_path": "/var/log/",
+     "production": false,
+
+     "process_user": "ubuntu",
+     "process_group": "ubuntu",
+
+     "cluster":1,
+     "cluster_nodes": 10,
+
+     "enable_http":1,
+     "enable_https":0,
+
+     "http_port" : 8080,
+     "https_port": 443, 
+
+     "ssl":{
+          "ca" : "cert/api-.ca-bundle",
+          "cert": "cert/api_.crt",
+          "key": "cert/api-.key"
+     },
+
+     "db": {
+          "uri": "mongodb://localhost:27017/ethlend",
+          "user":"",
+          "pass":""
+     },
+
+     "mail":{
+          "lang": "eng",
+
+          "service":"yandex",
+          "user":"noreply@ethlend.ru",
+          "pass":"",
+
+          "reply_to":"support@ethlend.ru",
+          "send_copy_to":"support@ethlend.ru",
+
+          "agreement_link":"http://www.ethlend.ru/agreement.html",
+          "about_link":"http://www.ethlend.ru/about.html",
+          "contacts_link":"http://www.ethlend.ru/contacts.html",
+
+          "validation_link":"http://www.ethlend.ru/validation.html",
+          "reset_link":"http://www.ethlend.ru/reset.html"
+     },
+
+     "auth":{
+          "min_pass_len": 6,
+          "expires_minutes": 60,
+          "salt": "$2a$10$ywsX7h.cOCxsvMHgDjQih."
+     },
+
+     "facebookLogin":{
+          "appID"      : "GET_THIS_ON_FACEBOOK",
+          "appSecret"  : "GET_THIS_ON_FACEBOOK",
+          "callbackURL": "http://tst.net/facebook_callback"
+     }
+}
