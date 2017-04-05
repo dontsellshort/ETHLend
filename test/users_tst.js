@@ -35,7 +35,7 @@ describe('Users module',function(){
      });
 
      it('should not create user if no email in body', function(done){
-          var url = '/users/v1';
+          var url = '/api/v1/users';
           var data = '';
 
           postData(9091,url,data,function(err,statusCode,h,dataOut){
@@ -46,7 +46,7 @@ describe('Users module',function(){
      })
 
      it('should not create user if no pass in body', function(done){
-          var url = '/users/v1';
+          var url = '/api/v1/users';
 
           var j = {
                email: 'tony@mail.ru'
@@ -61,7 +61,7 @@ describe('Users module',function(){
      })
 
      it('should not create user if bad email', function(done){
-          var url = '/users/v1/';
+          var url = '/api/v1/users';
 
           var j = {
                email: 'tonymailu',
@@ -77,7 +77,7 @@ describe('Users module',function(){
      })
 
      it('should not create user if pass is too short', function(done){
-          var url = '/users/v1';
+          var url = '/api/v1/users';
 
           var j = {
                email: 'anthony.akentiev@gmail.com',
@@ -94,10 +94,7 @@ describe('Users module',function(){
      })
 
      it('should create new user', function(done){
-          var url = '/users/v1/?do_not_send_email=1';
-
-          // to send e-mail - uncomment this
-          //var url = '/v1/users';
+          var url = '/api/v1/users?do_not_send_email=1';
 
           var j = {
                email: 'anthony.akentiev@gmail.com',
@@ -145,7 +142,7 @@ describe('Users module',function(){
 
      it('should not login if not validated yet',function(done){
           var email = helpers.encodeUrlDec('anthony.akentiev@gmail.com');
-          var url = '/users/' + email + '/login/v1';
+          var url = '/api/v1/users/' + email + '/login';
 
           var j = {
                pass: '123456'
@@ -163,7 +160,7 @@ describe('Users module',function(){
 
      it('should not send <reset password> if still not validated',function(done){
           var email = helpers.encodeUrlDec('anthony.akentiev@gmail.com');
-          var url = '/users/' + email + '/reset_password_request/v1';
+          var url = '/api/v1/users/' + email + '/reset_password_request';
 
           postData(9091,url,'',function(err,statusCode,h,dataOut){
                assert.equal(err,null);
@@ -176,7 +173,7 @@ describe('Users module',function(){
      })
 
      it('should not validate user without signature',function(done){
-          var url = '/users/' + userId + '/validation/v1';
+          var url = '/api/v1/users/' + userId + '/validation';
 
           postData(9091,url,'',function(err,statusCode,h,dataOut){
                assert.equal(err,null);
@@ -186,7 +183,7 @@ describe('Users module',function(){
      })
 
      it('should not validate user without valid user ID',function(done){
-          var url = '/users/' + '1234' + '/validation/v1';
+          var url = '/api/v1/users/' + '1234' + '/validation';
 
           postData(9091,url,'',function(err,statusCode,h,dataOut){
                assert.equal(err,null);
@@ -196,7 +193,7 @@ describe('Users module',function(){
      })
 
      it('should validate user',function(done){
-          var url = '/users/' + userId + '/validation/v1/?sig=' + signature;
+          var url = '/api/v1/users/' + userId + '/validation?sig=' + signature;
 
           postData(9091,url,'',function(err,statusCode,h,dataOut){
                assert.equal(err,null);
@@ -218,7 +215,7 @@ describe('Users module',function(){
      })
 
      it('should not validate user again',function(done){
-          var url = '/users/' + userId + '/validation/v1/?sig=' + signature;
+          var url = '/api/v1/users/' + userId + '/validation?sig=' + signature;
 
           postData(9091,url,'',function(err,statusCode,h,dataOut){
                assert.equal(err,null);
@@ -230,7 +227,7 @@ describe('Users module',function(){
 
      it('should not login if bad password',function(done){
           var email = helpers.encodeUrlDec('anthony.akentiev@gmail.com');
-          var url = '/users/' + email + '/login/v1';
+          var url = '/api/v1/users/' + email + '/login';
 
           var j = {
                pass: 'shitsomw'
@@ -249,7 +246,7 @@ describe('Users module',function(){
 
      it('should not login if bad email',function(done){
           var email = helpers.encodeUrlDec('nono@gmail.com');
-          var url = '/users/' + email + '/login/v1';
+          var url = '/api/v1/users/' + email + '/login';
 
           var j = {
                pass: '123456'
@@ -268,7 +265,7 @@ describe('Users module',function(){
 
      it('should login if everything OK',function(done){
           var email = helpers.encodeUrlDec('anthony.akentiev@gmail.com');
-          var url = '/users/' + email + '/login/v1';
+          var url = '/api/v1/users/' + email + '/login';
 
           var j = {
                pass: '123456'
@@ -292,7 +289,7 @@ describe('Users module',function(){
 
      it('should not send <reset password> if bad user',function(done){
           var email = helpers.encodeUrlDec('a.akentiev@gmail.com');
-          var url = '/users/' + email + '/reset_password_request/v1';
+          var url = '/api/v1/users/' + email + '/reset_password_request';
 
           postData(9091,url,'',function(err,statusCode,h,dataOut){
                assert.equal(err,null);
@@ -307,7 +304,7 @@ describe('Users module',function(){
      // WARNING: this code sends real e-mails! )))
      it('should reset password - send email',function(done){
           var email = helpers.encodeUrlDec('anthony.akentiev@gmail.com');
-          var url = '/users/' + email + '/reset_password_request/v1';
+          var url = '/api/v1/users/' + email + '/reset_password_request';
 
           //console.log('-->D: ');
           //console.log(data);
@@ -334,7 +331,7 @@ describe('Users module',function(){
                var sig = users[0].resetSig;
                var oldPass = users[0].password;
                
-               var url = '/users/' + userId + '/password/v1/?sig=' + sig + '&new_val=' + 'new_Pass';
+               var url = '/api/v1/users/' + userId + '/password?sig=' + sig + '&new_val=' + 'new_Pass';
                putData(9091,url,'',function(err,statusCode,headers,dataOut){
                     assert.equal(err,null);
                     assert.equal(statusCode,200);

@@ -6,36 +6,11 @@ var assert = require('assert');
 var jwt = require('jsonwebtoken');
 var bcrypt = require('bcrypt');
 
-// AUTH Get user by short ID
-// 
-// Params: shortId
-// Returns full user tuple
-app.get('/auth/users/v1/:shortId',function(request, res, next) {
-     if(typeof(request.params.shortId)==='undefined'){
-          winston.error('No shortId');
-          return next();
-     }
-
-     var shortId = request.params.shortId;
-     // req.user contains data from JWT (this route is only available for auth users)
-     // getUser will compare id with shortId and deny any "HACKER" calls )))
-     db_helpers.getUser(req.user,shortId,function(err,user){
-          if(err){
-               // err message is already printed to winston
-               return next(); // 404 with no error
-          }
-
-          // TODO: add here your logics
-
-     });
-});
-
-
 // Create new user
 //
 // Body params: {email: '', pass: ''}
 // Returns {shortId: '123456789'} or 404
-app.post('/users/v1',function(request, res, next) {
+app.post('/api/v1/users',function(request, res, next) {
      if(typeof(request.body)==='undefined' || request.body===null){
           return next();
      } 
@@ -130,7 +105,7 @@ function createUserContinue(user,res){
 // Params: signature
 //
 // Returns: redirection to 'OK' or 'BAD' pages
-app.post('/users/:shortId/validation/v1',function(request, res, next){
+app.post('/api/v1/users/:shortId/validation',function(request, res, next){
      if(typeof(request.params.shortId)==='undefined'){
           winston.error('No shortId');
           return next();
@@ -200,7 +175,7 @@ app.post('/users/:shortId/validation/v1',function(request, res, next){
 
 // Send e-mail with 'reset your password' text.
 // this method always returns 'OK' to cheat attacker. 
-app.post('/users/:email/reset_password_request/v1',function(request, res, next){
+app.post('/api/v1/users/:email/reset_password_request',function(request, res, next){
      winston.info('Reset password request');
      if(typeof(request.params.email)==='undefined'){
           winston.error('No email');
@@ -263,7 +238,7 @@ app.post('/users/:email/reset_password_request/v1',function(request, res, next){
 });
 
 // Create new password (after reset was requested)
-app.put('/users/:shortId/password/v1',function(request, res, next){
+app.put('/api/v1/users/:shortId/password',function(request, res, next){
      if(typeof(request.params.shortId)==='undefined'){
           winston.error('No shortId');
           return next();
@@ -356,7 +331,7 @@ app.put('/users/:shortId/password/v1',function(request, res, next){
 //
 // Body params: { password: ''}
 // Returns: 401 or good JSON web token
-app.post('/users/:email/login/v1', function (request, res, next) {
+app.post('/api/v1/users/:email/login', function (request, res, next) {
      winston.info('AUTH call');
 
      if(typeof(request.params.email)==='undefined'){
