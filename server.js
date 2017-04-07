@@ -1,18 +1,31 @@
 var application_root = __dirname;
 
-var express = require('express');
+var express          = require('express');
 
-var fs = require('fs');
-var http = require('http');
-var https = require('https');
-var winston = require('winston');
-var expressJwt = require('express-jwt');
+var fs               = require('fs');
+var http             = require('http');
+var https            = require('https');
+var winston          = require('winston');
+var expressJwt       = require('express-jwt');
 
-var config = require('./config');
-
+var config           = require('./config');
+var bodyParser       = require ('body-parser')
+var jsonParser       = bodyParser.json!
+var textParser       = bodyParser.text!
 ///////////// Global variables ))
+var app              = express();
 var db;
-var app = express();
+
+function pasteFiles(){
+  var out='', i$, len$, file;
+  for (i$ = 0, len$ = (arguments).length; i$ < len$; ++i$) {
+    file = (arguments)[i$];
+    out += eval(fs.readFileSync(file) + '');
+  }
+  return out;
+};
+
+
 
 var secret = config.get('service_name') + '-backend-secret';
 
@@ -79,7 +92,7 @@ app.use(require('body-parser')());
 app.use(require('cookie-parser')(config.get('cookie_secret')));
 
 // We are going to protect /auth routes with JWT
-app.use('/auth/', expressJwt({secret: secret}));
+app.use('/api/v1/auth/', expressJwt({secret: secret}));
 
 app.use(apiCallLimit);
 
@@ -136,9 +149,9 @@ app.get('/prepShutdown', function(req, res) {
 });
 
 // This is main APIs file
-eval(fs.readFileSync('requests/users.js')+'');
-eval(fs.readFileSync('requests/apis.js')+'');
-eval(fs.readFileSync('requests/static_pages.js')+'');
+pasteFiles('requests/users.js',
+           'requests/apis.js',
+           'requests/static_pages.js');
 
 function initDb(dbInit){
      db = dbInit;

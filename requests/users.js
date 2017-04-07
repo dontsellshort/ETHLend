@@ -10,6 +10,7 @@ var bcrypt = require('bcrypt');
 //
 // Body params: {email: '', pass: ''}
 // Returns {shortId: '123456789'} or 404
+
 app.post('/api/v1/users',function(request, res, next) {
      if(typeof(request.body)==='undefined' || request.body===null){
           return next();
