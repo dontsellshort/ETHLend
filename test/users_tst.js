@@ -86,41 +86,47 @@
     });
     it('1.5. should create new user', function(done){
       var url, j, data;
-      url = '/api/v1/users';
+      url = '/api/v1/users?do_not_send_email=1';
       j = {
         email: 'anthony.akentiev@gmail.com',
         pass: '123456'
       };
       data = JSON.stringify(j);
-      postData(9091, url, data, function(err, statusCode, h, dataOut){
-        var p;
-        SQ(err, null);
-        SQ(statusCode, 200);
-        p = JSON.parse(dataOut);
-        SQ(p.statusCode, 1);
-        NQ(p.shortId, 0);
-        db.UserModel.findByEmail(j.email, function(err, users){
-          SQ(err, null);
-          SQ(users.length, 1);
-          SQ(users[0].shortId, p.shortId);
-          SQ(users[0].validated, false);
-          db.UserModel.findByShortId(p.shortId, function(err, users){
-            var userId, signature;
-            SQ(err, null);
-            SQ(users.length, 1);
-            SQ(users[0].shortId, p.shortId);
-            NQ(users[0].validationSig, '');
-            userId = users[0].shortId;
-            signature = users[0].validationSig;
-            db.SubscriptionModel.findByShortId(userId, function(err, subs){
-              SQ(err, null);
-              SQ(subs.length, 1);
-              SQ(subs[0].type, 1);
-              done();
-            });
+       postData(9091,url,data,function(err,statusCode,h,dataOut){
+               assert.equal(err,null);
+               assert.equal(statusCode,200);
+
+               var p = JSON.parse(dataOut);
+               assert.equal(p.statusCode,1);
+               assert.notEqual(p.shortId,0);
+
+               // 2 - check that user is in DB now
+               db.UserModel.findByEmail(j.email,function(err,users){
+                    assert.equal(err,null);
+                    assert.equal(users.length,1);
+                    assert.equal(users[0].shortId,p.shortId);
+                    assert.equal(users[0].validated,false);
+
+                    db.UserModel.findByShortId(p.shortId,function(err,users){
+                         assert.equal(err,null);
+                         assert.equal(users.length,1);
+                         assert.equal(users[0].shortId,p.shortId);
+                         assert.notEqual(users[0].validationSig,'');
+
+                         userId = users[0].shortId;
+                         signature = users[0].validationSig;
+
+                         // must create basic subscription!
+                         db.SubscriptionModel.findByShortId(userId,function(err,subs){
+                              assert.equal(err,null);
+                              assert.equal(subs.length,1);
+                              assert.equal(subs[0].type,1); // "free"
+
+                              done();
+                         });
+                    });
+               });
           });
-        });
-      });
     });
     it('1.6. should not login if not validated yet', function(done){
       var email, url, j, data;
