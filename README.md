@@ -26,5 +26,3 @@ Server is located here - [https://ethlend-backend.herokuapp.com](https://ethlend
      mongo
      use 'ethlend'
      db.users.find()
-
-<!-- initial -->
