@@ -6,11 +6,16 @@ var assert = require('assert');
 var jwt = require('jsonwebtoken');
 var bcrypt = require('bcrypt');
 
+var bodyParser = require('body-parser');
+var jsonParser = bodyParser.json();
+var textParser = bodyParser.text();
+
+
 // Create new user
 //
 // Body params: {email: '', pass: ''}
 // Returns {shortId: '123456789'} or 404
-app.post('/api/v1/users',function(request, res, next) {
+app.post('/api/v1/users',  jsonParser, function(request, res, next) {
      if(typeof(request.body)==='undefined' || request.body===null){
           return next();
      } 
@@ -96,7 +101,7 @@ function createUserContinue(user,res){
      };
 
      var outData = JSON.stringify(out);
-     res.send(outData);
+     res.json(outData);
 }
 
 // Validate user (email)
@@ -105,7 +110,7 @@ function createUserContinue(user,res){
 // Params: signature
 //
 // Returns: redirection to 'OK' or 'BAD' pages
-app.post('/api/v1/users/:shortId/validation',function(request, res, next){
+app.post('/api/v1/users/:shortId/validation',  jsonParser, function(request, res, next){
      if(typeof(request.params.shortId)==='undefined'){
           winston.error('No shortId');
           return next();
@@ -175,7 +180,7 @@ app.post('/api/v1/users/:shortId/validation',function(request, res, next){
 
 // Send e-mail with 'reset your password' text.
 // this method always returns 'OK' to cheat attacker. 
-app.post('/api/v1/users/:email/reset_password_request',function(request, res, next){
+app.post('/api/v1/users/:email/reset_password_request',  jsonParser,  function(request, res, next){
      winston.info('Reset password request');
      if(typeof(request.params.email)==='undefined'){
           winston.error('No email');
@@ -238,7 +243,7 @@ app.post('/api/v1/users/:email/reset_password_request',function(request, res, ne
 });
 
 // Create new password (after reset was requested)
-app.put('/api/v1/users/:shortId/password',function(request, res, next){
+app.put('/api/v1/users/:shortId/password',  jsonParser,  function(request, res, next){
      if(typeof(request.params.shortId)==='undefined'){
           winston.error('No shortId');
           return next();
@@ -331,7 +336,7 @@ app.put('/api/v1/users/:shortId/password',function(request, res, next){
 //
 // Body params: { password: ''}
 // Returns: 401 or good JSON web token
-app.post('/api/v1/users/:email/login', function (request, res, next) {
+app.post('/api/v1/users/:email/login',  jsonParser,  function (request, res, next) {
      winston.info('AUTH call');
 
      if(typeof(request.params.email)==='undefined'){
