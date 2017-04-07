@@ -11,11 +11,11 @@ require!{
 
 
 eval fs.readFileSync('test/helpers.js') + ''
-signature   = ''
-userId      = ''
-globalToken = ''
-SQ          = assert.equal
-NQ          = assert.notEqual
+global.signature = ''
+global.userId    = ''
+globalToken      = ''
+SQ               = assert.equal
+NQ               = assert.notEqual
 
 describe 'Users module', (T)!->
 	before (done) !->
@@ -67,37 +67,40 @@ describe 'Users module', (T)!->
 			SQ statusCode, 404
 			NQ dataOut, ''
 			done()
-	it '1.5. should create new user', (done) !->
-		url  = '/api/v1/users?do_not_send_email=1'
-		j    = {email: 'anthony.akentiev@gmail.com', pass: '123456'}
+	it '1.5. should create new user', (done) ->
+		url = '/api/v1/users?do_not_send_email=1'
+		j = do
+			email: 'anthony.akentiev@gmail.com'
+			pass: '123456'
 		data = JSON.stringify(j)
 		# 1 - create
-		postData 9091, url, data, (err, statusCode, h, dataOut) !->
+		postData 9091, url, data, (err, statusCode, h, dataOut) ->
 			SQ err, null
 			SQ statusCode, 200
 			p = JSON.parse(dataOut)
 			SQ p.statusCode, 1
-			NQ p.shortId, 0
+			assert.notEqual p.shortId, 0
 			# 2 - check that user is in DB now
-			db.UserModel.findByEmail j.email, (err, users) !->
+			db.UserModel.findByEmail j.email, (err, users) ->
 				SQ err, null
 				SQ users.length, 1
 				SQ users[0].shortId, p.shortId
 				SQ users[0].validated, false
-				db.UserModel.findByShortId p.shortId, (err, users) !->
+				db.UserModel.findByShortId p.shortId, (err, users) ->
 					SQ err, null
 					SQ users.length, 1
 					SQ users[0].shortId, p.shortId
 					NQ users[0].validationSig, ''
-					userId = users[0].shortId
-					signature = users[0].validationSig
-					# must create basic subscription!
-					db.SubscriptionModel.findByShortId userId, (err, subs) !->
+					global.userId    = users[0].shortId
+					global.signature = users[0].validationSig
+					db.SubscriptionModel.findByShortId userId, (err, subs) ->
 						SQ err, null
 						SQ subs.length, 1
 						SQ subs[0].type, 1
 						# "free"
 						done()
+
+
 	it '1.6. should not login if not validated yet', (done) !->
 		email = helpers.encodeUrlDec('anthony.akentiev@gmail.com')
 		url   = '/api/v1/users/' + email + '/login'
@@ -166,8 +169,6 @@ describe 'Users module', (T)!->
 		url   = '/api/v1/users/' + email + '/login'
 		j     = pass: '123456'
 		data  = JSON.stringify(j)
-		#console.log('-!->D: ');
-		#console.log(data);
 		postData 9091, url, data, (err, statusCode, h, dataOut) !->
 			SQ err, null
 			SQ statusCode, 404
@@ -177,8 +178,6 @@ describe 'Users module', (T)!->
 		url   = '/api/v1/users/' + helpers.encodeUrlDec('anthony.akentiev@gmail.com') + '/login'
 		j     = pass: '123456'
 		data  = JSON.stringify(j)
-		#console.log('-!->D: ');
-		#console.log(data);
 		postData 9091, url, data, (err, statusCode, h, dataOut) !->
 			SQ err, null
 			SQ statusCode, 200
@@ -193,7 +192,6 @@ describe 'Users module', (T)!->
 		postData 9091, url, '', (err, statusCode, h, dataOut) !->
 			SQ err, null
 			SQ statusCode, 200
-			# But still OK!
 			SQ dataOut, 'OK'
 			done()
 
