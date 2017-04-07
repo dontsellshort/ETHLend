@@ -61,18 +61,14 @@ Will increase 'balance' field
     
     + sig (String) - Signature that is received in e-mail
     
-+ Response 200 (text/plain)
-    
-        "OK"
++ Response 200
             
 
 
 ### Reset password [POST /api/v1/users/{email}/reset_password_request]
 Will send an e-mail with 'reset your password' link.
 
-+ Response 200 (text/plain)
-    
-        "OK"
++ Response 200
 
 ### Set new password [PUT /api/v1/users/{shortId}/password{?sig}{?new_val}]
 Create new password (after reset was requested)
@@ -84,9 +80,8 @@ Create new password (after reset was requested)
     
     + new_val (String) - New password 
     
-+ Response 200 (text/plain)
++ Response 200
     
-        "OK"
 
 ### Login [POST /api/v1/users/:email/login]
 
