@@ -23,6 +23,12 @@ API description for EthLend project.
                 }
 
 ### Get user data [GET /api/v1/auth/users/{shortId}]
+
++ Request
+
+    + Headers
+    
+            Authorization: Bearer TOKEN-HERE
         
 + Response 200 (application/json)
     + Body
@@ -39,6 +45,12 @@ API description for EthLend project.
 
 This method is here just for DEBUG. In next version we will have full functionality of ETH fees.
 Will increase 'balance' field
+
++ Request
+
+    + Headers
+    
+            Authorization: Bearer TOKEN-HERE
 
 + Response 200 (application/json)
 
@@ -101,6 +113,12 @@ Create new password (after reset was requested)
 
 Get a list of LRs for a selected user. Returns a JSON list of IDs. 
 
++ Request
+
+    + Headers
+    
+            Authorization: Bearer TOKEN-HERE
+            
 + Parameters
     + shortId - User ID
     
@@ -116,23 +134,29 @@ Get a list of LRs for a selected user. Returns a JSON list of IDs.
 ### Create new Lending Request [POST /api/v1/auth/users/{shortId}/lrs]
 
 If user's *balance* is non-null -> user can Create new Lending Request.
-
+            
 + Parameters
     + shortId - User ID
 
 + Request (application/json)
-        
-        {
-            eth_count: 120,
-            token_amount: 10000,
-            token_name: 'Augur tokens',
-            token_smartcontract: 'https://etherscan.io/address/0xb533aae346245e2e05b23f420C140bCA2529b8a6#code',
-            token_infolink: 'www.augur.com',
-            borrower_account_address: '0xbd997cd2513c5f031b889d968de071eeafe07130',
-            borrower_id: 1234566,   // creator shortId
-            days_to_lend: 30,
-        }    
+    
+    + Body
+    
+            {
+                eth_count: 120,
+                token_amount: 10000,
+                token_name: 'Augur tokens',
+                token_smartcontract: 'https://etherscan.io/address/0xb533aae346245e2e05b23f420C140bCA2529b8a6#code',
+                token_infolink: 'www.augur.com',
+                borrower_account_address: '0xbd997cd2513c5f031b889d968de071eeafe07130',
+                borrower_id: 1234566,   // creator shortId
+                days_to_lend: 30,
+            }    
 
+    + Headers
+    
+            Authorization: Bearer TOKEN-HERE
+            
 + Response 200 (application/json)
     
         {
@@ -142,6 +166,12 @@ If user's *balance* is non-null -> user can Create new Lending Request.
 
 ### Get a Lending Request [GET /api/v1/auth/users/{shortId}/lrs/{id}]
 
++ Request
+
+    + Headers
+    
+            Authorization: Bearer TOKEN-HERE
+            
 + Parameters
     + shortId - User ID
     + id - Lending Request ID
@@ -188,10 +218,15 @@ LR should move from 'waiting for lender' to 'waiting for loan' state.
     + id - Lending Request ID
 
 + Request (application/json) 
-        
-        {
-        }
+    + Body
     
+            {
+            }
+    
+    + Headers
+    
+            Authorization: Bearer TOKEN-HERE
+            
 + Response 200 (application/json)
 
         {
