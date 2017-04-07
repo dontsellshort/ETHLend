@@ -379,7 +379,7 @@ app.post('/api/v1/users/:email/login',  jsonParser,  function (request, res, nex
 
           if(!user.validated){
                winston.error('Still not validated: ' + email);
-               return res.send(401, 'Wrong user or password');
+               return res.send(401);
           }
 
           // 3 - compare password
@@ -389,12 +389,12 @@ app.post('/api/v1/users/:email/login',  jsonParser,  function (request, res, nex
           bcrypt.hash(pass, config.get('auth:salt'), function(err, hash) {
                if(err){
                     winston.error('Can not hash password for check: ' + email);
-                    return res.send(401, 'Wrong user or password');
+                    return res.send(401);
                }
                     
                if(user.password!==hash){
                     winston.error('Bad password result for: ' + email);
-                    return res.send(401, 'Wrong user or password');
+                    return res.send(401);
                }
 
                // 4 - if OK -> give jwt
