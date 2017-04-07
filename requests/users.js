@@ -160,18 +160,18 @@ app.post('/api/v1/users/:shortId/validation',  jsonParser, function(request, res
           user.save(function(err){
                if(err){
                     winston.error('Can not save user: ' + shortId);
-                    return res.send('OK');
+                    return res.send(200);
                }
 
                // send 'registration complete' e-mail
                mail_send.sendRegComplete(user.email,function(err){
                     if(err){
                          winston.error('Can not send reg complete e-mail: ' + err);
-                         return res.send('OK');
+                         return res.send(200);
                     }
 
                     // 5 - return
-                    res.send('OK');
+                    res.send(200);
                });
           });
      });
@@ -183,26 +183,26 @@ app.post('/api/v1/users/:email/reset_password_request',  jsonParser,  function(r
      winston.info('Reset password request');
      if(typeof(request.params.email)==='undefined'){
           winston.error('No email');
-          return res.send('OK');
+          return res.send(200);
      }
 
      // 1 - get user
      var email = request.params.email;
      if(!helpers.validateEmail(email)){
           winston.error('Bad email');
-          return res.send('OK');
+          return res.send(200);
      }
 
      winston.info('Reset password email is: ' + email);
      db.UserModel.findByEmail(email,function(err,users){
           if(err){
                winston.error('Error: ' + err);
-               return res.send('OK');
+               return res.send(200);
           }
 
           if(typeof(users)==='undefined' || !users.length){
                winston.error('No such user: ' + email);
-               return res.send('OK');
+               return res.send(200);
           }
 
           // 2 - check if already validated
@@ -211,7 +211,7 @@ app.post('/api/v1/users/:email/reset_password_request',  jsonParser,  function(r
 
           if(!user.validated){
                winston.error('Not validated: ' + email);
-               return res.send('OK');
+               return res.send(200);
           }
 
           // 3 - generate new signature
@@ -220,7 +220,7 @@ app.post('/api/v1/users/:email/reset_password_request',  jsonParser,  function(r
           user.save(function(err){
                if(err){
                     winston.error('Can not generate validation sig: ' + email);
-                    return res.send('OK');
+                    return res.send(200);
                }
 
                // 4 - send e-mail 
@@ -235,7 +235,7 @@ app.post('/api/v1/users/:email/reset_password_request',  jsonParser,  function(r
                     }
 
                     // OK
-                    return res.send('OK');
+                    return res.send(200);
                });
           });
      });
@@ -324,7 +324,7 @@ app.put('/api/v1/users/:shortId/password',  jsonParser,  function(request, res, 
                               //return next();
                          }
 
-                         res.send('OK');
+                         res.send(200);
                     });
                });
           });
