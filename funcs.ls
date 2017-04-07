@@ -6,10 +6,9 @@
 		\jsonwebtoken            :jwt             
 		\bcrypt                  :bcrypt } 
 
-createUserContinue = (user, res)!->
+createUserContinue = (user, res)->
 	statusCode:1, shortId:user.shortId 
-	|> JSON.stringify 
-	|> res.send
+	|> res.json
 
 returnJwt = (user, res)!->
 	sId     = user.shortId
@@ -30,8 +29,7 @@ WERR = winston.error
 # checkIt =-> if undefQ it.par => WERR im.msg; return it.next!/
 
 ### 1. USERS
-
-POST \users, (Q,res,next)-> ### 1.1. Create new user
+POST \users,(Q,res,next)->									    ### 1.1. Create new user
  	email     = Q.body?email
 	pass      = Q.body?pass 
     sendEmail = true # 0 - validate email
@@ -58,21 +56,21 @@ POST \users, (Q,res,next)-> ### 1.1. Create new user
 					createUserContinue user, res
 			else createUserContinue user, res
 
-GET \users/:shortId, (Q,res,next)-> ### 1.2. Get user data
-	if undefQ request.params.shortId => WERR 'No shortId'; return next!
-	shortId = request.params.shortId # req.user contains data from JWT (this route is only available for auth users)
+GET  \users/:shortId, (Q,res,next)-> 							### 1.2. Get user data
+	if undefQ Q.params.shortId => WERR 'No shortId'; return next!
+	shortId = Q.params.shortId # req.user contains data from JWT (this route is only available for auth users)
 	# getUser will compare id with shortId and deny any "HACKER" calls )))
-	db_helpers.getUser req.user, shortId, (err, user) ->
-		if err
+	db_helpers.getUser Q.user, shortId, (err, user) ->
+		if err => return next!
+		res.json { email:user.email, balance:user.balance }
+
 			# err message is already printed to winston
-			return next()
+			
 
-POST \users/:shortId/balance, (Q,res,next)-> ### 1.3. Increase User"s Balance
-    # HEADER  Content-Type:application/json;
-    # IN
-    # OUT    
+POST \users/:shortId/balance, (Q,res,next)->				    ### 1.3. Increase User"s Balance
+	res.send \OK 
 
-POST \users/:shortId/validation, (Q,res,next)-> ### 1.4. Validate user
+POST \users/:shortId/validation, (Q,res,next)-> 				### 1.4. Validate user
     shortId = Q.params?shortId
 	if undefQ shortId                   => WERR "No shortId";   return next!
 	if undefQ Q.query?sig               => WERR "No signature"; return next!
@@ -92,30 +90,8 @@ POST \users/:shortId/validation, (Q,res,next)-> ### 1.4. Validate user
 				if err => WERR "Can not send reg complete e-mail: #err"; return res.send \OK			
 				res.send \OK # 5 - return
 
- POST \users/:email/reset_password_request, (Q,res,next)-> ### 1.5. Reset password
- 	winston.info "Reset password request"
-	if undefQ Q.params.email => WERR "No email"; return res.send \OK
-	email = Q.params.email 
-    # 1 - get user
-	if !helpers.validateEmail email => WERR "Bad email"; return res.send \OK
-	winston.info "Reset password email is: #email" 
-	db.UserModel.findByEmail email, (err, users) ->
-        user = users?0
-		if err               => WERR "Error: #email";  return res.send \OK
-		if undeflenQ users   => WERR "No such user: #email";  return res.send \OK
-		if !user?validated   => WERR "Not validated: #email"; return res.send \OK
-		# 3 - generate new signature
-		user.modified = Date.now!
-		user.resetSig = helpers.generateResetSig user.email, user.pass
-		user.save (err) ->
-			if err => WERR "Can`t generate validation sig: #email"; return res.send \OK
-			# 4 - send e-mail 
-			resetLink = config.get(\mail:reset_link) + "?sig=#{user.resetSig}&id=#{user.shortId}"
-			mail_send.sendResetPassword user.email, resetLink, (err) ->
-				if err => WERR "Can not save user to DB: #err"; return next!
-				res.send \OK
 
- PUT \users/:shortId/password, (Q,res,next)-> ### 1.6. Set new password
+PUT  \users/:shortId/password, (Q,res,next)-> 					### 1.5. Set new password
 	shortId = Q.params?shortId # validate everything
 	if undefQ Q.params.shortId => WERR "No shortId";   return next!
 	if undefQ Q.query.sig      => WERR "No signature"; return next!
@@ -140,8 +116,31 @@ POST \users/:shortId/validation, (Q,res,next)-> ### 1.4. Validate user
 					if err => WERR "Can not send email to user: #err" # eat this error return next!;
 					res.send \OK
 
+POST \users/:email/reset_password_request, (Q,res,next)-> 		### 1.6. Reset password
+ 	winston.info "Reset password request"
+	if undefQ Q.params.email => WERR "No email"; return res.send \OK
+	email = Q.params.email 
+    # 1 - get user
+	if !helpers.validateEmail email => WERR "Bad email"; return res.send \OK
+	winston.info "Reset password email is: #email" 
+	db.UserModel.findByEmail email, (err, users) ->
+        user = users?0
+		if err               => WERR "Error: #email";  return res.send \OK
+		if undeflenQ users   => WERR "No such user: #email";  return res.send \OK
+		if !user?validated   => WERR "Not validated: #email"; return res.send \OK
+		# 3 - generate new signature
+		user.modified = Date.now!
+		user.resetSig = helpers.generateResetSig user.email, user.pass
+		user.save (err) ->
+			if err => WERR "Can`t generate validation sig: #email"; return res.send \OK
+			# 4 - send e-mail 
+			resetLink = config.get(\mail:reset_link) + "?sig=#{user.resetSig}&id=#{user.shortId}"
+			if Q.params.do_not_send_email == 1 => return res.send \OK
+			mail_send.sendResetPassword user.email, resetLink, (err) ->
+				if err => WERR "Can not save user to DB: #err"; return next!
+				res.send \OK
 
-POST \/api/v1/users/:email/login", (Q,res,next)-> ### 1.7. Login
+POST \users/:email/login", (Q,res,next)-> 						### 1.7. Login
 	winston.info "AUTH call"
 	email = helpers.decodeUrlEnc Q.params?email
 	pass  = Q.body?pass 
@@ -160,13 +159,21 @@ POST \/api/v1/users/:email/login", (Q,res,next)-> ### 1.7. Login
 			if user.password != hash => WERR "Bad password result for: #email";       return res.send 401, "Wrong user or password"  # 4 - if OK -> give jwt
 			returnJwt user, res
 
-### 2. LANDING REQUESTS
 
-GET \auth/users/:shortId/lrs, (Q,res,next)->  ### 2.1. Get a list of Lending Requests for user
+### 2. LENDING REQUESTS
+GET  \auth/users/:shortId/lrs,(Q,res,next)-> 					###TODO: 2.1. Get a list of Lending Requests for user 
+	if undefQ Q.params?shortId => WERR 'No shortId'; return next!
+	db_helpers.getUser Q.user, shortId, (err, user) ->
+		if err => return next!
+		#...........
     # HEADER  Authorization:Bearer TOKEN-HERE
     # OUT     [ 1234342344, 7879878789, 2423423423 ]
 
-POST \auth/users/:shortId/lrs, (Q,res,next)-> ### 2.2. Create new Lending Request
+POST \auth/users/:shortId/lrs, (Q,res,next)-> 					###TODO: 2.2. Create new Lending Request 
+	if undefQ Q.params?shortId => WERR 'No shortId'; return next!
+	db_helpers.getUser Q.user, shortId, (err, user) ->
+		if err => return next!
+		# ...............
     # HEADER   Content-Type:application/json; 
     # HEADER   Authorization:Bearer TOKEN-HERE
     # IN       eth_count:                120,
@@ -179,8 +186,12 @@ POST \auth/users/:shortId/lrs, (Q,res,next)-> ### 2.2. Create new Lending Reques
     # IN       days_to_lend:             30
     # OUT      id: 123123123
 
-GET \auth/users/:shortId/lrs/:id, (Q,res,next)-> ### 2.3. Get a Lending Request
-    # HEADER  Authorization:Bearer TOKEN-HERE
+GET  \auth/users/:shortId/lrs/:id,(Q,res,next)-> 				###TODO: 2.3. Get a Lending Request 
+	if undefQ Q.params?shortId => WERR 'No shortId'; return next!
+    if undefQ Q.params?id      => WERR 'No id';      return next!
+	db_helpers.getUser Q.user, shortId, (err, user) ->
+		if err => return next!
+	# HEADER  Authorization:Bearer TOKEN-HERE
     # OUT     current_state:            1, // 1..10
     # OUT     eth_count:                120,
     # OUT     token_amount:             10000,
@@ -196,7 +207,11 @@ GET \auth/users/:shortId/lrs/:id, (Q,res,next)-> ### 2.3. Get a Lending Request
     # OUT     days_to_lend:             30,
     # OUT     days_left:                0,
 
-POST \auth/users/:shortId/lrs/:id/lend, (Q,res,next)-> ### 2.4. Lend
+POST \auth/users/:shortId/lrs/:id/lend,(Q,res,next)-> 			###TODO: 2.4. Lend 	
+	if undefQ Q.params?shortId => WERR 'No shortId'; return next!
+	if undefQ Q.params?id 	   => WERR 'No id';      return next!
+	db_helpers.getUser Q.user, shortId, (err, user) ->
+		if err => return next!
     # HEADER  Content-Type:application/json; Authorization:Bearer TOKEN-HERE
     # IN      ---
     # OUT     "address_to_send": "0xbd997cd2513c5f031b889d968de071eeafe07130",

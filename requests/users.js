@@ -224,7 +224,7 @@ app.post('/api/v1/users/:email/reset_password_request',function(request, res, ne
                var resetLink = config.get('mail:reset_link') 
                     + '?sig=' + user.resetSig
                     + '&id=' + user.shortId;
-
+               if (request.params.do_not_send_email == 1 ){return res.send('OK')}
                mail_send.sendResetPassword(user.email,resetLink,function(err){
                     if(err){
                          winston.error('Can not save user to DB: ' + err);

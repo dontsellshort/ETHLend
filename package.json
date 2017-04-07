@@ -47,5 +47,8 @@
   ],
   "author": "Anthony Akentiev",
   "license": "BSD-2-Clause",
-  "gitHead": "6e64bb0c9477bcecd553c92506159304494aee91"
+  "gitHead": "6e64bb0c9477bcecd553c92506159304494aee91",
+  "devDependencies": {
+    "mocha": "^3.2.0"
+  }
 }

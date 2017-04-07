@@ -10,8 +10,8 @@ var expressJwt       = require('express-jwt');
 
 var config           = require('./config');
 var bodyParser       = require ('body-parser')
-var jsonParser       = bodyParser.json!
-var textParser       = bodyParser.text!
+var jsonParser       = bodyParser.json();
+var textParser       = bodyParser.text();
 ///////////// Global variables ))
 var app              = express();
 var db;
