@@ -100,8 +100,7 @@ function createUserContinue(user,res){
           shortId: user.shortId
      };
 
-     var outData = JSON.stringify(out);
-     res.json(outData);
+     res.json(out);
 }
 
 // Validate user (email)
