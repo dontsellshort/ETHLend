@@ -84,8 +84,8 @@ app.post('/api/v1/users',  function(request, res, next) {
 
                     mail_send.sendUserValidation(user.email, validationLink,dontSend, function(err){
                          if(err){
-                              winston.error('Can not save user to DB: ' + err);
-                              return res.status(400).json('Can not save user to DB: ' + err);
+                              winston.error('Can`t send email: ' + err);
+                              return res.status(400).json('Can`t send email: ' + err);
                          }
 
                          createUserContinue(user,res);

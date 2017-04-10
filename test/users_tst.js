@@ -286,7 +286,7 @@ describe('Users module', function(T){
                     done();
                 });
             });
-        });
+        }); 
     });
 
 	it('1.18. should validate email xxx@chain.cloud',function(done){
@@ -294,7 +294,15 @@ describe('Users module', function(T){
 		var emailQ = helpers.validateEmail(email);
 		SQ(emailQ, true);
 		done();
-	})
+	});
+
+
+	it('2.1. should template...',function(done){
+
+		SQ(true, true);
+		done();
+	});
+
 
 });
 
