@@ -288,5 +288,13 @@ describe('Users module', function(T){
             });
         });
     });
+
+	it('1.18. should validate email xxx@chain.cloud',function(done){
+		var email = 'xxx@chain.cloud';
+		var emailQ = helpers.validateEmail(email);
+		SQ(emailQ, true);
+		done();
+	})
+
 });
 
