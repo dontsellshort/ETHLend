@@ -6,16 +6,13 @@ var assert = require('assert');
 var jwt = require('jsonwebtoken');
 var bcrypt = require('bcrypt');
 
-var bodyParser = require('body-parser');
-var jsonParser = bodyParser.json();
-var textParser = bodyParser.text();
-
-
 // Create new user
 //
 // Body params: {email: '', pass: ''}
 // Returns {shortId: '123456789'} or 404
 app.post('/api/v1/users',  function(request, res, next) {
+     console.log('1');
+     
      if(typeof(request.body)==='undefined' || request.body===null){
           return next();
      } 
@@ -454,4 +451,4 @@ function returnJwt(user,res){
      console.log('-->User logged in: ' + user.shortId);
 
      res.json({ token: token, shortId: user.shortId });
-}
+};

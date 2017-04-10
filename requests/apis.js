@@ -81,6 +81,7 @@ app.post('auth/users/:shortId/lrs/:id/lend', function(request,res,next){//2.4. L
     db_helpers.getUser(request.user, shortId, function(err, user){
         if (err){ 
             return res.status(400).json('Can`t get user');
+        };
         // .........
     });        
 });

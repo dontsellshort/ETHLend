@@ -1,12 +1,9 @@
-var db = require('../db.js');
-var config = require('../config.js');
-
+var db      = require('../db.js');
+var config  = require('../config.js');
 var helpers = require('./helpers.js');
-
 var winston = require('winston');
-var assert = require('assert');
-
-var bcrypt = require('bcrypt');
+var assert  = require('assert');
+var bcrypt  = require('bcrypt');
 
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////
