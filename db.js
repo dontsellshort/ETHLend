@@ -12,6 +12,8 @@ var User = new Schema({
      email:         {type: String, required:  true},
      password:      {type: String, required:  true},
      validated:     {type: Boolean, required: true},
+     balance:       {type: Number, default:0, required: true},
+
      //optional
      validationSig: {type: String, required:  false},
      facebookID:    {type: String, required:  false},

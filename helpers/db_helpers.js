@@ -45,6 +45,40 @@ function generateNewUserId(cb){
      });
 }
 
+
+function inc_balance(shortId,cb){
+   
+     if(!helpers.validateShortId(shortId)){
+          winston.error('Bad shortId'); 
+          return cb(null,null);
+     };
+
+     db.UserModel.findByShortId(shortId,function(err,users){
+          if(err){
+               winston.error('Error: ' + err);
+               return cb(err,null);
+          };
+
+          if(typeof(users)==='undefined' || !users.length){
+               winston.error('No such user: ' + shortId);
+               return cb(null,null);
+          }
+
+          var user = users[0];
+          if(!user.validated){
+               winston.error('User not validated: ' + shortId);
+               return cb(null,null);
+          };
+          var newBalance = user.balance + 1;
+          db.UserModel.findByIdAndUpdate(user._id, { $set:{balance:newBalance}}, { new: true }, function (err, user){
+               if (err){ return cb(err) };
+               cb(null,user);
+          });
+
+
+     });
+}
+
 function getUser(currentUser,shortId,cb){
      if(!helpers.validateShortId(shortId)){
           winston.error('Bad shortId');
@@ -138,6 +172,6 @@ function createNewUser(name,lastName,email,pass,facebookID,needValidation,cb){
 /////////////////////////////////////////////
 exports.findUserByEmail = findUserByEmail;
 exports.generateNewUserId = generateNewUserId;
-
+exports.inc_balance = inc_balance;
 exports.getUser = getUser;
 exports.createNewUser = createNewUser;
