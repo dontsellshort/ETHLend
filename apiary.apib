@@ -38,7 +38,13 @@ API description for EthLend project.
                     
                     // how much Lending Request user can create
                     // before creating LR he must pay us some fee (upfront)
-                    balance: 1
+                    balance: 1,
+                    
+                    // to increase balance please send Fee money here
+                    balanceFeeAddress: '0xbd997cd2513c5f031b889d968de071eeafe07130',
+                    
+                    // this is how much does 1 Lending Request creation costs
+                    balanceFeeAmountInWei: 12000
                 }
 
 ### Increase User's Balance [POST /api/v1/auth/users/{shortId}/balance]
@@ -201,6 +207,11 @@ If user's *balance* is non-null -> user can Create new Lending Request.
             
             days_to_lend: 30,
             days_left: 0,
+            
+            // if in state 4 - waiting for loan
+            "address_to_send": "0xb533aae346245e2e05b23f420C140bCA2529b8a6",
+            "eth_count": 120,
+            "minutes_left": 1440    // lender should send us eth_count ETHs until time is left
         }
         
 ### Lend [POST /api/v1/auth/users/{shortId}/lrs/{id}/lend]
