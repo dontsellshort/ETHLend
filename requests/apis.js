@@ -24,8 +24,6 @@ app.get('/api/v1/auth/users/:shortId',function(request, res, next) {
 // 
 // Params: shortId
 // Returns full user tuple
-<<<<<<< HEAD
-
 app.post('/api/v1/auth/users/:shortId/balance',function(request, res, next) {
      if(typeof(request.params.shortId)==='undefined'){
           winston.error('No shortId');
@@ -69,29 +67,7 @@ app.get('auth/users/:shortId/lrs/:id', function(request,res,next){//2.3. Get a L
     db_helpers.getUser(request.user, shortId, function(err, user){
         if (err){ return next()};
         // .........
-    });  
-=======
-app.post('/api/v1/auth/users/{shortId}/balance',function(request, res, next) {
-     // TODO
-});
-
-app.get('/api/v1/auth/users/{shortId}/lrs',function(request, res, next) {
-     // TODO
-});
-
-app.post('/api/v1/auth/users/{shortId}/lrs',function(request, res, next) {
-     // TODO
-});
-
-app.get('/api/v1/auth/users/{shortId}/lrs/{id}',function(request, res, next) {
-     // TODO
-
-});
-
-app.post('/api/v1/auth/users/{shortId}/lrs/{id}/lend',function(request, res, next) {
-     // TODO
->>>>>>> origin
-
+    });
 });
 
 app.post('auth/users/:shortId/lrs/:id/lend', function(request,res,next){//2.4. Lend

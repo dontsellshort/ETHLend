@@ -15,12 +15,7 @@ var textParser = bodyParser.text();
 //
 // Body params: {email: '', pass: ''}
 // Returns {shortId: '123456789'} or 404
-<<<<<<< HEAD
-
 app.post('/api/v1/users',function(request, res, next) {
-=======
-app.post('/api/v1/users',  jsonParser, function(request, res, next) {
->>>>>>> origin
      if(typeof(request.body)==='undefined' || request.body===null){
           return next();
      } 
@@ -113,13 +108,8 @@ function createUserContinue(user,res){
 // Params: shortId
 // Params: signature
 //
-<<<<<<< HEAD
 // Returns: redirection to 200 or 'BAD' pages
 app.post('/api/v1/users/:shortId/validation',function(request, res, next){
-=======
-// Returns: redirection to 'OK' or 'BAD' pages
-app.post('/api/v1/users/:shortId/validation',  jsonParser, function(request, res, next){
->>>>>>> origin
      if(typeof(request.params.shortId)==='undefined'){
           winston.error('No shortId');
          return res.status(400).json('No shortId');
@@ -170,82 +160,50 @@ app.post('/api/v1/users/:shortId/validation',  jsonParser, function(request, res
           user.save(function(err){
                if(err){
                     winston.error('Can not save user: ' + shortId);
-<<<<<<< HEAD
-                    return res.send(200);
-=======
                     return res.status(400).json('Can not save user: ' + shortId);
->>>>>>> origin
                }
 
                // send 'registration complete' e-mail
                mail_send.sendRegComplete(user.email, function(err){
                     if(err){
                          winston.error('Can not send reg complete e-mail: ' + err);
-<<<<<<< HEAD
-                         return res.send(200);
-                    }
 
-                    // 5 - return
-                    res.send(200);
-=======
                          return res.status(400).json('Can not send reg complete e-mail: ' + err);
                     }
 
                     // 5 - return
                     res.json(200);
->>>>>>> origin
                });
           });
      });
 });
 
 // Send e-mail with 'reset your password' text.
-<<<<<<< HEAD
-// this method always returns 200 to cheat attacker. 
-app.post('/api/v1/users/:email/reset_password_request',function(request, res, next){
-     winston.info('Reset password request');
-     if(typeof(request.params.email)==='undefined'){
-          winston.error('No email');
-          return res.send(200);
-=======
 // this method always returns 'OK' to cheat attacker. 
-app.post('/api/v1/users/:email/reset_password_request',  jsonParser,  function(request, res, next){
+app.post('/api/v1/users/:email/reset_password_request',  function(request, res, next){
      winston.info('Reset password request');
      if(typeof(request.params.email)==='undefined'){
           winston.error('No email');
          return res.status(400).json('No email');
->>>>>>> origin
      }
 
      // 1 - get user
      var email = request.params.email;
      if(!helpers.validateEmail(email)){
           winston.error('Bad email');
-<<<<<<< HEAD
-          return res.send(200);
-=======
           return res.status(400).json('Bad email');
->>>>>>> origin
      }
 
      winston.info('Reset password email is: ' + email);
      db.UserModel.findByEmail(email,function(err,users){
           if(err){
                winston.error('Error: ' + err);
-<<<<<<< HEAD
-               return res.send(200);
-=======
                return res.status(400).json('Error: ' + err);
->>>>>>> origin
           }
 
           if(typeof(users)==='undefined' || !users.length){
                winston.error('No such user: ' + email);
-<<<<<<< HEAD
-               return res.send(200);
-=======
                return res.status(400).json('No such user: ' + email);
->>>>>>> origin
           }
 
           // 2 - check if already validated
@@ -254,11 +212,7 @@ app.post('/api/v1/users/:email/reset_password_request',  jsonParser,  function(r
 
           if(!user.validated){
                winston.error('Not validated: ' + email);
-<<<<<<< HEAD
-               return res.send(200);
-=======
                return res.status(400).json('Not validated: ' + email);
->>>>>>> origin
           }
 
           // 3 - generate new signature
@@ -267,11 +221,7 @@ app.post('/api/v1/users/:email/reset_password_request',  jsonParser,  function(r
           user.save(function(err){
                if(err){
                     winston.error('Can not generate validation sig: ' + email);
-<<<<<<< HEAD
-                    return res.send(200);
-=======
                     return res.status(400).json('Can not generate validation sig: ' + email);
->>>>>>> origin
                }
 
                // 4 - send e-mail 
@@ -378,9 +328,6 @@ app.put('/api/v1/users/:shortId/password',  jsonParser,  function(request, res, 
                               //return next();
                          }
 
-<<<<<<< HEAD
-                         res.send(200);
-=======
                         db.UserModel.findByEmail(email, function(err,users){
                             if(err){
                                 winston.error('Error: ' + err);
@@ -399,7 +346,6 @@ app.put('/api/v1/users/:shortId/password',  jsonParser,  function(request, res, 
                             // 4 - if OK -> give jwt
                             returnJwt(user, res);
                         });
->>>>>>> origin
                     });
                });
           });
