@@ -127,7 +127,11 @@ function makeBasicReport(templateFile,cb){
      });
 }
 
-function sendEmail(sendTo,subjText,text,textHtml,attachmentFile,cb){
+function sendEmail(sendTo,subjText,text,textHtml,attachmentFile,dont_send,cb){
+    if (dont_send===true){ 
+      console.log('message sent (emulated)'); 
+      return cb(null, {message:200})
+    };
      var transport = nodemailer.createTransport("SMTP", {
           service: config.get('mail:service'),
           auth: {
@@ -158,7 +162,7 @@ function sendEmail(sendTo,subjText,text,textHtml,attachmentFile,cb){
            text: text,                     // plaintext body
            html: textHtml                  // html body
      }
-
+  
      // send mail with defined transport object
      transport.sendMail(mailOptions, function(error, response){
           if(error){
@@ -176,7 +180,7 @@ function sendEmail(sendTo,subjText,text,textHtml,attachmentFile,cb){
      });
 }
 
-function sendUserValidation(sendTo,validationLink,cb){
+function sendUserValidation(sendTo,validationLink,dontSend,cb){
      winston.info('Sending user validation e-mail to: ' + sendTo);
 
      // 2 - make HTML e-mail from template
@@ -196,7 +200,7 @@ function sendUserValidation(sendTo,validationLink,cb){
 
             data,  //textHtml
             '',    //attachment
-
+            dontSend,
             function(err,resp){
                  if(err){
                       return cb(err);
@@ -209,7 +213,7 @@ function sendUserValidation(sendTo,validationLink,cb){
 }
 
 // after successful validation
-function sendRegComplete(sendTo,cb){
+function sendRegComplete(sendTo,dontSend,cb){
      winston.info('Sending reg complete e-mail to: ' + sendTo);
 
      // 2 - make HTML e-mail from template
@@ -229,7 +233,7 @@ function sendRegComplete(sendTo,cb){
 
             data,  //textHtml
             '',    //attachment
-
+            dontSend,
             function(err,resp){
                  if(err){
                       return cb(err);
@@ -241,7 +245,7 @@ function sendRegComplete(sendTo,cb){
      });
 }
 
-function sendResetPassword(sendTo,resetLink,cb){
+function sendResetPassword(sendTo,resetLink,dontSend,cb){
      winston.info('Sending reset passwrod e-mail to: ' + sendTo);
 
      // 2 - make HTML e-mail from template
@@ -261,7 +265,7 @@ function sendResetPassword(sendTo,resetLink,cb){
 
             data,  //textHtml
             '',    //attachment
-
+            dontSend,
             function(err,resp){
                  if(err){
                       return cb(err);
@@ -273,7 +277,7 @@ function sendResetPassword(sendTo,resetLink,cb){
      });
 }
 
-function sendPassChanged(sendTo,cb){
+function sendPassChanged(sendTo,dontSend,cb){
      winston.info('Sending passwrod changed e-mail to: ' + sendTo);
 
      // 2 - make HTML e-mail from template
@@ -293,7 +297,7 @@ function sendPassChanged(sendTo,cb){
 
             data,  //textHtml
             '',    //attachment
-
+            dontSend,
             function(err,resp){
                  if(err){
                       return cb(err);
