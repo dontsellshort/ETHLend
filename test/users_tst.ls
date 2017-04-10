@@ -16,6 +16,7 @@ global.userId    = ''
 globalToken      = ''
 SQ               = assert.equal
 NQ               = assert.notEqual
+target-email = 'xxx@chain.cloud'
 
 describe 'Users module', (T)!->
 	before (done) !->
@@ -59,7 +60,7 @@ describe 'Users module', (T)!->
 	it '1.4.should not create user if pass is too short', (done) !->
 		url = '/api/v1/users'
 		j = 
-			email: 'anthony.akentiev@gmail.com'
+			email: target-email
 			pass: '123'
 		data = JSON.stringify(j)
 		postData 9091, url, data, (err, statusCode, h, dataOut) !->
@@ -70,7 +71,7 @@ describe 'Users module', (T)!->
 	it '1.5. should create new user', (done) ->
 		url = '/api/v1/users?do_not_send_email=1'
 		j = do
-			email: 'anthony.akentiev@gmail.com'
+			email: target-email
 			pass: '123456'
 		data = JSON.stringify(j)
 		# 1 - create
@@ -102,7 +103,7 @@ describe 'Users module', (T)!->
 
 
 	it '1.6. should not login if not validated yet', (done) !->
-		email = helpers.encodeUrlDec('anthony.akentiev@gmail.com')
+		email = helpers.encodeUrlDec(target-email)
 		url   = '/api/v1/users/' + email + '/login'
 		j     = pass: '123456'
 		data  = JSON.stringify(j)
@@ -113,7 +114,7 @@ describe 'Users module', (T)!->
 			SQ statusCode, 401
 			done()
 	it '1.7. should not send <reset password> if still not validated', (done) !->
-		email = helpers.encodeUrlDec('anthony.akentiev@gmail.com')
+		email = helpers.encodeUrlDec(target-email)
 		url   = '/api/v1/users/' + email + '/reset_password_request'
 		postData 9091, url, '', (err, statusCode, h, dataOut) !->
 			SQ err, null
@@ -139,7 +140,7 @@ describe 'Users module', (T)!->
 			SQ err, null
 			SQ statusCode, 200
 			SQ dataOut, 'OK'
-			str = 'anthony.akentiev@gmail.com'
+			str = target-email
 			db.UserModel.findByEmail str, (err, users) !->
 				SQ err, null
 				SQ users.length, 1
@@ -154,7 +155,7 @@ describe 'Users module', (T)!->
 			SQ statusCode, 404
 			done()
 	it '1.12. should not login if bad password', (done) !->
-		email = helpers.encodeUrlDec('anthony.akentiev@gmail.com')
+		email = helpers.encodeUrlDec(target-email)
 		url   = '/api/v1/users/' + email + '/login'
 		j     = pass: 'shitsomw'
 		data  = JSON.stringify(j)
@@ -175,7 +176,7 @@ describe 'Users module', (T)!->
 			done()
 	it '1.14. should login if everything OK', (done) !->
 		
-		url   = '/api/v1/users/' + helpers.encodeUrlDec('anthony.akentiev@gmail.com') + '/login'
+		url   = '/api/v1/users/' + helpers.encodeUrlDec(target-email) + '/login'
 		j     = pass: '123456'
 		data  = JSON.stringify(j)
 		postData 9091, url, data, (err, statusCode, h, dataOut) !->
@@ -197,7 +198,7 @@ describe 'Users module', (T)!->
 
 	# WARNING: this code sends real e-mails! )))
 	it '1.16. should reset password - send email', (done) !->
-		email = helpers.encodeUrlDec('anthony.akentiev@gmail.com')
+		email = helpers.encodeUrlDec(target-email)
 		url   = '/api/v1/users/' + email + '/reset_password_request?do_not_send_email=1'
 
 		postData 9091, url, '', (err, statusCode, h, dataOut) !->
@@ -209,7 +210,7 @@ describe 'Users module', (T)!->
 			done()
 
 	it '1.17. should set new password', (done) !->
-		email = 'anthony.akentiev@gmail.com'
+		email = target-email
 		db.UserModel.findByEmail email, (err, users) !->
 			SQ err, null
 			SQ users.length, 1
@@ -228,3 +229,5 @@ describe 'Users module', (T)!->
 					SQ users[0].resetSig, ''
 					NQ users[0].password, oldPass
 					done()
+
+				

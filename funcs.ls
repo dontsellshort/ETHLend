@@ -1,4 +1,4 @@
- require! {
+require! {
 		\./helpers/helpers.js    :helpers     
 		\./helpers/db_helpers.js :db_helpers
 		\./helpers/mail_send.js  :mail_send 
@@ -18,11 +18,10 @@ returnJwt = (user, res)!->
 	console.log  "-->User logged in: #sId"
 	res.json token:token, shortId:sId
 
-POST =-> app.post "/api/v1/#{&0}", jsonParser, &1
-GET  =-> app.get  "/api/v1/#{&0}", jsonParser, &1
-PUT  =-> app.put  "/api/v1/#{&0}", jsonParser, &1
-
-undefQ =->    typeof it == \undefined
+POST 	  =-> app.post "/api/v1/#{&0}", jsonParser, &1
+GET  	  =-> app.get  "/api/v1/#{&0}", jsonParser, &1
+PUT  	  =-> app.put  "/api/v1/#{&0}", jsonParser, &1
+undefQ    =-> typeof it == \undefined
 undefnulQ =-> typeof it == \undefined  || it == null
 undeflenQ =-> typeof it == \undefined  || !it?length
 WERR = winston.error
@@ -68,7 +67,11 @@ GET  \users/:shortId, (Q,res,next)-> 							### 1.2. Get user data
 			
 
 POST \users/:shortId/balance, (Q,res,next)->				    ### 1.3. Increase User"s Balance
-	res.send \OK 
+	if undefQ Q.params.shortId => WERR 'No shortId'; return next!
+	shortId = Q.params.shortId
+	db_helpers.getUser Q.user, shortId, (err, user) ->
+		if err => return next!
+		res.json { email:user.email, balance:user.balance }
 
 POST \users/:shortId/validation, (Q,res,next)-> 				### 1.4. Validate user
     shortId = Q.params?shortId
@@ -85,10 +88,10 @@ POST \users/:shortId/validation, (Q,res,next)-> 				### 1.4. Validate user
 		user.validated     = true
 		user.modified      = Date.now!
 		user.save (err) ->
-            if err => WERR "Can not save user: #shortId"; return res.send \OK		
+            if err => WERR "Can not save user: #shortId"; return res.send 200		
 			mail_send.sendRegComplete user.email, (err)-> # send "registration complete" e-mail
-				if err => WERR "Can not send reg complete e-mail: #err"; return res.send \OK			
-				res.send \OK # 5 - return
+				if err => WERR "Can not send reg complete e-mail: #err"; return res.send 200			
+				res.send 200 # 5 - return
 
 
 PUT  \users/:shortId/password, (Q,res,next)-> 					### 1.5. Set new password
@@ -114,31 +117,31 @@ PUT  \users/:shortId/password, (Q,res,next)-> 					### 1.5. Set new password
 				if err => WERR "Can not save user"; return next! # 5 - send "password has been changed" email
 				mail_send.sendPassChanged user.email, (err) ->
 					if err => WERR "Can not send email to user: #err" # eat this error return next!;
-					res.send \OK
+					res.send 200
 
 POST \users/:email/reset_password_request, (Q,res,next)-> 		### 1.6. Reset password
  	winston.info "Reset password request"
-	if undefQ Q.params.email => WERR "No email"; return res.send \OK
+	if undefQ Q.params.email => WERR "No email"; return res.send 200
 	email = Q.params.email 
     # 1 - get user
-	if !helpers.validateEmail email => WERR "Bad email"; return res.send \OK
+	if !helpers.validateEmail email => WERR "Bad email"; return res.send 200
 	winston.info "Reset password email is: #email" 
 	db.UserModel.findByEmail email, (err, users) ->
         user = users?0
-		if err               => WERR "Error: #email";  return res.send \OK
-		if undeflenQ users   => WERR "No such user: #email";  return res.send \OK
-		if !user?validated   => WERR "Not validated: #email"; return res.send \OK
+		if err               => WERR "Error: #email";  return res.send 200
+		if undeflenQ users   => WERR "No such user: #email";  return res.send 200
+		if !user?validated   => WERR "Not validated: #email"; return res.send 200
 		# 3 - generate new signature
 		user.modified = Date.now!
 		user.resetSig = helpers.generateResetSig user.email, user.pass
 		user.save (err) ->
-			if err => WERR "Can`t generate validation sig: #email"; return res.send \OK
+			if err => WERR "Can`t generate validation sig: #email"; return res.send 200
 			# 4 - send e-mail 
 			resetLink = config.get(\mail:reset_link) + "?sig=#{user.resetSig}&id=#{user.shortId}"
-			if Q.params.do_not_send_email == 1 => return res.send \OK
+			if Q.params.do_not_send_email == 1 => return res.send 200
 			mail_send.sendResetPassword user.email, resetLink, (err) ->
 				if err => WERR "Can not save user to DB: #err"; return next!
-				res.send \OK
+				res.send 200
 
 POST \users/:email/login", (Q,res,next)-> 						### 1.7. Login
 	winston.info "AUTH call"
@@ -217,3 +220,5 @@ POST \auth/users/:shortId/lrs/:id/lend,(Q,res,next)-> 			###TODO: 2.4. Lend
     # OUT     "address_to_send": "0xbd997cd2513c5f031b889d968de071eeafe07130",
     # OUT     "eth_count": 120,
     # OUT     "minutes_left": 1440    // 1 day left until this LR moves back to "waiting for lender" state
+
+some=->
