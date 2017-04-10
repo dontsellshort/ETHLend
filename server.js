@@ -50,13 +50,14 @@ var allowCrossDomain = function(req, res, next) {
      res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
+     res.header('Content-Type', 'application/json');
      // Set to true if you need the website to include cookies in the requests sent
      // to the API (e.g. in case you use sessions)
      res.setHeader('Access-Control-Allow-Credentials', true);
 
      // intercept OPTIONS method
      if ('OPTIONS' == req.method) {
-          res.send(200);
+         res.sendStatus(200);
      } else {
           next();
      }
@@ -86,7 +87,7 @@ app.use(require('method-override')());
 app.use(allowCrossDomain);
 
 app.use(rawBody);
-app.use(require('body-parser')());
+app.use(require('body-parser').json());
 
 // cookie parsing support, cookie avail through 'req.cookies'
 app.use(require('cookie-parser')(config.get('cookie_secret')));
@@ -113,7 +114,7 @@ app.use(function(err, req, res, next){
      // this happens when token expires too 
      // so handle that in your frontend and redirect to '/login.html'
      case "UnauthorizedError":
-          return res.status(401).send('');
+          return res.sendStatus(401);
      case "BadRequestError":
      case "UnauthorizedAccessError":
      case "NotFoundError":
@@ -125,7 +126,7 @@ app.use(function(err, req, res, next){
      winston.error('ERROR detected: ' + err);
      winston.error(err.stack);
 
-     res.send(500, 'Something went wrong! Contact administrator');
+    res.sendStatus(500, 'Something went wrong! Contact administrator');
 });
 
 // Remove X-Powered-by: Express header...
