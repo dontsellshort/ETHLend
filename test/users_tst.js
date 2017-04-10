@@ -14,7 +14,7 @@ globalToken   = '';
 SQ            = assert.equal;
 NQ            = assert.notEqual;
 targetEmail   = 'kirill@chain.cloud';
-describe('Users module', function(T){
+describe('Users module and lending requests', function(T){
     before(function(done){
         var uri, conn;
         uri = 'mongodb://localhost/tests';
