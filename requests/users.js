@@ -15,7 +15,7 @@ var textParser = bodyParser.text();
 //
 // Body params: {email: '', pass: ''}
 // Returns {shortId: '123456789'} or 404
-app.post('/api/v1/users',function(request, res, next) {
+app.post('/api/v1/users',  function(request, res, next) {
      if(typeof(request.body)==='undefined' || request.body===null){
           return next();
      } 
@@ -42,9 +42,9 @@ app.post('/api/v1/users',function(request, res, next) {
          return res.status(400).json('Bad pass');
      }
 
-     var sendEmail = true;
+     var dontSend = false;
      if(typeof(request.query.do_not_send_email)!=='undefined'){
-          sendEmail = false;
+          dontSend = true;
      }
 
      // 1 - check if already exists
@@ -71,14 +71,18 @@ app.post('/api/v1/users',function(request, res, next) {
                     return res.status(400).json('Can not create new user: ' + err);
                }
 
-               if(sendEmail){
                     // 4 - send validation e-mail
                     var validationSig = user.validationSig;
                     var validationLink = config.get('mail:validation_link') 
                          + '?sig=' + validationSig 
                          + '&id=' + user.shortId;
 
-                    mail_send.sendUserValidation(user.email, validationLink, function(err){
+                    var dontSend = false;
+                    if(typeof(request.query.do_not_send_email)!=='undefined'){
+                        dontSend = true;
+                    }
+
+                    mail_send.sendUserValidation(user.email, validationLink,dontSend, function(err){
                          if(err){
                               winston.error('Can not save user to DB: ' + err);
                               return res.status(400).json('Can not save user to DB: ' + err);
@@ -86,9 +90,7 @@ app.post('/api/v1/users',function(request, res, next) {
 
                          createUserContinue(user,res);
                     });
-               }else{
-                    createUserContinue(user,res);
-               }
+
           });
      });
 
@@ -108,8 +110,8 @@ function createUserContinue(user,res){
 // Params: shortId
 // Params: signature
 //
-// Returns: redirection to 200 or 'BAD' pages
-app.post('/api/v1/users/:shortId/validation',function(request, res, next){
+// Returns: redirection to 'OK' or 'BAD' pages
+app.post('/api/v1/users/:shortId/validation',  function(request, res, next){
      if(typeof(request.params.shortId)==='undefined'){
           winston.error('No shortId');
          return res.status(400).json('No shortId');
@@ -164,10 +166,14 @@ app.post('/api/v1/users/:shortId/validation',function(request, res, next){
                }
 
                // send 'registration complete' e-mail
-               mail_send.sendRegComplete(user.email, function(err){
+                var dontSend = false;
+                if(typeof(request.query.do_not_send_email)!=='undefined'){
+                    dontSend = true;
+                }
+               
+               mail_send.sendRegComplete(user.email,dontSend, function(err){
                     if(err){
                          winston.error('Can not send reg complete e-mail: ' + err);
-
                          return res.status(400).json('Can not send reg complete e-mail: ' + err);
                     }
 
@@ -228,8 +234,13 @@ app.post('/api/v1/users/:email/reset_password_request',  function(request, res, 
                var resetLink = config.get('mail:reset_link') 
                     + '?sig=' + user.resetSig
                     + '&id=' + user.shortId;
-               if (request.params.do_not_send_email == 1 ){return res.send(200)}
-               mail_send.sendResetPassword(user.email,resetLink,function(err){
+                
+                var dontSend = false;
+                if(typeof(request.query.do_not_send_email)!=='undefined'){
+                    dontSend = true;
+                }
+
+               mail_send.sendResetPassword(user.email,resetLink,dontSend,function(err){
                     if(err){
                          winston.error('Can not save user to DB: ' + err);
                          return res.status(400).json('Can not save user to DB: ' + err);
@@ -243,7 +254,7 @@ app.post('/api/v1/users/:email/reset_password_request',  function(request, res, 
 });
 
 // Create new password (after reset was requested)
-app.put('/api/v1/users/:shortId/password',  jsonParser,  function(request, res, next){
+app.put('/api/v1/users/:shortId/password',  function(request, res, next){
      if(typeof(request.params.shortId)==='undefined'){
           winston.error('No shortId');
           return res.status(400).json('No shortId');
@@ -320,7 +331,12 @@ app.put('/api/v1/users/:shortId/password',  jsonParser,  function(request, res, 
                     }
 
                     // 5 - send 'password has been changed' email
-                    mail_send.sendPassChanged(user.email, function(err){
+                    var dontSend = false;
+                    if(typeof(request.query.do_not_send_email)!=='undefined'){
+                        dontSend = true;
+                    }
+                    
+                    mail_send.sendPassChanged(user.email, dontSend,function(err){
                          if(err){
                               winston.error('Can not send email to user: ' + err);
                               return res.status(400).json('Can not send email to user: ' + err);
@@ -328,7 +344,7 @@ app.put('/api/v1/users/:shortId/password',  jsonParser,  function(request, res, 
                               //return next();
                          }
 
-                        db.UserModel.findByEmail(email, function(err,users){
+                        db.UserModel.findByEmail(user.email, function(err,users){
                             if(err){
                                 winston.error('Error: ' + err);
                                 return res.status(400).json('Error: ' + err);
@@ -356,7 +372,7 @@ app.put('/api/v1/users/:shortId/password',  jsonParser,  function(request, res, 
 //
 // Body params: { password: ''}
 // Returns: 401 or good JSON web token
-app.post('/api/v1/users/:email/login',  jsonParser,  function (request, res, next) {
+app.post('/api/v1/users/:email/login', function (request, res, next) {
      winston.info('AUTH call');
 
      if(typeof(request.params.email)==='undefined'){

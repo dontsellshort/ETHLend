@@ -67,7 +67,8 @@ app.get('auth/users/:shortId/lrs/:id', function(request,res,next){//2.3. Get a L
     db_helpers.getUser(request.user, shortId, function(err, user){
         if (err){ return next()};
         // .........
-    });
+    });  
+
 });
 
 app.post('auth/users/:shortId/lrs/:id/lend', function(request,res,next){//2.4. Lend
