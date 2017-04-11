@@ -45,7 +45,6 @@ function generateNewUserId(cb){
      });
 }
 
-
 function changeBalanceBy(shortId,units,cb){
      if(!helpers.validateShortId(shortId)){
           winston.error('Bad shortId'); 
@@ -200,7 +199,20 @@ function createLendingRequest(data, cb){
                return cb(null, lendingRequest,user)
           })
 
-          
+     })
+}
+
+function getAllLRforUser(user, cb){
+     db.LendingRequestModel.find({borrower_id: user.shortId},function(err,allLR){
+          if(err){
+               winston.error('Can`t find LR`s for user: ' + err);
+               return cb(err);
+          };
+          var out = [];
+          for (var i in allLR){
+               out.push(allLR[i]._id)         
+          };   
+          cb(null, out)
      })
 }
 
@@ -209,5 +221,6 @@ exports.findUserByEmail = findUserByEmail;
 exports.generateNewUserId = generateNewUserId;
 exports.changeBalanceBy = changeBalanceBy;
 exports.getUser = getUser;
+exports.getAllLRforUser = getAllLRforUser;
 exports.createNewUser = createNewUser;
 exports.createLendingRequest = createLendingRequest;
