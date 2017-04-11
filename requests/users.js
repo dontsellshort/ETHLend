@@ -451,4 +451,4 @@ function returnJwt(user,res){
      console.log('-->User logged in: ' + user.shortId);
 
      res.json({ token: token, shortId: user.shortId });
-};
+}
