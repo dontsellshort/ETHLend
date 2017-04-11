@@ -45,8 +45,7 @@ function generateNewUserId(cb){
      });
 }
 
-
-function inc_balance(shortId,cb){
+function incBalance(shortId,cb){
    
      if(!helpers.validateShortId(shortId)){
           winston.error('Bad shortId'); 
@@ -69,13 +68,12 @@ function inc_balance(shortId,cb){
                winston.error('User not validated: ' + shortId);
                return cb(null,null);
           };
+
           var newBalance = user.balance + 1;
           db.UserModel.findByIdAndUpdate(user._id, { $set:{balance:newBalance}}, { new: true }, function (err, user){
                if (err){ return cb(err) };
                cb(null,user);
           });
-
-
      });
 }
 
@@ -172,6 +170,6 @@ function createNewUser(name,lastName,email,pass,facebookID,needValidation,cb){
 /////////////////////////////////////////////
 exports.findUserByEmail = findUserByEmail;
 exports.generateNewUserId = generateNewUserId;
-exports.inc_balance = inc_balance;
+exports.incBalance = incBalance;
 exports.getUser = getUser;
 exports.createNewUser = createNewUser;

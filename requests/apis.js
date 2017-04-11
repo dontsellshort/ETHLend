@@ -25,8 +25,10 @@ app.post('/api/v1/auth/users/:shortId/balance',function(request, res, next) {
 	db.UserModel.findByShortId(shortId,function(err,users){
 		if(err){ return res.status(400).json('can`t get user'); };
 
-		db_helpers.increase_balance_1(shortId,function(err,user){
-			if(err){ return res.status(400).json('can`t increase balance'); };
+		db_helpers.incBalance(shortId,function(err,user){
+			if(err){ 
+				return res.status(400).json('can`t increase balance'); 
+			};
 			res.send(200);
 		});
 	});
