@@ -18,7 +18,6 @@ app.get('/api/v1/auth/users/:shortId', function (request, res, next) {
 });
 
 app.post('/api/v1/auth/users/:shortId/balance', function (request, res, next) {
-     console.log('balance++');
      if (typeof (request.params.shortId) === 'undefined') {
           winston.error('No shortId');
           return res.status(400).json('No shortId');
@@ -41,7 +40,7 @@ app.post('/api/v1/auth/users/:shortId/balance', function (request, res, next) {
 
 app.get('auth/users/:shortId/lrs', function (request, res, next) { //2.1. Get a list of Lending Requests for user 
      if (typeof (request.params.shortId) === 'undefined') {
-          winston.error('undefined shortId');
+          winston.error('Undefined shortId');
           return res.status(400).json('No shortId');
      };
      var shortId = request.params.shortId;
@@ -54,7 +53,7 @@ app.get('auth/users/:shortId/lrs', function (request, res, next) { //2.1. Get a 
           db_helpers.getAllLRforUser(user, function (err, allLR) {
                if (err) {
                     winston.error('can`t return all LR`s');
-                    return res.status(400).json('can`t return all LR`s');
+                    return res.status(400).json('Can`t return all LR`s');
                }
                res.json(allLR);
           })
@@ -77,7 +76,7 @@ app.post('auth/users/:shortId/lrs', function (request, res, next) { //2.2. Creat
 
           db_helpers.createLendingRequest(data, function (err, user, lr) {
                if (err) {
-                    winston.error('can`t createLendingRequest: ' + err);
+                    winston.error('Can`t createLendingRequest: ' + err);
                     return res.status(400).json('can`t createLendingRequest');
                };
                return res.json(lr._id)
@@ -87,11 +86,11 @@ app.post('auth/users/:shortId/lrs', function (request, res, next) { //2.2. Creat
 
 app.get('auth/users/:shortId/lrs/:id', function (request, res, next) { //2.3. Get a Lending Request 
      if (typeof (request.params.shortId) === 'undefined') {
-          winston.error('undefined shortId');
+          winston.error('Undefined shortId');
           return res.status(400).json('No id');
      };
      if (typeof (request.params.id) === 'undefined') {
-          winston.error('undefined id');
+          winston.error('Undefined id');
           return res.status(400).json('No id');
      };
      var userId = request.params.shortId;
@@ -101,11 +100,9 @@ app.get('auth/users/:shortId/lrs/:id', function (request, res, next) { //2.3. Ge
                return res.status(400);
           };
 
-          db.LendingRequestModel.find({
-               _id: lrId
-          }, function (err, lr) {
+          db.LendingRequestModel.find({_id: lrId}, function (err, lr) {
                if (err) {
-                    winston.error('can`t get LR');
+                    winston.error('Can`t get LR');
                     return res.status(400).json('can`t get LR');
                };
                res.json(lr);
@@ -115,11 +112,11 @@ app.get('auth/users/:shortId/lrs/:id', function (request, res, next) { //2.3. Ge
 
 app.post('auth/users/:shortId/lrs/:id/lend', function (request, res, next) { //2.4. Lend
      if (typeof (request.params.shortId) === 'undefined') {
-          winston.error('undefined shortId');
+          winston.error('Undefined shortId');
           return res.status(400).json('No id');
      };
      if (typeof (request.params.id) === 'undefined') {
-          winston.error('undefined id');
+          winston.error('Undefined id');
           return res.status(400).json('No id');
      };
      var userId = request.params.shortId;
@@ -137,7 +134,7 @@ app.post('auth/users/:shortId/lrs/:id/lend', function (request, res, next) { //2
 
           db.LendingRequestModel.findByIdAndUpdate(lrId, {$set: setObj}, {new: true}, function (err, lr) {
                if (err) {
-                    winston.error('can`t Lend: ' + err);
+                    winston.error('Can`t Lend: ' + err);
                     return res.status(400).json('can`t lend');
                };
 

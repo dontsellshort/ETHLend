@@ -445,12 +445,33 @@ describe('Users module and lending requests', function (T) {
           });
      });
 
+     it('2.5. Should create new Lending Request if user`s balance is non-null', function(done){
+     });
 
-     // it('2.2. shouldn`t return a list of LRs for a selected user, if requester isn`t this user.', function (done) {
-     // 	SQ(true, true);
-     // 	done();
-     // });
+     it('2.6. Shouldn`t create new Lending Request if user`s balance is null', function(done){
+     });
 
+     it('2.7. Shouldn`t create new Lending Request if currentUser!=req.userId', function(done){
+     });
+
+     //------------
+     it('2.8. Should return a list of LRs for a selected user', function (done) {
+     });
+
+     it('2.9. Shouldn`t return a list of LRs for a selected user if currentUser!=req.userId', function (done) {
+     });
+
+     it('2.10. Should return a Lending Request', function (done) {
+     });
+
+     it('2.11. Shouldn`t return a Lending Request if currentUser!=req.userId', function (done) {
+     });
+
+     it('2.12. Should lend', function (done) {
+     });
+
+     it('2.13. Shouldn`t lend if currentUser!=req.userId', function (done) {
+     });
 
      // it('2.4. shouldn`t create new Lending Request if user`s balance is null', function (done) {
      // 	SQ(true, true);
