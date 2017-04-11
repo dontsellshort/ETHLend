@@ -46,17 +46,16 @@ function generateNewUserId(cb){
 }
 
 function incBalance(shortId,cb){
-   
      if(!helpers.validateShortId(shortId)){
           winston.error('Bad shortId'); 
           return cb(null,null);
-     };
+     }
 
      db.UserModel.findByShortId(shortId,function(err,users){
           if(err){
                winston.error('Error: ' + err);
                return cb(err,null);
-          };
+          }
 
           if(typeof(users)==='undefined' || !users.length){
                winston.error('No such user: ' + shortId);
@@ -67,10 +66,11 @@ function incBalance(shortId,cb){
           if(!user.validated){
                winston.error('User not validated: ' + shortId);
                return cb(null,null);
-          };
+          }
 
           var newBalance = user.balance + 1;
-          db.UserModel.findByIdAndUpdate(user._id, { $set:{balance:newBalance}}, { new: true }, function (err, user){
+ 
+          db.UserModel.findByIdAndUpdate(user._id, {$set:{balance:newBalance}}, {new: true}, function(err, user){
                if (err){ return cb(err) };
                cb(null,user);
           });

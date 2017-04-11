@@ -23,7 +23,9 @@ app.post('/api/v1/auth/users/:shortId/balance',function(request, res, next) {
 	}
 	var shortId = request.params.shortId;
 	db.UserModel.findByShortId(shortId,function(err,users){
-		if(err){ return res.status(400).json('can`t get user'); };
+		if(err){ 
+			return res.status(400).json('can`t get user'); 
+		};
 
 		db_helpers.incBalance(shortId,function(err,user){
 			if(err){ 
