@@ -307,7 +307,7 @@ describe('Users module and lending requests', function (T) {
 			SQ(users[0].balance, 0);
 			var url = 'api/v1/auth/users/'+users[0].shortId+'/balance';
 			console.log('user balance is: '+users[0].balance);				
-			db_helpers.inc_balance(users[0].shortId,function(err,user){
+			db_helpers.incBalance(users[0].shortId,function(err,user){
 				console.log('user.balance: '+user.balance)
 				SQ(err,null);
 				SQ(user.balance,1)
@@ -315,7 +315,6 @@ describe('Users module and lending requests', function (T) {
 			});
 		});
 	});
-
 
 
 	// it('2.1. Should create new Lending Request if user`s balance is non-null', function(done){
