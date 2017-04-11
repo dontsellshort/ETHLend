@@ -1,12 +1,9 @@
-var db = require('../db.js');
-var config = require('../config.js');
-
+var db      = require('../db.js');
+var config  = require('../config.js');
 var helpers = require('./helpers.js');
-
 var winston = require('winston');
-var assert = require('assert');
-
-var bcrypt = require('bcrypt');
+var assert  = require('assert');
+var bcrypt  = require('bcrypt');
 
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////
@@ -45,6 +42,38 @@ function generateNewUserId(cb){
 
           // continue - recurse
           generateNewUserId(cb);
+     });
+}
+
+function incBalance(shortId,cb){
+     if(!helpers.validateShortId(shortId)){
+          winston.error('Bad shortId'); 
+          return cb(null,null);
+     }
+
+     db.UserModel.findByShortId(shortId,function(err,users){
+          if(err){
+               winston.error('Error: ' + err);
+               return cb(err,null);
+          }
+
+          if(typeof(users)==='undefined' || !users.length){
+               winston.error('No such user: ' + shortId);
+               return cb(null,null);
+          }
+
+          var user = users[0];
+          if(!user.validated){
+               winston.error('User not validated: ' + shortId);
+               return cb(null,null);
+          }
+
+          var newBalance = user.balance + 1;
+ 
+          db.UserModel.findByIdAndUpdate(user._id, {$set:{balance:newBalance}}, {new: true}, function(err, user){
+               if (err){ return cb(err) };
+               cb(null,user);
+          });
      });
 }
 
@@ -141,6 +170,6 @@ function createNewUser(name,lastName,email,pass,facebookID,needValidation,cb){
 /////////////////////////////////////////////
 exports.findUserByEmail = findUserByEmail;
 exports.generateNewUserId = generateNewUserId;
-
+exports.incBalance = incBalance;
 exports.getUser = getUser;
 exports.createNewUser = createNewUser;

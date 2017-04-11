@@ -16,19 +16,15 @@ var textParser       = bodyParser.text();
 var app              = express();
 var db;
 
-function pasteFiles(){
-  var out='', i$, len$, file;
-  for (i$ = 0, len$ = (arguments).length; i$ < len$; ++i$) {
-    file = (arguments)[i$];
-    out += eval(fs.readFileSync(file) + '');
-  }
-  return out;
-};
-
-
-
 var secret = config.get('service_name') + '-backend-secret';
-
+function pasteFiles(){
+     var out='', i$, len$, file;
+     for (i$ = 0, len$ = (arguments).length; i$ < len$; ++i$) {
+       file = (arguments)[i$];
+       out += eval(fs.readFileSync(file));
+     }
+     return out;
+};
 // ## CORS middleware
 //
 // see: http://stackoverflow.com/questions/7067966/how-to-allow-cors-in-express-nodejs
@@ -126,7 +122,7 @@ app.use(function(err, req, res, next){
      winston.error('ERROR detected: ' + err);
      winston.error(err.stack);
 
-    res.sendStatus(500, 'Something went wrong! Contact administrator');
+       res.sendStatus(500, 'Something went wrong! Contact administrator');
 });
 
 // Remove X-Powered-by: Express header...
@@ -150,9 +146,14 @@ app.get('/prepShutdown', function(req, res) {
 });
 
 // This is main APIs file
-pasteFiles('requests/users.js',
-           'requests/apis.js',
-           'requests/static_pages.js');
+
+// pasteFiles('requests/users.js',
+//               'requests/apis.js',
+//               'requests/static_pages.js');
+
+eval(fs.readFileSync('requests/users.js')+'');
+eval(fs.readFileSync('requests/apis.js')+'');
+eval(fs.readFileSync('requests/static_pages.js')+'');
 
 function initDb(dbInit){
      db = dbInit;
