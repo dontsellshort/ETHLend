@@ -45,7 +45,8 @@ function generateNewUserId(cb){
      });
 }
 
-function incBalance(shortId,cb){
+
+function changeBalanceBy(shortId,units,cb){
      if(!helpers.validateShortId(shortId)){
           winston.error('Bad shortId'); 
           return cb(null,null);
@@ -68,7 +69,7 @@ function incBalance(shortId,cb){
                return cb(null,null);
           }
 
-          var newBalance = user.balance + 1;
+          var newBalance = user.balance + units;
  
           db.UserModel.findByIdAndUpdate(user._id, {$set:{balance:newBalance}}, {new: true}, function(err, user){
                if (err){ return cb(err) };
@@ -167,9 +168,46 @@ function createNewUser(name,lastName,email,pass,facebookID,needValidation,cb){
      });
 }
 
+function createLendingRequest(data, cb){
+     var lendingRequest = new db.LendingRequestModel;
+     lendingRequest.eth_count                = data.eth_count;
+     lendingRequest.token_amount             = data.token_amount;
+     lendingRequest.token_name               = data.token_name;
+     lendingRequest.token_smartcontract      = data.token_smartcontract;
+     lendingRequest.token_infolink           = data.token_infolink;
+     lendingRequest.borrower_account_address = data.borrower_account_address;
+     lendingRequest.borrower_id              = data.borrower_id;
+     lendingRequest.days_to_lend             = data.days_to_lend;
+
+     lendingRequest.current_state            = 1;
+     lendingRequest.lender_account_address   = 'no_lender_address';  
+     lendingRequest.lender_id                = 'no_lender_id';               
+     lendingRequest.date_created             = Date.now();            
+     lendingRequest.date_modified            = Date.now();  
+     lendingRequest.days_left                = data.days_to_lend;       
+
+     lendingRequest.save(function(err){
+          if(err){
+               winston.error('Can not save lending request to DB: ' + err);
+               return cb(err);
+          }
+
+          changeBalanceBy(data.borrower_id, -1, function(err,user){
+               if(err){
+                    winston.error('Can`t change user`s balance: ' + err);
+                    return cb(err);
+               }     
+               return cb(null, lendingRequest,user)
+          })
+
+          
+     })
+}
+
 /////////////////////////////////////////////
 exports.findUserByEmail = findUserByEmail;
 exports.generateNewUserId = generateNewUserId;
-exports.incBalance = incBalance;
+exports.changeBalanceBy = changeBalanceBy;
 exports.getUser = getUser;
 exports.createNewUser = createNewUser;
+exports.createLendingRequest = createLendingRequest;
