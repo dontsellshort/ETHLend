@@ -330,7 +330,7 @@ describe('Users module and lending requests', function (T) {
           });
      });
 
-     it('2.1. Should create new Lending Request if user`s balance is non-null', function(done){
+     it('2.1. (Internal, no API) Should create new Lending Request if user`s balance is non-null', function(done){
           db.UserModel.findByEmail(targetEmail, function (err, users){
                SQ(err,null);
                SQ(users.length, 1);
@@ -361,7 +361,7 @@ describe('Users module and lending requests', function (T) {
          });
      });
 
-     it('2.2. should return a list of LRs for a selected user. Returns a JSON list of IDs.', function(done){
+     it('2.2. (Internal, no API) should return a list of LRs for a selected user. Returns a JSON list of IDs.', function(done){
           db.UserModel.findByEmail(targetEmail, function (err, users){
                SQ(err,null);
                SQ(users.length, 1);
@@ -397,7 +397,7 @@ describe('Users module and lending requests', function (T) {
           })
      });
 
-     it('2.3. should return a Lending Request', function (done) {
+     it('2.3. (Internal, no API) should return a Lending Request', function (done) {
           db.UserModel.findByEmail(targetEmail, function (err, users){
                SQ(err,null);
                SQ(users.length, 1);
@@ -419,7 +419,7 @@ describe('Users module and lending requests', function (T) {
           });
      });
 
-     it('2.4. should Lend', function (done) {
+     it('2.4. (Internal, no API) should Lend', function (done) {
           db.UserModel.findByEmail(targetEmail, function (err, users){
                SQ(err,null);
                SQ(users.length, 1);
@@ -444,7 +444,6 @@ describe('Users module and lending requests', function (T) {
                })
           });
      });
-
 
 
      // it('2.2. shouldn`t return a list of LRs for a selected user, if requester isn`t this user.', function (done) {
