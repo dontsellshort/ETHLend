@@ -7,24 +7,21 @@ var Schema = mongoose.Schema;
 
 //////
 var User = new Schema({ // user can log in using this one too
-     shortId:              {type: String, required:  true},
-     email:                {type: String, required:  true},
-     password:             {type: String, required:  true},
-     validated:            {type: Boolean, required: true},
-     balance:              {type: Number,  required: true, default: 0},
-
-     ethAddress:            {type: String, required:  true},
-     balanceFeeAddress:     {type: String, required:  true},
-     balanceFeeAmountInWei: {type: String, required:  true},
+     shortId:                  {type: String, required:  true},
+     email:                    {type: String, required:  true},
+     password:                 {type: String, required:  true},
+     validated:                {type: Boolean, required: true},
+     balance:                  {type: Number,  required: true, default: 0},
 
      //optional
-     validationSig:        {type: String, required:  false},
-     facebookID:           {type: String, required:  false},
-     resetSig:             {type: String, required:  false},
-     created:              {type: Date,  required:   true, default: Date.now},
-     modified:             {type: Date,  required:   true, default: Date.now},
+     ethAddress:               {type: String, required:  false},
+     validationSig:            {type: String, required:  false},
+     facebookID:               {type: String, required:  false},
+     resetSig:                 {type: String, required:  false},
+     created:                  {type: Date,  required:   true, default: Date.now},
+     modified:                 {type: Date,  required:   true, default: Date.now},
 
-     comment:              {type: String, required:  false}
+     comment:                  {type: String, required:  false}
 });
 
 User.statics.findByEmail = function(e,cb){

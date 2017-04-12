@@ -353,6 +353,27 @@ describe('Users module and lending requests', function (T) {
           });
      });
 
+     it('1.22. should update user data', function (done) {
+          var url = '/api/v1/auth/users/' + global.sessionUID;
+          var j = {
+               ethAddress:'0xoloololololo'
+          }
+          var data = JSON.stringify(j);
+
+          putDataAuth(9091, url, data, global.authToken, function (err, statusCode, h, dataOut) {
+               SQ(err, null);
+               SQ(statusCode, 200);
+
+               var url = '/api/v1/auth/users/' + global.sessionUID;
+               getData(9091, url, global.authToken, function (err, statusCode, h, dataOut) {
+                    SQ(err, null);
+                    SQ(statusCode, 200);
+                    SQ(JSON.parse(h).ethAddress, '0xoloololololo')
+                    done();
+               });              
+          });
+     });
+
      it('2.1. Should create new Lending Request if user`s balance is non-null ( we`ll create 2 LR`s)', function (done) {
           var url = '/api/v1/auth/users/' + global.sessionUID + '/lrs';
 

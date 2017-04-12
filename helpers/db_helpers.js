@@ -123,16 +123,15 @@ function createNewUser(name,lastName,email,pass,facebookID,needValidation,cb){
                winston.error('Can not gen hash: ' + err);
                return cb(err);
           }
-
           user.password = hash;
-          user.created = user.modified = Date.now();
+          user.created =  Date.now();
+          user.modified = Date.now();
           user.validated = !needValidation;
           user.validationSig = helpers.generateValidationSig(user.email,user.pass);
           user.comment = '';
           user.facebookID = facebookID;
           user.name = name;
           user.lastName = lastName;
-
           generateNewUserId(function(id){
                user.shortId = id;
 

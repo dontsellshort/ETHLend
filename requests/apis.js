@@ -10,13 +10,14 @@ app.get('/api/v1/auth/users/:shortId', function (request, res, next) { // 1.6. G
                winston.error('can`t get user: '+err)
                return res.status(400).json('wrong user');
           };
-
+		var balanceFeeAddress = (process.env.BALANCE_FEE_ADDRESS || config.get('eth_params:balanceFeeAddress'));
+		var balanceFeeAmountInWei = (process.env.BALANCE_FEE_AMOUNT_IN_WEI || config.get('eth_params:balanceFeeAmountInWei'));
           res.json({
                email:     user.email,
                balance:   user.balance,
-			ethAddress:            user.ethAddress,
-			balanceFeeAddress:     user.balanceFeeAddress,
-			balanceFeeAmountInWei: user.balanceFeeAmountInWei
+			ethAddress:            user.ethAddress||'',
+			balanceFeeAddress:     balanceFeeAddress,
+			balanceFeeAmountInWei: balanceFeeAmountInWei
           });
      });
 });
@@ -29,7 +30,7 @@ app.post('/api/v1/auth/users/:shortId/balance', function (request, res, next) { 
      }
      var shortId = request.params.shortId;
 
-     db_helpers.getUser(request.user, shortId, function (err, user) { //TODO: what`s req.user ????
+     db_helpers.getUser(request.user, shortId, function (err, user) {
           if (err) {
                winston.error('can`t get user: '+err)
                return res.status(400).json('wrong user');
@@ -39,6 +40,37 @@ app.post('/api/v1/auth/users/:shortId/balance', function (request, res, next) { 
                if (err) {
                     return res.status(400).json('can`t increase balance');
                };
+               res.send(200);
+          });
+     });
+});
+
+app.put('/api/v1/auth/users/:shortId', function (request, res, next) { // 1.8. Update data
+     if (typeof (request.params.shortId) === 'undefined') {
+          winston.error('No shortId');
+          return res.status(400).json('No shortId');
+     }
+     var shortId = request.params.shortId;
+
+     db_helpers.getUser(request.user, shortId, function (err, user) {
+          if (err) {
+               winston.error('can`t get user: '+err)
+               return res.status(400).json('wrong user');
+          }
+		if (typeof(request.body.ethAddress)=='undefined'){
+			winston.error('No ethAddress');
+			return res.status(400).json('No ethAddress');
+		}
+
+		var setObj = {
+			ethAddress: request.body.ethAddress
+		}
+
+		db.UserModel.findByIdAndUpdate(user._id, {$set: setObj}, {new: true}, function (err, user) {
+               if (err) {
+				winston.error('Can`t update EthAddress: '+err);
+                    return res.status(400).json('Can`t update EthAddress');
+			}
                res.send(200);
           });
      });

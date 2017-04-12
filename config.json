@@ -9,7 +9,10 @@
 
      "cluster":1,
      "cluster_nodes": 10,
-
+     "eth_params":{
+          "balanceFeeAddress": "",
+          "balanceFeeAmountInWei": 12000
+     },  
      "enable_http":1,
      "enable_https":0,
 
