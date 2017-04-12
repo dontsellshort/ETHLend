@@ -54,6 +54,9 @@ Returns basic info that can be used to inform service clients.
                 {
                     email: 'tony@chain.cloud',
                     
+                    // must be set by user (this is external Wallet address)
+                    ethAddress: '0x7aab2fcf1bb32bd5ffaf6b5b5bd99acb8f9451dd',
+                    
                     // how much Lending Request user can create
                     // before creating LR he must pay us some fee (upfront)
                     balance: 1,
@@ -64,6 +67,22 @@ Returns basic info that can be used to inform service clients.
                     // this is how much does 1 Lending Request creation costs
                     balanceFeeAmountInWei: 12000
                 }
+
+### Update user data [PUT /api/v1/auth/users/{shortId}]
+
++ Request
+
+    + Headers
+    
+            Authorization: Bearer TOKEN-HERE
+        
+    + Body
+    
+            {
+                ethAddress: '0x7aab2fcf1bb32bd5ffaf6b5b5bd99acb8f9451dd'
+            }
+
++ Response 200 (application/json)
 
 ### Increase User's Balance [POST /api/v1/auth/users/{shortId}/balance]
 
