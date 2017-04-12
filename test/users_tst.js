@@ -14,6 +14,9 @@ globalToken = '';
 SQ = assert.equal;
 NQ = assert.notEqual;
 targetEmail = 'kirill@chain.cloud';
+global.sessionUID = '';
+global.authToken = '';
+global.oneOfLrId = '';
 
 describe('Users module and lending requests', function (T) {
      before(function (done) {
@@ -115,6 +118,7 @@ describe('Users module and lending requests', function (T) {
                          SQ(users[0].shortId, p.shortId);
                          NQ(users[0].validationSig, '');
                          global.userId = users[0].shortId;
+                         global.sessionUID = users[0].shortId;
                          global.signature = users[0].validationSig;
                          return db.SubscriptionModel.findByShortId(userId, function (err, subs) {
                               SQ(err, null);
@@ -246,6 +250,7 @@ describe('Users module and lending requests', function (T) {
                SQ(statusCode, 200);
                parsed = JSON.parse(dataOut);
                globalToken = parsed.token;
+               global.authToken = parsed.token;
                NQ(globalToken.length, 0);
                done();
           });
@@ -314,101 +319,161 @@ describe('Users module and lending requests', function (T) {
           done();
      });
 
-     it('1.19. should increase user balance', function(done){
-          db.UserModel.findByEmail(targetEmail, function(err, users){
+     it('1.19. (Internal, no API) should increase user balance', function (done) {
+          db_helpers.changeBalanceBy(global.sessionUID, 3, function (err, user) {
+               console.log('user.balance: ' + user.balance)
                SQ(err, null);
-               SQ(users.length, 1);
-               SQ(users[0].validated, true);
-               SQ(users[0].balance, 0);
-               console.log('user balance is: '+users[0].balance);				
-               db_helpers.changeBalanceBy(users[0].shortId, 1, function(err,user){
-                    console.log('user.balance: '+user.balance)
-                    SQ(err,null);
-                    SQ(user.balance,1)
-                    done();			
+               SQ(user.balance, 3)
+               done();
+          });
+     });
+
+     it('1.20. should increase user balance', function (done) {
+          var url = '/api/v1/auth/users/' + global.sessionUID + '/balance';
+          postDataAuth(9091, url, '', global.authToken, function (err, statusCode, h, dataOut) {
+               SQ(err, null);
+               SQ(statusCode, 200);
+               url = '/api/v1/auth/users/' + global.sessionUID;
+               getData(9091, url, global.authToken, function (err, statusCode, h, dataOut) {
+                    SQ(err, null);
+                    SQ(statusCode, 200);
+                    SQ(JSON.parse(h).balance, 4)
+                    done()
                });
           });
      });
 
-     it('2.1. Should create new Lending Request if user`s balance is non-null', function(done){
-          db.UserModel.findByEmail(targetEmail, function (err, users){
-               SQ(err,null);
-               SQ(users.length, 1);
-               var user = users[0];
-               SQ(user.validated, true);
-               SQ(user.balance, 1);   
-
-               var lendingRequest = {
-                    eth_count:                120,
-                    token_amount:             10000,
-                    token_name:               'Augur tokens',
-                    token_smartcontract:      'https://etherscan.io/address/0xb533aae346245e2e05b23f420C140bCA2529b8a6#code',
-                    token_infolink:           'www.augur.com',
-                    borrower_account_address: '0xbd997cd2513c5f031b889d968de071eeafe07130',
-                    borrower_id:              user.shortId,   // creator shortId
-                    days_to_lend:             30 
-               }
-			
-               
-               console.log('user.balance (before lending request): '+user.balance)
-
-               db_helpers.createLendingRequest(lendingRequest, function(err,lr,user){
-                    SQ(err,null);
-                    NQ(lr,null);
-                    SQ(user.balance, 0); 
-                    console.log('user.balance (after lending request): '+user.balance)
-                    done();
-
-               });
-         });
+     it('1.21. should return user data', function (done) {
+          var url = '/api/v1/auth/users/' + global.sessionUID;
+          getData(9091, url, global.authToken, function (err, statusCode, h, dataOut) {
+               SQ(err, null);
+               SQ(statusCode, 200);
+               SQ(JSON.parse(h).balance, 4)
+               done()
+          });
      });
 
+     it('2.1. Should create new Lending Request if user`s balance is non-null ( we`ll create 2 LR`s)', function (done) {
+          var url = '/api/v1/auth/users/' + global.sessionUID + '/lrs';
 
+          var j = {
+               eth_count: 120,
+               token_amount: 10000,
+               token_name: 'Augur tokens',
+               token_smartcontract: 'https://etherscan.io/address/0xb533aae346245e2e05b23f420C140bCA2529b8a6#code',
+               token_infolink: 'www.augur.com',
+               borrower_account_address: 'ololo',
+               borrower_id: global.sessionUID, // creator shortId
+               days_to_lend: 30
+          };
+          data = JSON.stringify(j);
 
+          postDataAuth(9091, url, data, global.authToken, function (err, statusCode, h, dataOut) {
+               SQ(statusCode, 200);
+               SQ(err, null);
+               NQ(JSON.parse(dataOut).id, null);
 
+               postDataAuth(9091, url, data, global.authToken, function (err, statusCode, h, dataOut) {
+                    SQ(statusCode, 200);
+                    SQ(err, null);
+                    NQ(JSON.parse(dataOut).id, null);
+                    LR = JSON.parse(dataOut);
+                    global.oneOfLrId = LR.id;
+                    done();
+               });
+          });
+     });
 
+     it('2.2. should return a list of LRs for a selected user. Returns a JSON list of IDs.', function (done) {
+          var url = '/api/v1/auth/users/' + global.sessionUID + '/lrs';
+          getData(9091, url, global.authToken, function (err, statusCode, h, dataOut) {
+               SQ(err, null);
+               SQ(statusCode, 200);
+               NQ(JSON.parse(h).ids, null);
+               NQ(JSON.parse(h).ids.length, 0);
+               done();
+          });
+     });
 
-     // it('2.2. Should create new Lending Request if user`s balance is non-null', function (done) {
-     // 	SQ(true, true);
-     // 	done();
+     it('2.3. should return a Lending Request', function (done) {
+          var url = '/api/v1/auth/users/' + global.sessionUID + '/lrs/' + global.oneOfLrId;
+          getData(9091, url, global.authToken, function (err, statusCode, h, dataOut) {
+               SQ(err, null);
+               SQ(statusCode, 200);
+               SQ(JSON.parse(h).days_left,30);
+               done();
+          });
+     });
+
+     it('2.4. should Lend', function (done) {
+          var lrId = global.oneOfLrId;
+          var j = {
+               date_modified: Date.now(),
+               lender_id: global.sessionUID,
+               lender_account_address: ''
+          };
+          var data = JSON.stringify(j);
+          var url = '/api/v1/auth/users/'+global.sessionUID+'/lrs/'+global.oneOfLrId+'/lend'
+          postDataAuth(9091, url, data, global.authToken, function (err, statusCode, h, dataOut) {
+               SQ(statusCode, 200);
+               var parsed = JSON.parse(dataOut)
+               SQ(parsed.minutes_left,1440)
+               done();
+          });
+
+     });
+
+     // it('2.5. Should create new Lending Request if user`s balance is non-null', function(done){
+     //      db.UserModel.findByEmail(targetEmail, function (err, users){
+     //           SQ(err,null);
+     //           SQ(users.length, 1);
+     //           var user = users[0];
+     //           SQ(user.validated, true);
+     //           NQ(user.balance,0);
+     //           var url = '/api/v1/auth/users/' + user.shortId + '/lrs';
+
+     //           var j = {
+     //                eth_count: 120,
+     //                token_amount: 10000,
+     //                token_name: 'Augur tokens',
+     //                token_smartcontract: 'https://etherscan.io/address/0xb533aae346245e2e05b23f420C140bCA2529b8a6#code',
+     //                token_infolink: 'www.augur.com',
+     //                borrower_account_address: '',
+     //                borrower_id: user.shortId,   // creator shortId
+     //                days_to_lend: 30
+     //           };
+     //           data = JSON.stringify(j);
+     //           console.log('user.balance is: ' + user.balance)
+     //           postData(9091, url, data, function (err, statusCode, h, dataOut) {
+     //                SQ(err,null);
+     //                console.log(dataOut)
+     //                done()
+     //           });
+     //      })
      // });
 
+     // // it('2.6. Shouldn`t create new Lending Request if user`s balance is null', function(done){
+     // // });
 
+     // // it('2.7. Shouldn`t create new Lending Request if currentUser!=req.userId', function(done){
+     // // });
 
-     // it('2.1. should return a list of LRs for a selected user. Returns a JSON list of IDs.', function (done) {
-     // 	SQ(true, true);
-     // 	done();
-     // });
+     // // //------------
+     // // it('2.8. Should return a list of LRs for a selected user', function (done) {
+     // // });
 
-     // it('2.2. shouldn`t return a list of LRs for a selected user, if requester isn`t this user.', function (done) {
-     // 	SQ(true, true);
-     // 	done();
-     // });
+     // // it('2.9. Shouldn`t return a list of LRs for a selected user if currentUser!=req.userId', function (done) {
+     // // });
 
+     // // it('2.10. Should return a Lending Request', function (done) {
+     // // });
 
-     // it('2.4. shouldn`t create new Lending Request if user`s balance is null', function (done) {
-     // 	SQ(true, true);
-     // 	done();
-     // });
+     // // it('2.11. Shouldn`t return a Lending Request if currentUser!=req.userId', function (done) {
+     // // });
 
-     // it('2.5. should return a Lending Request', function (done) {
-     // 	SQ(true, true);
-     // 	done();
-     // });
+     // // it('2.12. Should lend', function (done) {
+     // // });
 
-     // it('2.6. shouldn`t return a Lending Request', function (done) {
-     // 	SQ(true, true);
-     // 	done();
-     // });
-
-     // it('2.7. should lend', function (done) {
-     // 	SQ(true, true);
-     // 	done();
-     // });
-
-     // it('2.8. shouldn`t lend', function (done) {
-     // 	SQ(true, true);
-     // 	done();
-     // });
-
-});
+     // // it('2.13. Shouldn`t lend if currentUser!=req.userId', function (done) {
+     // // });
+})
