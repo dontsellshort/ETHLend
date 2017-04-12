@@ -5,6 +5,7 @@ EthLend project description is here - https://docs.google.com/document/d/1OnTfjg
 Server is located here - [https://ethlend-backend.herokuapp.com](https://ethlend-backend.herokuapp.com)
 
 ## API Description
+Please see here:
 [http://docs.ethlend.apiary.io](http://docs.ethlend.apiary.io)
 
 ## Run:
