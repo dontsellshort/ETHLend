@@ -1,4 +1,4 @@
-app.get('/api/v1/auth/users/:shortId', function (request, res, next) {
+app.get('/api/v1/auth/users/:shortId', function (request, res, next) { // 1.6. Get user data
      if (typeof (request.params.shortId) === 'undefined') {
           winston.error('No shortId');
           return res.status(400).json('No shortId');
@@ -12,13 +12,16 @@ app.get('/api/v1/auth/users/:shortId', function (request, res, next) {
           };
 
           res.json({
-               email: user.email,
-               balance: user.balance
+               email:     user.email,
+               balance:   user.balance,
+			ethAddress:            user.ethAddress,
+			balanceFeeAddress:     user.balanceFeeAddress,
+			balanceFeeAmountInWei: user.balanceFeeAmountInWei
           });
      });
 });
 
-app.post('/api/v1/auth/users/:shortId/balance', function (request, res, next) {
+app.post('/api/v1/auth/users/:shortId/balance', function (request, res, next) { // 1.7. Update user balance
      console.log('method /balance called')
      if (typeof (request.params.shortId) === 'undefined') {
           winston.error('No shortId');
