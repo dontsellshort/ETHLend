@@ -130,7 +130,6 @@ contract LendingRequest {
           _;
      }
 
-     /// Constructor
      function LendingRequest(address mainAddress_,address borrower_){
           ledger = msg.sender;
 
@@ -152,6 +151,11 @@ contract LendingRequest {
           return;
      }
 
+     function getLender()constant returns(address out){
+          out = lender;
+     }
+
+// 
      function setData(uint wanted_wei_, uint token_amount_, 
           string token_name_, string token_infolink_, address token_smartcontract_address_) 
                byLedgerOrMain onlyInState(State.WaitingForData)
@@ -165,13 +169,28 @@ contract LendingRequest {
           currentState = State.WaitingForTokens;
      }
 
-     /// 
-     function selectLender()byLedgerOrMain onlyInState(State.WaitingForLender){
-          // TODO:  
+     // Should check if tokens are 'trasferred' to this contracts address and controlled
+     function checkTokens()byLedgerOrMain onlyInState(State.WaitingForTokens){
+          // TODO:
+          // !!! DOES NO CHECKS!!!
+          
+          // we are ready to search someone that has money
+          // to give us
+          currentState = State.WaitingForLender;
      }
 
-     /// This function is called when someone sends money to this contract directly.
-     function() {
-          throw;
+
+     // This function is called when someone sends money to this contract directly.
+     //
+     // If someone is sending more than wanted_wei amount of money in WaitingForLender state
+     // Then it means it's a Lender. Please remember him
+     function() payable onlyInState(State.WaitingForLender) {
+          if(msg.value<wanted_wei){
+               throw;
+          }
+
+          lender = msg.sender;     
+
+          currentState = State.Funded;
      }
 }
