@@ -37,7 +37,7 @@ User.statics.findByFacebookID = function(id,cb){
 }
 //––––––––––––––––––––––––––––––––––––––––––––
 
-var LendingRequests = new Schema({
+var LendingRequest = new Schema({
      current_state:            {type: Number, required: true},
 
      eth_count:                {type: Number, required: true},
@@ -58,9 +58,6 @@ var LendingRequests = new Schema({
      days_left:                {type: Number, required: true}
 });
 
-
-
-//––––––––––––––––––––––––––––––––––––––––––––
 var Subscription = new Schema({
      userShortId: {type: String, required:true},
 
@@ -142,9 +139,11 @@ function removeDb(cb){
 // Exports:
 var UserModel         = mongoose.model('User', User);
 var SubscriptionModel = mongoose.model('Subscription', Subscription);
+var LendingRequestModel = mongoose.model('LendingRequest', LendingRequest);
 
 module.exports.UserModel         = UserModel;
 module.exports.SubscriptionModel = SubscriptionModel;
+module.exports.LendingRequestModel = LendingRequestModel;
 
 module.exports.blockLogging        = blockLogging;
 module.exports.connectToDb         = connectToDb;

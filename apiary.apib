@@ -5,6 +5,24 @@ HOST: http://ethlend.herokuapps.com/
 
 API description for EthLend project.
 
+## Basic Info [/api/v1/info]
+
+### Get Basic Info [GET /api/v1/info]
+
+Returns basic info that can be used to inform service clients.
+
++ Response 201 (application/json)
+
+    + Body
+    
+            {
+                "eth_is_enabled": true,
+                "eth_node": "http://ethnode.chain.cloud:8545",
+                "eth_main_account": "0xb9af8aa42c97f5a1f73c6e1a683c4bf6353b83e7",
+                "eth_main_account_link": "https://kovan.etherscan.io/address/0xb9af8aa42c97f5a1f73c6e1a683c4bf6353b83e7",
+                "eth_balance_wei": "123112"
+            }
+            
 ## Users [/api/v1/users]
 
 ### Create new user [POST /api/v1/users]
@@ -135,6 +153,7 @@ Get a list of LRs for a selected user. Returns a JSON list of IDs.
 ### Create new Lending Request [POST /api/v1/auth/users/{shortId}/lrs]
 
 If user's *balance* is non-null -> user can Create new Lending Request.
+LR will be in 'waiting for tokens' state
             
 + Parameters
     + shortId - User ID
@@ -180,6 +199,7 @@ If user's *balance* is non-null -> user can Create new Lending Request.
 + Response 200 (application/json)
     
         {
+            // 0 - waiting for data
             // 1 - waiting for tokens
             // 2 - cancelled
             // 3 - waiting for lender
