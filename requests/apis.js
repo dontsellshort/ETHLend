@@ -151,7 +151,8 @@ app.post('/api/v1/auth/users/:shortId/lrs/:id/lend', function (request, res, nex
           var setObj = {
                date_modified: Date.now(),
                lender_id: userId,
-               lender_account_address: '0x6cc2d616e56e155d8a06e65542fdb9bd2d7f3c2e'
+               lender_account_address: '',
+			current_state: 4
           };
 
           db.LendingRequestModel.findByIdAndUpdate(lrId, {$set: setObj}, {new: true}, function (err, lr) {
@@ -161,7 +162,7 @@ app.post('/api/v1/auth/users/:shortId/lrs/:id/lend', function (request, res, nex
                };
 
                var responseObj = {
-                    address_to_send: "0xbd997cd2513c5f031b889d968de071eeafe07130",
+                    address_to_send: "",
                     eth_count: 120, //TODO: ????
                     minutes_left: 1440 // 1 day left until this LR moves back to 'waiting for lender' state
                }

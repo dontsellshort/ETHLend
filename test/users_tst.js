@@ -412,15 +412,25 @@ describe('Users module and lending requests', function (T) {
                lender_id: global.sessionUID,
                lender_account_address: ''
           };
+
           var data = JSON.stringify(j);
           var url = '/api/v1/auth/users/'+global.sessionUID+'/lrs/'+global.oneOfLrId+'/lend'
+ 
           postDataAuth(9091, url, data, global.authToken, function (err, statusCode, h, dataOut) {
+               SQ(err, null);
                SQ(statusCode, 200);
                var parsed = JSON.parse(dataOut)
                SQ(parsed.minutes_left,1440)
-               done();
-          });
+               var url = '/api/v1/auth/users/' + global.sessionUID + '/lrs/' + global.oneOfLrId;
 
+               getData(9091, url, global.authToken, function (err, statusCode, h, dataOut) {
+                    SQ(err, null);
+                    SQ(statusCode, 200);
+                    var parsed = JSON.parse(h);
+                    SQ(parsed.current_state,4);
+                    done();
+               });
+          });
      });
 
      // it('2.5. Should create new Lending Request if user`s balance is non-null', function(done){
