@@ -6,12 +6,13 @@ app.get('/api/v1/auth/users/:shortId',function(request, res, next) {
 	}
 
 	var shortId = request.params.shortId;
-	db_helpers.getUser(req.user,shortId,function(err,user){
+	db_helpers.getUser(request.user,shortId,function(err,user){
 		if(err){ 
-			return res.status(400).json('No shortId'); 
+               winston.error('Can not get user');
+			return res.status(400).json('Bad user'); 
 		};
-		res.json({ email:user.email, balance:user.balance });
 
+		res.json({ email:user.email, balance:user.balance });
 	});
 });
 
