@@ -196,9 +196,8 @@ function createLendingRequest(data, cb){
                     winston.error('Can`t change user`s balance: ' + err);
                     return cb(err);
                }     
-               return cb(null, lendingRequest,user)
+               return cb(null,lendingRequest,user);
           })
-
      })
 }
 
