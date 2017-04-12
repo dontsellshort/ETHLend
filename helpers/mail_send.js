@@ -128,10 +128,11 @@ function makeBasicReport(templateFile,cb){
 }
 
 function sendEmail(sendTo,subjText,text,textHtml,attachmentFile,dont_send,cb){
-    if (dont_send===true){ 
-      console.log('message sent (emulated)'); 
-      return cb(null, {message:200})
-    };
+     if(dont_send){ 
+          console.log('Message sent (emulated)'); 
+          return cb(null, {message:200});
+     }
+     
      var transport = nodemailer.createTransport("SMTP", {
           service: config.get('mail:service'),
           auth: {

@@ -5,6 +5,24 @@ HOST: http://ethlend.herokuapps.com/
 
 API description for EthLend project.
 
+## Basic Info [/api/v1/info]
+
+### Get Basic Info [GET /api/v1/info]
+
+Returns basic info that can be used to inform service clients.
+
++ Response 201 (application/json)
+
+    + Body
+    
+            {
+                "eth_is_enabled": true,
+                "eth_node": "http://ethnode.chain.cloud:8545",
+                "eth_main_account": "0xb9af8aa42c97f5a1f73c6e1a683c4bf6353b83e7",
+                "eth_main_account_link": "https://kovan.etherscan.io/address/0xb9af8aa42c97f5a1f73c6e1a683c4bf6353b83e7",
+                "eth_balance_wei": "123112"
+            }
+            
 ## Users [/api/v1/users]
 
 ### Create new user [POST /api/v1/users]
@@ -36,10 +54,35 @@ API description for EthLend project.
                 {
                     email: 'tony@chain.cloud',
                     
+                    // must be set by user (this is external Wallet address)
+                    ethAddress: '0x7aab2fcf1bb32bd5ffaf6b5b5bd99acb8f9451dd',
+                    
                     // how much Lending Request user can create
                     // before creating LR he must pay us some fee (upfront)
-                    balance: 1
+                    balance: 1,
+                    
+                    // to increase balance please send Fee money here
+                    balanceFeeAddress: '0xbd997cd2513c5f031b889d968de071eeafe07130',
+                    
+                    // this is how much does 1 Lending Request creation costs
+                    balanceFeeAmountInWei: 12000
                 }
+
+### Update user data [PUT /api/v1/auth/users/{shortId}]
+
++ Request
+
+    + Headers
+    
+            Authorization: Bearer TOKEN-HERE
+        
+    + Body
+    
+            {
+                ethAddress: '0x7aab2fcf1bb32bd5ffaf6b5b5bd99acb8f9451dd'
+            }
+
++ Response 200 (application/json)
 
 ### Increase User's Balance [POST /api/v1/auth/users/{shortId}/balance]
 
@@ -119,16 +162,19 @@ Get a list of LRs for a selected user. Returns a JSON list of IDs.
     
 + Response 200 (application/json)
     
-        [
-            1234342344,
-            7879878789,
-            2423423423
-        ]
-        
+        {
+            ids: 
+            [
+                1234342344,
+                7879878789,
+                2423423423
+            ]
+        }
 
 ### Create new Lending Request [POST /api/v1/auth/users/{shortId}/lrs]
 
 If user's *balance* is non-null -> user can Create new Lending Request.
+LR will be in 'waiting for tokens' state
             
 + Parameters
     + shortId - User ID
@@ -174,6 +220,7 @@ If user's *balance* is non-null -> user can Create new Lending Request.
 + Response 200 (application/json)
     
         {
+            // 0 - waiting for data
             // 1 - waiting for tokens
             // 2 - cancelled
             // 3 - waiting for lender
@@ -201,6 +248,11 @@ If user's *balance* is non-null -> user can Create new Lending Request.
             
             days_to_lend: 30,
             days_left: 0,
+            
+            // if in state 4 - waiting for loan
+            "address_to_send": "0xb533aae346245e2e05b23f420C140bCA2529b8a6",
+            "eth_count": 120,
+            "minutes_left": 1440    // lender should send us eth_count ETHs until time is left
         }
         
 ### Lend [POST /api/v1/auth/users/{shortId}/lrs/{id}/lend]

@@ -30,12 +30,12 @@ app.post('/api/v1/users',  function(request, res, next) {
      // 0 - validate email
      if(!helpers.validateEmail(email)){
           winston.error('Bad email');
-         return res.status(400).json('Bad email');
+          return res.status(400).json('Bad email');
      }
 
      if(!helpers.validatePass(pass)){
           winston.error('Bad pass');
-         return res.status(400).json('Bad pass');
+          return res.status(400).json('Bad pass');
      }
 
      var dontSend = false;
@@ -46,14 +46,14 @@ app.post('/api/v1/users',  function(request, res, next) {
      // 1 - check if already exists
      db_helpers.findUserByEmail(email,function(err,user){
           if(err){
-               winston.error('Error: ' + err);
+              winston.error('Error: ' + err);
               return res.status(400).json('Error: ' + err);
           }
 
           if(typeof(user)!=='undefined' && user!==null){
                // already exists
                winston.info('User ' + email + ' already exists');
-              return res.status(400).json('User ' + email + ' already exists');
+               return res.status(400).json('User ' + email + ' already exists');
           }
 
           // 2 - create user + subscription
@@ -67,29 +67,27 @@ app.post('/api/v1/users',  function(request, res, next) {
                     return res.status(400).json('Can not create new user: ' + err);
                }
 
-                    // 4 - send validation e-mail
-                    var validationSig = user.validationSig;
-                    var validationLink = config.get('mail:validation_link') 
-                         + '?sig=' + validationSig 
-                         + '&id=' + user.shortId;
+               // 4 - send validation e-mail
+               var validationSig = user.validationSig;
+               var validationLink = config.get('mail:validation_link') 
+                    + '?sig=' + validationSig 
+                    + '&id=' + user.shortId;
 
-                    var dontSend = false;
-                    if(typeof(request.query.do_not_send_email)!=='undefined'){
-                        dontSend = true;
+               var dontSend = false;
+               if(typeof(request.query.do_not_send_email)!=='undefined'){
+                   dontSend = true;
+               }
+
+               mail_send.sendUserValidation(user.email, validationLink,dontSend, function(err){
+                    if(err){
+                         winston.error('Can`t send email: ' + err);
+                         return res.status(400).json('Can`t send email: ' + err);
                     }
 
-                    mail_send.sendUserValidation(user.email, validationLink,dontSend, function(err){
-                         if(err){
-                              winston.error('Can`t send email: ' + err);
-                              return res.status(400).json('Can`t send email: ' + err);
-                         }
-
-                         createUserContinue(user,res);
-                    });
-
+                    createUserContinue(user,res);
+               });
           });
      });
-
 });
 
 function createUserContinue(user,res){
@@ -110,11 +108,11 @@ function createUserContinue(user,res){
 app.post('/api/v1/users/:shortId/validation',  function(request, res, next){
      if(typeof(request.params.shortId)==='undefined'){
           winston.error('No shortId');
-         return res.status(400).json('No shortId');
+          return res.status(400).json('No shortId');
      }
      if(typeof(request.query.sig)==='undefined'){
           winston.error('No signature');
-         return res.status(400).json('No signature');
+          return res.status(400).json('No signature');
      }
 
      // 1 - get user
@@ -127,7 +125,7 @@ app.post('/api/v1/users/:shortId/validation',  function(request, res, next){
      db.UserModel.findByShortId(shortId, function(err,users){
           if(err){
                winston.error('Error: ' + err);
-              return res.status(400).json('Error: ' + err);
+               return res.status(400).json('Error: ' + err);
           }
 
           if(!users || !users.length){
@@ -186,7 +184,7 @@ app.post('/api/v1/users/:email/reset_password_request',  function(request, res, 
      winston.info('Reset password request');
      if(typeof(request.params.email)==='undefined'){
           winston.error('No email');
-         return res.status(400).json('No email');
+          return res.status(400).json('No email');
      }
 
      // 1 - get user
@@ -373,14 +371,14 @@ app.post('/api/v1/users/:email/login', function (request, res, next) {
 
      if(typeof(request.params.email)==='undefined'){
           winston.error('No email');
-         return res.status(400).json('No email');
+          return res.status(400).json('No email');
      }
      if(typeof(request.body)==='undefined' || request.body===null){
           return next();
      } 
      if(typeof(request.body.pass)==='undefined'){
           winston.error('No pass');
-         return res.status(400).json('No pass');
+          return res.status(400).json('No pass');
      }
 
      var email = helpers.decodeUrlEnc(request.params.email);
@@ -389,7 +387,7 @@ app.post('/api/v1/users/:email/login', function (request, res, next) {
      // 0 - validate email
      if(!helpers.validateEmail(email)){
           winston.error('Bad email');
-         return res.status(400).json('Bad email');
+          return res.status(400).json('Bad email');
      }
 
      // 1 - find user
@@ -398,12 +396,12 @@ app.post('/api/v1/users/:email/login', function (request, res, next) {
      db.UserModel.findByEmail(email,function(err,users){
           if(err){
                winston.error('Error: ' + err);
-              return res.status(400).json('Error: ' + err);
+               return res.status(400).json('Error: ' + err);
           }
 
           if(typeof(users)==='undefined' || !users.length){
                winston.error('No such user: ' + email);
-              return res.status(400).json('No such user: ' + email);
+               return res.status(400).json('No such user: ' + email);
           }
 
           // 2 - check if already validated
@@ -422,12 +420,12 @@ app.post('/api/v1/users/:email/login', function (request, res, next) {
           bcrypt.hash(pass, config.get('auth:salt'), function(err, hash) {
                if(err){
                     winston.error('Can not hash password for check: ' + email);
-                   return res.status(400).json('Bad password result for: ' + email);
+                    return res.status(400).json('Bad password result for: ' + email);
                }
                     
                if(user.password!==hash){
                     winston.error('Bad password result for: ' + email);
-                   return res.status(400).json('Bad password result for: ' + email);
+                    return res.status(400).json('Bad password result for: ' + email);
                }
 
                // 4 - if OK -> give jwt
