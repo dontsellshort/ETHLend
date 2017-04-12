@@ -5,7 +5,7 @@ app.get('/api/v1/auth/users/:shortId', function (request, res, next) {
      }
 
      var shortId = request.params.shortId;
-     db_helpers.getUser(req.user, shortId, function (err, user) { //TODO: what`s req.user ????
+     db_helpers.getUser(request.user, shortId, function (err, user) { //TODO: what`s req.user ????
           if (err) {
                return res.status(400).json('wrong user');
           };
@@ -24,7 +24,7 @@ app.post('/api/v1/auth/users/:shortId/balance', function (request, res, next) {
      }
      var shortId = request.params.shortId;
 
-     db_helpers.getUser(req.user, shortId, function (err, user) { //TODO: what`s req.user ????
+     db_helpers.getUser(request.user, shortId, function (err, user) { //TODO: what`s req.user ????
           if (err) {
                return res.status(400).json('wrong user');
           }
@@ -45,7 +45,7 @@ app.get('auth/users/:shortId/lrs', function (request, res, next) { //2.1. Get a 
      };
      var shortId = request.params.shortId;
 
-     db_helpers.getUser(req.user, shortId, function (err, user) { //TODO: what`s req.user ????
+     db_helpers.getUser(request.user, shortId, function (err, user) { //TODO: what`s req.user ????
           if (err) {
                return res.status(400);
           }
@@ -67,7 +67,7 @@ app.post('auth/users/:shortId/lrs', function (request, res, next) { //2.2. Creat
      };
      var shortId = request.params.shortId;
 
-     db_helpers.getUser(req.user, shortId, function (err, user) { //TODO: what`s req.user ????
+     db_helpers.getUser(request.user, shortId, function (err, user) { //TODO: what`s req.user ????
           if (err) {
                return res.status(400);
           }

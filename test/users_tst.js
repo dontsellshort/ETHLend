@@ -446,6 +446,30 @@ describe('Users module and lending requests', function (T) {
      });
 
      it('2.5. Should create new Lending Request if user`s balance is non-null', function(done){
+          db.UserModel.findByEmail(targetEmail, function (err, users){
+               SQ(err,null);
+               SQ(users.length, 1);
+               var user = users[0];
+               SQ(user.validated, true);
+               NQ(user.balance,0);
+               var url = '/api/v1/auth/users/' + user.shortId + '/lrs';
+ 
+               var j = {
+                    eth_count: 120,
+                    token_amount: 10000,
+                    token_name: 'Augur tokens',
+                    token_smartcontract: 'https://etherscan.io/address/0xb533aae346245e2e05b23f420C140bCA2529b8a6#code',
+                    token_infolink: 'www.augur.com',
+                    borrower_account_address: '0xbd997cd2513c5f031b889d968de071eeafe07130',
+                    borrower_id: user.shortId,   // creator shortId
+                    days_to_lend: 30
+               };
+               data = JSON.stringify(j);
+
+               postData(9091, url, data, function (err, statusCode, h, dataOut) {
+
+               });
+          })
      });
 
      it('2.6. Shouldn`t create new Lending Request if user`s balance is null', function(done){
@@ -472,25 +496,4 @@ describe('Users module and lending requests', function (T) {
 
      it('2.13. Shouldn`t lend if currentUser!=req.userId', function (done) {
      });
-
-     // it('2.4. shouldn`t create new Lending Request if user`s balance is null', function (done) {
-     // 	SQ(true, true);
-     // 	done();
-     // });
-
-     // it('2.6. shouldn`t return a Lending Request', function (done) {
-     // 	SQ(true, true);
-     // 	done();
-     // });
-
-     // it('2.7. should lend', function (done) {
-     // 	SQ(true, true);
-     // 	done();
-     // });
-
-     // it('2.8. shouldn`t lend', function (done) {
-     // 	SQ(true, true);
-     // 	done();
-     // });
-
 })
