@@ -28,7 +28,7 @@ app.post('/api/v1/auth/users/:shortId/balance',function(request, res, next) {
 			return res.status(400).json('can`t get user'); 
 		};
 
-		db_helpers.changeBalanceBy(shortId,function(err,user){
+		db_helpers.changeBalanceBy(shortId,1,function(err,user){
 			if(err){ 
 				return res.status(400).json('can`t increase balance'); 
 			};
