@@ -9,9 +9,10 @@
 
 #env ETH_NODE=http://ethnode.chain.cloud:8545 mocha --reporter spec -t 90000 -g "Contract"
 
-env ETH_NODE=http://localhost:8989 mocha --reporter spec -t 90000 -g "Contract"
+env ETH_NODE=http://localhost:8989 mocha --reporter spec -t 90000 -g "Users"
 
-#-g "Users"
+#-g "Contract"
+
 
 #-g "What"
 

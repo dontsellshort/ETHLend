@@ -76,12 +76,19 @@ contract LendingRequest {
      
      enum State {
           WaitingForData,
+
+          // borrower set data
           WaitingForTokens,
           Cancelled,
+
+          // borrower sent us tokens
           WaitingForLender,
-          // lender must be set
+          // lender is set 
+          // TODO: not used, moving immediately to Funded
           WaitingForLoan,
+          // lender must send money
           Funded,
+
           WaitingForPayback,
           Default,
           PaybackReceived,

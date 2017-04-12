@@ -478,7 +478,19 @@ describe('Contract - Ledger', function() {
           var diff = initialBalanceLender - current;
           assert.equal(diffWithGas(wantedWei,diff),true);
           done();
-     });
+     })
+
+     it('should move to Funded state',function(done){
+          assert.equal(ledgerContract.getLrCountForUser(borrower),1);
+          
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          var state = lr.getState();
+          // "Waiting for lender" state
+          assert.equal(state.toString(),5);
+          done();
+     })
 })
 
 
