@@ -18,6 +18,9 @@ var accounts;
 var creator;
 var borrower;
 var feeCollector;
+var initialBalanceCreator = 0;
+var initialBalanceBorrower = 0;
+var initialBalanceFeeCollector = 0;
 
 var ledgerContractAddress;
 var ledgerContract;
@@ -32,6 +35,11 @@ var requestAbi;
 
 // init BigNumber
 var unit = new BigNumber(Math.pow(10,18));
+
+function diffWithGas(mustBe,diff){
+     var gasFee = 1000000;
+     return (diff>=mustBe) && (diff<=mustBe + gasFee);
+}
 
 function getContractAbi(contractName,cb){
      var file = './contracts/EthLend.sol';
@@ -93,8 +101,8 @@ function deployLedgerContract(data,cb){
                     // TX can be processed in 1 minute or in 30 minutes...
                     // So we can not be sure on this -> result can be null.
                     web3.eth.getTransactionReceipt(c.transactionHash, function(err, result){
-                         console.log('RESULT: ');
-                         console.log(result);
+                         //console.log('RESULT: ');
+                         //console.log(result);
 
                          assert.equal(err, null);
                          assert.notEqual(result, null);
@@ -157,8 +165,8 @@ function deployContract(data,cb){
                     // TX can be processed in 1 minute or in 30 minutes...
                     // So we can not be sure on this -> result can be null.
                     web3.eth.getTransactionReceipt(c.transactionHash, function(err, result){
-                         console.log('RESULT: ');
-                         console.log(result);
+                         //console.log('RESULT: ');
+                         //console.log(result);
 
                          assert.equal(err, null);
                          assert.notEqual(result, null);
@@ -225,6 +233,87 @@ describe('Contract - Ledger', function() {
           console.log('Creator initial balance is: ');
           console.log(initialBalanceCreator.toString(10));
 
+          done();
+     });
+
+     it('should get initial borrower balance',function(done){
+          initialBalanceBorrower = web3.eth.getBalance(borrower);
+
+          console.log('Borrower initial balance is: ');
+          console.log(initialBalanceCreator.toString(10));
+
+          done();
+     });
+
+     it('should get initial feeCollector balance',function(done){
+          initialBalanceFeeCollector = web3.eth.getBalance(feeCollector);
+
+          console.log('FeeCollector initial balance is: ');
+          console.log(initialBalanceFeeCollector.toString(10));
+          done();
+     });
+
+     it('should get current count of LR',function(done){
+          var count = ledgerContract.getLrCount();
+          assert.equal(count,0);
+          done();
+     })
+
+     it('should get intial count of LR for borrower',function(done){
+          var count = ledgerContract.getLrCountForUser(borrower);
+          assert.equal(count,0);
+          done();
+     })
+
+     it('should issue new LR',function(done){
+          // 0.2 ETH
+          var amount = 200000000000000000;
+
+          // this should be called by borrower
+          ledgerContract.createNewLendingRequest(
+               {
+                    from: borrower,               
+                    value: amount,
+                    gas: 2900000 
+               },function(err,result){
+                    assert.equal(err,null);
+
+                    web3.eth.getTransactionReceipt(result, function(err, r2){
+                         assert.equal(err, null);
+
+                         done();
+                    });
+               }
+          );
+     });
+
+     it('should get updated count of LR',function(done){
+          var count = ledgerContract.getLrCount();
+          assert.equal(count,1);
+          done();
+     })
+
+     it('should get updated count of LR for borrower',function(done){
+          var count = ledgerContract.getLrCountForUser(borrower);
+          assert.equal(count,1);
+          done();
+     })
+
+     it('should get updated feeCollector balance',function(done){
+          var current = web3.eth.getBalance(feeCollector);
+          var feeAmount = 100000000000000000;
+
+          var diff = current - initialBalanceFeeCollector;
+          assert.equal(diff.toString(10),feeAmount);
+          done();
+     });
+
+     it('should get updated borrower balance',function(done){
+          var current = web3.eth.getBalance(borrower);
+          var mustBe = 200000000000000000;
+
+          var diff = initialBalanceBorrower - current;
+          assert.equal(diffWithGas(mustBe,diff),true);
           done();
      });
 

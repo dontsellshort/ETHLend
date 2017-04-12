@@ -5,6 +5,12 @@ contract Ledger {
      address public mainAddress;
      address public whereToSendFee;
 
+     mapping (address => mapping(uint => address)) lrsPerUser;
+     mapping (address => uint) lrsCountPerUser;
+
+     uint public totalLrCount = 0;
+     mapping (uint => address) lrs;
+
      modifier byAnyone(){
           _;
      }
@@ -16,15 +22,44 @@ contract Ledger {
 
      /// Must be called by Borrower
      function createNewLendingRequest()payable byAnyone returns(address out){
-          // TODO:
           // 1 - send Fee to wherToSendFee 
-          //out = whereToSendFee.call.gas(200000).value(this.balance)();
+          // 0.1 ETH
+          uint feeAmount = 100000000000000000;
+          if(!whereToSendFee.call.gas(200000).value(feeAmount)()){
+               throw;
+          }
 
           // 2 - create new LR
           // will be in state 'WaitingForData'
           out = new LendingRequest(mainAddress,msg.sender);
 
-          // TODO: add to list
+          // 3 - add to list
+          uint currentCount = lrsCountPerUser[msg.sender];
+          lrsPerUser[msg.sender][currentCount] = out;
+          lrsCountPerUser[msg.sender]++;
+
+          lrs[totalLrCount] = out;
+          totalLrCount++;
+     }
+
+     function getLrCount()constant returns(uint out){
+          out = totalLrCount;
+          return;
+     }
+
+     function getLr(uint index) constant returns (address out){
+          out = lrs[index];  
+          return;
+     }
+
+     function getLrCountForUser(address a)constant returns(uint out){
+          out = lrsCountPerUser[a];
+          return;
+     }
+
+     function getLrForUser(address a,uint index) constant returns (address out){
+          out = lrsPerUser[a][index];  
+          return;
      }
 
      function(){
