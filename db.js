@@ -50,9 +50,9 @@ var LendingRequest = new Schema({
 
      borrower_id:              {type: String, required: true},
      lender_id:                {type: String, required: true},
-
-     date_created:             {type: Date, default:    Date.now, required: true},
-     date_modified:            {type: Date, default:    Date.now, required: true},
+     date_moved_to_state_4:    {type: Date, default:    Date.now(), required: false},
+     date_created:             {type: Date, default:    Date.now(), required: true},
+     date_modified:            {type: Date, default:    Date.now(), required: true},
 
      days_to_lend:             {type: Number, required: true},
      days_left:                {type: Number, required: true}

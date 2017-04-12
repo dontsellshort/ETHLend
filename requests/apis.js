@@ -143,6 +143,15 @@ app.get('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { /
                     winston.error('Can`t get LR');
                     return res.status(400).json('can`t get LR');
                }
+			var min_left =  if(Date.now() - lr.date_created > config.get('lending_requests_params:timeout')){
+				
+// minutes_left = (config.get(‘param’) - (now - lr.dateMovedToState4));
+// if(minutes_left<=0){
+// address_to_send - куда послать деньги Lender'у (равно адресу token_smartcontract)
+// eth_count - сколько денег нужно послать Lender'у
+// (равно eth_count, если деньги еще не получены)
+  	
+			}
                var out = {
                     current_state:            lr.current_state,
                     eth_count:                lr.eth_count,
@@ -155,12 +164,13 @@ app.get('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { /
                     borrower_id:              lr.borrower_id,
                     lender_id:                lr.lender_id,
                     date_created:             lr.date_created,
+				date_moved_to_state_4:    lr.date_moved_to_state_4,
                     date_modified:            lr.date_modified,
                     days_to_lend:             lr.days_to_lend,
                     days_left:                lr.days_left,
                     address_to_send:          lr.address_to_send,
                     eth_count:                lr.eth_count,
-                    minutes_left:             lr.minutes_left
+                    minutes_left:            
                };
                res.json(out);
           })
@@ -185,6 +195,7 @@ app.post('/api/v1/auth/users/:shortId/lrs/:id/lend', function (request, res, nex
 
           var setObj = {
                date_modified: Date.now(),
+			date_moved_to_state_4: Date.now(),
                lender_id: userId,
                lender_account_address: '',
 			current_state: 4
