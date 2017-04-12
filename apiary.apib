@@ -153,6 +153,7 @@ Get a list of LRs for a selected user. Returns a JSON list of IDs.
 ### Create new Lending Request [POST /api/v1/auth/users/{shortId}/lrs]
 
 If user's *balance* is non-null -> user can Create new Lending Request.
+LR will be in 'waiting for tokens' state
             
 + Parameters
     + shortId - User ID
@@ -198,6 +199,7 @@ If user's *balance* is non-null -> user can Create new Lending Request.
 + Response 200 (application/json)
     
         {
+            // 0 - waiting for data
             // 1 - waiting for tokens
             // 2 - cancelled
             // 3 - waiting for lender
