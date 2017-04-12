@@ -317,24 +317,78 @@ describe('Contract - Ledger', function() {
           done();
      });
 
-     /*
-     it('should return ZERO initial balance',function(done){
-          var balance = ledgerContract.getBalance(borrower);
-          assert.equal(balance,0);
+     it('should get LR contract',function(done){
+          assert.equal(ledgerContract.getLrCount(),1);
+
+          var a = ledgerContract.getLr(0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          var state = lr.getState();
+          // "Waiting for data" state
+          assert.equal(state.toString(),0);
           done();
+     })
+
+     it('should get LR contract for user',function(done){
+          assert.equal(ledgerContract.getLrCountForUser(borrower),1);
+          
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          var state = lr.getState();
+          // "Waiting for data" state
+          assert.equal(state.toString(),0);
+          done();
+     })
+
+     it('should set data',function(done){
+          var data = {
+               wanted_wei: 1000000000,
+               token_amount: 10,
+
+               token_name: 'Cosmos',
+               token_infolink: 'https://cosmos.network',
+               // https://etherscan.io/address/0xCF965Cfe7C30323E9C9E41D4E398e2167506f764
+               token_smartcontract_address: '0xCF965Cfe7C30323E9C9E41D4E398e2167506f764'
+          };
+
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          // this is set by creator (from within platform)
+          lr.setData(
+               data.wanted_wei,
+               data.token_amount,
+               data.token_name,
+               data.token_infolink,
+               data.token_smartcontract_address,
+               {
+                    from: creator,               
+                    //value: amount,
+                    gas: 2900000 
+               },function(err,result){
+                    assert.equal(err,null);
+
+                    web3.eth.getTransactionReceipt(result, function(err, r2){
+                         assert.equal(err, null);
+
+                         done();
+                    });
+               }
+          );
      });
 
-     it('send some money',function(done){
-          web3.eth.sendTransaction({
-               from: borrower, 
-               to: ledgerContractAddress, 
-               value: 100
-          });
+     it('should move to Waiting for lender state',function(done){
+          assert.equal(ledgerContract.getLrCountForUser(borrower),1);
+          
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
 
+          var state = lr.getState();
+          // "Waiting for tokens" state
+          assert.equal(state.toString(),1);
           done();
-     });
-     */
-
+     })
 })
 
 /*

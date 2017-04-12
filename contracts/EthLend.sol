@@ -147,6 +147,11 @@ contract LendingRequest {
           mainAddress = new_;
      }
 
+     function getState()constant returns(State out){
+          out = currentState;
+          return;
+     }
+
      function setData(uint wanted_wei_, uint token_amount_, 
           string token_name_, string token_infolink_, address token_smartcontract_address_) 
                byLedgerOrMain onlyInState(State.WaitingForData)
@@ -156,6 +161,8 @@ contract LendingRequest {
           token_name = token_name_;
           token_infolink = token_infolink_;
           token_smartcontract_address = token_smartcontract_address_;
+
+          currentState = State.WaitingForTokens;
      }
 
      /// 
