@@ -143,15 +143,22 @@ app.get('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { /
                     winston.error('Can`t get LR');
                     return res.status(400).json('can`t get LR');
                }
-			var min_left =  if(Date.now() - lr.date_created > config.get('lending_requests_params:timeout')){
-				
+				var minutes_left = 0;
+				var now = new Date;
+				var minutesDiff = (now.getTime() - lr.date_moved_to_state_4.getTime())%60000;
+				if (minutesDiff >= config.get('lending_requests_params:timeout')){
+					minutes_left = 0;
+				} else {
+					minutes_left = config.get('lending_requests_params:timeout') - minutesDiff; 
+				}
+
 // minutes_left = (config.get(‘param’) - (now - lr.dateMovedToState4));
 // if(minutes_left<=0){
 // address_to_send - куда послать деньги Lender'у (равно адресу token_smartcontract)
 // eth_count - сколько денег нужно послать Lender'у
 // (равно eth_count, если деньги еще не получены)
   	
-			}
+			
                var out = {
                     current_state:            lr.current_state,
                     eth_count:                lr.eth_count,
@@ -170,7 +177,10 @@ app.get('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { /
                     days_left:                lr.days_left,
                     address_to_send:          lr.address_to_send,
                     eth_count:                lr.eth_count,
-                    minutes_left:            
+
+                    minutes_left:             minutes_left,
+				address_to_send:          lr.token_smartcontract,
+                    eth_count:                lr.eth_count
                };
                res.json(out);
           })
