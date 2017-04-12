@@ -162,12 +162,14 @@ Get a list of LRs for a selected user. Returns a JSON list of IDs.
     
 + Response 200 (application/json)
     
-        [
-            1234342344,
-            7879878789,
-            2423423423
-        ]
-        
+        {
+            ids: 
+            [
+                1234342344,
+                7879878789,
+                2423423423
+            ]
+        }
 
 ### Create new Lending Request [POST /api/v1/auth/users/{shortId}/lrs]
 
