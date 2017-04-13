@@ -104,7 +104,12 @@ function deployMain(cb){
      var alreadyCalled = false;
 
      var tempContract = web3.eth.contract(g_abi);
+
+     // TODO: make param
+     var whereToSendMoney = g_creator;
+
      tempContract.new(
+          whereToSendMoney,
           {
                from: g_creator, 
                gas: 4995000,
@@ -155,6 +160,13 @@ function waitForTransactionInt(indexTry,txHash,cb){
      });
 }
 
+function getFeeAmount(){
+     return (process.env.BALANCE_FEE_AMOUNT_IN_WEI || config.get('eth_params:balanceFeeAmountInWei'));
+}
+
+function getMainAddress(){
+     return (g_ledgerAddress || config.get('eth_params:balanceFeeAddress'));
+}
 
 function getMainAddressLink(){
      return process.env.ETH_EXPLORER_ADDRESS_LINK + g_ledgerAddress;
@@ -179,7 +191,10 @@ function getBalance(address){
 exports.getAccount = getAccounts;
 exports.compileContracts = compileContracts;
 
-exports.getMainAccount = getMainAccount;
+exports.getFeeAmount = getFeeAmount;
+exports.getMainAddress = getMainAddress;
 exports.getMainAddressLink = getMainAddressLink;
+
+exports.getMainAccount = getMainAccount;
 exports.getMainAccountLink = getMainAccountLink;
 exports.getBalance = getBalance;

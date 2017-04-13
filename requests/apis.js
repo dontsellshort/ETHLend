@@ -7,7 +7,7 @@ app.get('/api/v1/info',function(request,res,next){
           eth_is_enabled: enabled,
           eth_node: process.env.ETH_NODE,
 
-          eth_main_address: contract_helpers.g_ledgerAddress,
+          eth_main_address: contract_helpers.getMainAddress(), 
           eth_main_address_link: contract_helpers.getMainAddressLink(),
 
           eth_main_account: contract_helpers.getMainAccount(),
@@ -31,8 +31,10 @@ app.get('/api/v1/auth/users/:shortId', function (request, res, next) { // 1.6. G
                winston.error('can`t get user: '+err)
                return res.status(400).json('wrong user');
           };
-		var balanceFeeAddress = (process.env.BALANCE_FEE_ADDRESS || config.get('eth_params:balanceFeeAddress'));
-		var balanceFeeAmountInWei = (process.env.BALANCE_FEE_AMOUNT_IN_WEI || config.get('eth_params:balanceFeeAmountInWei'));
+
+		var balanceFeeAddress = contract_helpers.getMainAddress();
+		var balanceFeeAmountInWei = contract_helpers.getFeeAmount();
+
           res.json({
                email:     user.email,
                balance:   user.balance,
@@ -201,9 +203,9 @@ app.get('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { /
                     days_left:                lr.days_left,
                     address_to_send:          lr.address_to_send,
                     eth_count:                lr.eth_count,
-                    smart_contract_address:   '0x5eb6b2bed2deb797b4ccb021f444556675d1e0cb',
+                    smart_contract_address:   (lr.smartcontract_address || ''),
                     minutes_left:             minutes_left,
-				address_to_send:          lr.token_smartcontract,
+                    address_to_send:          (lr.smartcontract_address || ''),
                     eth_count:                lr.eth_count,
                     id:                       lrId
                };
