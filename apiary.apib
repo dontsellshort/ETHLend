@@ -60,12 +60,8 @@ Returns basic info that can be used to inform service clients.
                 {
                     email: 'tony@chain.cloud',
                     
-                    // must be set by user (this is external Wallet address)
+                    // must be set by user (this is his external Wallet address)
                     ethAddress: '0x7aab2fcf1bb32bd5ffaf6b5b5bd99acb8f9451dd',
-                    
-                    // how much Lending Request user can create
-                    // before creating LR he must pay us some fee (upfront)
-                    balance: 1,
                     
                     // to increase balance please send Fee money here
                     balanceFeeAddress: '0xbd997cd2513c5f031b889d968de071eeafe07130',
@@ -87,19 +83,6 @@ Returns basic info that can be used to inform service clients.
             {
                 ethAddress: '0x7aab2fcf1bb32bd5ffaf6b5b5bd99acb8f9451dd'
             }
-
-+ Response 200 (application/json)
-
-### Increase User's Balance [POST /api/v1/auth/users/{shortId}/balance]
-
-This method is here just for DEBUG. In next version we will have full functionality of ETH fees.
-Will increase 'balance' field
-
-+ Request
-
-    + Headers
-    
-            Authorization: Bearer TOKEN-HERE
 
 + Response 200 (application/json)
 
@@ -201,18 +184,22 @@ LR will be in 'waiting for data' state
             id: 123123123
         }
 
-### Set data to the Lending Request [PUT /api/v1/auth/users/{shortId}/lrs]
+### Set data to the Lending Request [PUT /api/v1/auth/users/{shortId}/lrs/{id}]
 
 If LR is in 'waiting for data' state -> borrower should set basic data
             
 + Parameters
     + shortId - User ID
+    + id - Lending Request ID
 
 + Request (application/json)
     
     + Body
     
             {
+                // current object ID
+                id: '12312312311',
+                
                 eth_count: 120,
                 token_amount: 10000,
                 token_name: 'Augur tokens',
@@ -245,6 +232,9 @@ If LR is in 'waiting for data' state -> borrower should set basic data
 + Response 200 (application/json)
     
         {
+            // current object ID
+            id: '12312312311',
+                
             // 0 - waiting for data
             // 1 - waiting for tokens
             // 2 - cancelled
@@ -302,6 +292,9 @@ LR should move from 'waiting for lender' to 'waiting for loan' state.
 + Response 200 (application/json)
 
         {
+            // current object ID
+            id: '12312312311',
+                
             "address_to_send": "0xbd997cd2513c5f031b889d968de071eeafe07130",
             "eth_count": 120,
             "minutes_left": 1440    // 1 day left until this LR moves back to 'waiting for lender' state

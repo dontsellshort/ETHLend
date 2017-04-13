@@ -90,7 +90,11 @@ server.initDb(db);
 
 if(config.get('enable_http')){
      server.startHttp(port,function(err){
-          winston.info("Listening (http) on " + port);
+          if (err){
+               winston.info("Problem with enable http: " + err);
+          }else{
+               winston.info("Listening (http) on " + port);
+          }
      });
 }
 

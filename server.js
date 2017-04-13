@@ -161,20 +161,6 @@ function initDb(dbInit){
      db = dbInit;
 }
 
-function startHttp(port){
-     this.httpServer = http.createServer(app).listen(port);
-
-     this.httpServer.on('connection', function(sock) {
-          winston.info('Client connected from ' + sock.remoteAddress);
-     });
-     
-     this.httpServer.on('request', function(req,resp) {
-          winston.info('REQ: ' + req.connection.remoteAddress + '.URL: ' + req.url);
-     });
-}
-
-/*
-// TODO: 
 function startHttp(port,cb){
      contract_helpers.getAccount(function(err){
           if(err){
@@ -202,35 +188,6 @@ function startHttp(port,cb){
 
                cb(null);
           });
-     });
-}
-*/
-
-function startHttps(https_port){
-     var ca          = fs.readFileSync( config.get('ssl:ca'), 'utf8');
-     var certificate = fs.readFileSync( config.get('ssl:cert'), 'utf8');
-     // this was generated while making CSR
-     var privateKey  = fs.readFileSync( config.get('ssl:key'), 'utf8');
-
-     var options = {
-          ca: ca,
-          cert: certificate,
-          key: privateKey, 
-
-          // TODO: check this out!
-
-          //requestCert:        true
-          //rejectUnauthorized: true 
-     };
-
-     this.httpsServer = https.createServer(options, app).listen(https_port);
-
-     this.httpsServer.on('connection', function(sock) {
-          winston.info('Client connected from ' + sock.remoteAddress);
-     });
-     
-     this.httpsServer.on('request', function(req,resp) {
-          winston.info('HTTPS REQ: ' + req.connection.remoteAddress + '.URL: ' + req.url);
      });
 }
 

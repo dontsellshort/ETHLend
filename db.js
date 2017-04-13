@@ -6,22 +6,22 @@ var config   = require('./config');
 var Schema = mongoose.Schema;
 
 //////
-var User = new Schema({
-     // user can log in using this one too
-     shortId:       {type: String, required:  true},
-     email:         {type: String, required:  true},
-     password:      {type: String, required:  true},
-     validated:     {type: Boolean, required: true},
-     balance:       {type: Number, default:0, required: true},
+var User = new Schema({ // user can log in using this one too
+     shortId:                  {type: String, required:  true},
+     email:                    {type: String, required:  true},
+     password:                 {type: String, required:  true},
+     validated:                {type: Boolean, required: true},
+     balance:                  {type: Number,  required: true, default: 0},
 
      //optional
-     validationSig: {type: String, required:  false},
-     facebookID:    {type: String, required:  false},
-     resetSig:      {type: String, required:  false},
-     created:       {type: Date, default:     Date.now, required: true },
-     modified:      {type: Date, default:     Date.now, required: true },
+     ethAddress:               {type: String, required:  false},
+     validationSig:            {type: String, required:  false},
+     facebookID:               {type: String, required:  false},
+     resetSig:                 {type: String, required:  false},
+     created:                  {type: Date,  required:   true, default: Date.now},
+     modified:                 {type: Date,  required:   true, default: Date.now},
 
-     comment:       {type: String, required:  false}
+     comment:                  {type: String, required:  false}
 });
 
 User.statics.findByEmail = function(e,cb){
@@ -40,22 +40,22 @@ User.statics.findByFacebookID = function(id,cb){
 var LendingRequest = new Schema({
      current_state:            {type: Number, required: true},
 
-     eth_count:                {type: Number, required: true},
-     token_amount:             {type: Number, required: true},
-     token_name:               {type: String, required: true},
-     token_smartcontract:      {type: String, required: true},
-     token_infolink:           {type: String, required: true},
-     borrower_account_address: {type: String, required: true},
-     lender_account_address:   {type: String, required: true},
+     eth_count:                {type: Number, required: false},
+     token_amount:             {type: Number, required: false},
+     token_name:               {type: String, required: false},
+     token_smartcontract:      {type: String, required: false},
+     token_infolink:           {type: String, required: false},
+     borrower_account_address: {type: String, required: false},
+     lender_account_address:   {type: String, required: false},
 
      borrower_id:              {type: String, required: true},
-     lender_id:                {type: String, required: true},
+     lender_id:                {type: String, required: false},
+     waiting_for_loan_from:    {type: Date, default:    Date.now(), required: false},
+     date_created:             {type: Date, default:    Date.now(), required: true},
+     date_modified:            {type: Date, default:    Date.now(), required: true},
 
-     date_created:             {type: Date, default:    Date.now, required: true},
-     date_modified:            {type: Date, default:    Date.now, required: true},
-
-     days_to_lend:             {type: Number, required: true},
-     days_left:                {type: Number, required: true}
+     days_to_lend:             {type: Number, required: false},
+     days_left:                {type: Number, required: false}
 });
 
 var Subscription = new Schema({
