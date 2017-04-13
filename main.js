@@ -89,8 +89,12 @@ var port = (process.env.PORT || config.get('http_port'));
 server.initDb(db);
 
 if(config.get('enable_http')){
-     server.startHttp(port);
-     winston.info("Listening (http) on " + port);
+     server.startHttp(port,function(err){
+          if (err){
+               winston.info("Problem with enable http: " + err);
+          }
+          winston.info("Listening (http) on " + port);
+     });
 }
 
 if(config.get('enable_https')){

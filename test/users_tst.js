@@ -25,8 +25,12 @@ describe('Users module and lending requests', function (T) {
           conn = db.connectToDb(uri, '', '');
           db.removeDb(function () {
                server.initDb(db);
-               server.startHttp(9091);
-               done();
+               server.startHttp(9091,function(err){
+                    if (err){
+                         winston.info("Problem with http: " + err);
+                    }
+                    done();
+               });
           });
      });
      after(function (done) {
@@ -319,42 +323,57 @@ describe('Users module and lending requests', function (T) {
           done();
      });
 
-     it('1.19. (Internal, no API) should increase user balance', function (done) {
-          db_helpers.changeBalanceBy(global.sessionUID, 3, function (err, user) {
-               console.log('user.balance: ' + user.balance)
-               SQ(err, null);
-               SQ(user.balance, 3)
-               done();
-          });
-     });
-
-     it('1.20. should increase user balance', function (done) {
-          var url = '/api/v1/auth/users/' + global.sessionUID + '/balance';
-          postDataAuth(9091, url, '', global.authToken, function (err, statusCode, h, dataOut) {
-               SQ(err, null);
-               SQ(statusCode, 200);
-               url = '/api/v1/auth/users/' + global.sessionUID;
-               getData(9091, url, global.authToken, function (err, statusCode, h, dataOut) {
-                    SQ(err, null);
-                    SQ(statusCode, 200);
-                    SQ(JSON.parse(h).balance, 4)
-                    done()
-               });
-          });
-     });
-
      it('1.21. should return user data', function (done) {
           var url = '/api/v1/auth/users/' + global.sessionUID;
           getData(9091, url, global.authToken, function (err, statusCode, h, dataOut) {
                SQ(err, null);
                SQ(statusCode, 200);
-               SQ(JSON.parse(h).balance, 4)
+               // SQ(JSON.parse(h).balance, 4)
                done()
           });
      });
 
-     it('2.1. Should create new Lending Request if user`s balance is non-null ( we`ll create 2 LR`s)', function (done) {
+     it('1.22. should update user data', function (done) {
+          var url = '/api/v1/auth/users/' + global.sessionUID;
+          var j = {
+               ethAddress:'0xoloololololo'
+          }
+          var data = JSON.stringify(j);
+
+          putDataAuth(9091, url, data, global.authToken, function (err, statusCode, h, dataOut) {
+               SQ(err, null);
+               SQ(statusCode, 200);
+
+               var url = '/api/v1/auth/users/' + global.sessionUID;
+               getData(9091, url, global.authToken, function (err, statusCode, h, dataOut) {
+                    SQ(err, null);
+                    SQ(statusCode, 200);
+                    SQ(JSON.parse(h).ethAddress, '0xoloololololo')
+                    done();
+               });              
+          });
+     });
+
+     it('2.1. Should create new Lending Request', function (done) {
           var url = '/api/v1/auth/users/' + global.sessionUID + '/lrs';
+
+          var j = {
+               borrower_id: global.sessionUID // creator shortId
+          };
+          data = JSON.stringify(j);
+
+          postDataAuth(9091, url, data, global.authToken, function (err, statusCode, h, dataOut) {
+               SQ(statusCode, 200);
+               SQ(err, null);
+               NQ(JSON.parse(dataOut).id, null);
+               LR = JSON.parse(dataOut);
+               global.oneOfLrId = LR.id;
+               done();
+          });       
+     });
+
+     it('2.2. Should set data for Lending Request', function (done) {
+          var url = '/api/v1/auth/users/' + global.sessionUID + '/lrs/' + global.oneOfLrId;
 
           var j = {
                eth_count: 120,
@@ -364,27 +383,19 @@ describe('Users module and lending requests', function (T) {
                token_infolink: 'www.augur.com',
                borrower_account_address: 'ololo',
                borrower_id: global.sessionUID, // creator shortId
-               days_to_lend: 30
+               days_to_lend: 30,
+               lrId: global.oneOfLrId
           };
           data = JSON.stringify(j);
 
-          postDataAuth(9091, url, data, global.authToken, function (err, statusCode, h, dataOut) {
+          putDataAuth(9091, url, data, global.authToken, function (err, statusCode, h, dataOut) {
                SQ(statusCode, 200);
-               SQ(err, null);
-               NQ(JSON.parse(dataOut).id, null);
-
-               postDataAuth(9091, url, data, global.authToken, function (err, statusCode, h, dataOut) {
-                    SQ(statusCode, 200);
-                    SQ(err, null);
-                    NQ(JSON.parse(dataOut).id, null);
-                    LR = JSON.parse(dataOut);
-                    global.oneOfLrId = LR.id;
-                    done();
-               });
+               SQ(err, null);        
+               done();
           });
      });
 
-     it('2.2. should return a list of LRs for a selected user. Returns a JSON list of IDs.', function (done) {
+     it('2.3. should return a list of LRs for a selected user. Returns a JSON list of IDs.', function (done) {
           var url = '/api/v1/auth/users/' + global.sessionUID + '/lrs';
           getData(9091, url, global.authToken, function (err, statusCode, h, dataOut) {
                SQ(err, null);
@@ -395,7 +406,7 @@ describe('Users module and lending requests', function (T) {
           });
      });
 
-     it('2.3. should return a Lending Request', function (done) {
+     it('2.4. should return a Lending Request', function (done) {
           var url = '/api/v1/auth/users/' + global.sessionUID + '/lrs/' + global.oneOfLrId;
           getData(9091, url, global.authToken, function (err, statusCode, h, dataOut) {
                SQ(err, null);
@@ -405,52 +416,33 @@ describe('Users module and lending requests', function (T) {
           });
      });
 
-     it('2.4. should Lend', function (done) {
+     it('2.5. should Lend', function (done) {
           var lrId = global.oneOfLrId;
           var j = {
                date_modified: Date.now(),
                lender_id: global.sessionUID,
                lender_account_address: ''
           };
+
           var data = JSON.stringify(j);
           var url = '/api/v1/auth/users/'+global.sessionUID+'/lrs/'+global.oneOfLrId+'/lend'
+ 
           postDataAuth(9091, url, data, global.authToken, function (err, statusCode, h, dataOut) {
+               SQ(err, null);
                SQ(statusCode, 200);
                var parsed = JSON.parse(dataOut)
                SQ(parsed.minutes_left,1440)
-               done();
+               var url = '/api/v1/auth/users/' + global.sessionUID + '/lrs/' + global.oneOfLrId;
+
+               getData(9091, url, global.authToken, function (err, statusCode, h, dataOut) {
+                    SQ(err, null);
+                    SQ(statusCode, 200);
+                    var parsed = JSON.parse(h);
+                    SQ(parsed.current_state,4);
+                    done();
+               });
           });
-
      });
-
-     // it('2.5. Should create new Lending Request if user`s balance is non-null', function(done){
-     //      db.UserModel.findByEmail(targetEmail, function (err, users){
-     //           SQ(err,null);
-     //           SQ(users.length, 1);
-     //           var user = users[0];
-     //           SQ(user.validated, true);
-     //           NQ(user.balance,0);
-     //           var url = '/api/v1/auth/users/' + user.shortId + '/lrs';
-
-     //           var j = {
-     //                eth_count: 120,
-     //                token_amount: 10000,
-     //                token_name: 'Augur tokens',
-     //                token_smartcontract: 'https://etherscan.io/address/0xb533aae346245e2e05b23f420C140bCA2529b8a6#code',
-     //                token_infolink: 'www.augur.com',
-     //                borrower_account_address: '',
-     //                borrower_id: user.shortId,   // creator shortId
-     //                days_to_lend: 30
-     //           };
-     //           data = JSON.stringify(j);
-     //           console.log('user.balance is: ' + user.balance)
-     //           postData(9091, url, data, function (err, statusCode, h, dataOut) {
-     //                SQ(err,null);
-     //                console.log(dataOut)
-     //                done()
-     //           });
-     //      })
-     // });
 
      // // it('2.6. Shouldn`t create new Lending Request if user`s balance is null', function(done){
      // // });

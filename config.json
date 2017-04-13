@@ -15,7 +15,13 @@
 
      "http_port" : 8080,
      "https_port": 443, 
-
+     "lending_requests_params":{
+          "timeout": 30
+     },  
+     "eth_params":{
+          "balanceFeeAddress": "",
+          "balanceFeeAmountInWei": 12000
+     },  
      "ssl":{
           "ca" : "cert/api-.ca-bundle",
           "cert": "cert/api_.crt",
