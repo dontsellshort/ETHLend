@@ -40,22 +40,22 @@ User.statics.findByFacebookID = function(id,cb){
 var LendingRequest = new Schema({
      current_state:            {type: Number, required: true},
 
-     eth_count:                {type: Number, required: true},
-     token_amount:             {type: Number, required: true},
-     token_name:               {type: String, required: true},
-     token_smartcontract:      {type: String, required: true},
-     token_infolink:           {type: String, required: true},
-     borrower_account_address: {type: String, required: true},
-     lender_account_address:   {type: String, required: true},
+     eth_count:                {type: Number, required: false},
+     token_amount:             {type: Number, required: false},
+     token_name:               {type: String, required: false},
+     token_smartcontract:      {type: String, required: false},
+     token_infolink:           {type: String, required: false},
+     borrower_account_address: {type: String, required: false},
+     lender_account_address:   {type: String, required: false},
 
      borrower_id:              {type: String, required: true},
-     lender_id:                {type: String, required: true},
+     lender_id:                {type: String, required: false},
      waiting_for_loan_from:    {type: Date, default:    Date.now(), required: false},
      date_created:             {type: Date, default:    Date.now(), required: true},
      date_modified:            {type: Date, default:    Date.now(), required: true},
 
-     days_to_lend:             {type: Number, required: true},
-     days_left:                {type: Number, required: true}
+     days_to_lend:             {type: Number, required: false},
+     days_left:                {type: Number, required: false}
 });
 
 var Subscription = new Schema({

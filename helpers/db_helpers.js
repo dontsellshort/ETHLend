@@ -136,23 +136,11 @@ function createNewUser(name,lastName,email,pass,facebookID,needValidation,cb){
 
 function createLendingRequest(data, cb){
      var lendingRequest = new db.LendingRequestModel;
-     lendingRequest.eth_count                = data.eth_count;
-     lendingRequest.token_amount             = data.token_amount;
-     lendingRequest.token_name               = data.token_name;
-     lendingRequest.token_smartcontract      = data.token_smartcontract;
-     lendingRequest.token_infolink           = data.token_infolink;
-     lendingRequest.borrower_account_address = data.borrower_account_address;
-     lendingRequest.borrower_id              = data.borrower_id;
-     lendingRequest.days_to_lend             = data.days_to_lend;
+     lendingRequest.current_state = 0;            
+     lendingRequest.date_created  = Date.now();            
+     lendingRequest.borrower_id   = data.borrower_id;    
 
-     lendingRequest.current_state            = 1;
-     lendingRequest.lender_account_address   = 'no_lender_address';  
-     lendingRequest.lender_id                = 'no_lender_id';               
-     lendingRequest.date_created             = Date.now();            
-     lendingRequest.date_modified            = Date.now();  
-     lendingRequest.days_left                = data.days_to_lend;       
-
-     lendingRequest.save(function(err){
+     lendingRequest.save(function(err,lendingRequest){
           if(err){
                winston.error('Can not save lending request to DB: ' + err);
                return cb(err);
@@ -160,6 +148,30 @@ function createLendingRequest(data, cb){
           return cb(null,lendingRequest);
      })
 }
+
+function setDataForLendingRequest(data,cb){
+     var setObj = {};
+     setObj.eth_count                = data.eth_count;
+     setObj.token_amount             = data.token_amount;
+     setObj.token_name               = data.token_name;
+     setObj.token_smartcontract      = data.token_smartcontract;
+     setObj.token_infolink           = data.token_infolink;
+     setObj.borrower_account_address = data.borrower_account_address;
+     setObj.days_to_lend             = data.days_to_lend;
+     setObj.current_state            = 1;                 
+     setObj.date_modified            = Date.now();  
+     setObj.days_left                = data.days_to_lend;       
+
+     db.LendingRequestModel.findByIdAndUpdate(data.lrId, {$set: setObj}, {new: true}, function (err, lr) {
+          if(err){
+               winston.error('Can`t update LR: '+err);
+               return cb(err,null)
+          }
+          return cb(null,null)
+     });
+}
+
+
 
 function getAllLRforUser(user, cb){
      db.LendingRequestModel.find({borrower_id: user.shortId},function(err,allLR){
@@ -182,3 +194,4 @@ exports.getUser = getUser;
 exports.getAllLRforUser = getAllLRforUser;
 exports.createNewUser = createNewUser;
 exports.createLendingRequest = createLendingRequest;
+exports.setDataForLendingRequest = setDataForLendingRequest;
