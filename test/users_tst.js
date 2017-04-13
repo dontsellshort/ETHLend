@@ -319,29 +319,29 @@ describe('Users module and lending requests', function (T) {
           done();
      });
 
-     it('1.19. (Internal, no API) should increase user balance', function (done) {
-          db_helpers.changeBalanceBy(global.sessionUID, 3, function (err, user) {
-               console.log('user.balance: ' + user.balance)
-               SQ(err, null);
-               SQ(user.balance, 3)
-               done();
-          });
-     });
+     // it('1.19. (Internal, no API) should increase user balance', function (done) {
+     //      db_helpers.changeBalanceBy(global.sessionUID, 3, function (err, user) {
+     //           console.log('user.balance: ' + user.balance)
+     //           SQ(err, null);
+     //           SQ(user.balance, 3)
+     //           done();
+     //      });
+     // });
 
-     it('1.20. should increase user balance', function (done) {
-          var url = '/api/v1/auth/users/' + global.sessionUID + '/balance';
-          postDataAuth(9091, url, '', global.authToken, function (err, statusCode, h, dataOut) {
-               SQ(err, null);
-               SQ(statusCode, 200);
-               url = '/api/v1/auth/users/' + global.sessionUID;
-               getData(9091, url, global.authToken, function (err, statusCode, h, dataOut) {
-                    SQ(err, null);
-                    SQ(statusCode, 200);
-                    SQ(JSON.parse(h).balance, 4)
-                    done()
-               });
-          });
-     });
+     // it('1.20. should increase user balance', function (done) {
+     //      var url = '/api/v1/auth/users/' + global.sessionUID + '/balance';
+     //      postDataAuth(9091, url, '', global.authToken, function (err, statusCode, h, dataOut) {
+     //           SQ(err, null);
+     //           SQ(statusCode, 200);
+     //           url = '/api/v1/auth/users/' + global.sessionUID;
+     //           getData(9091, url, global.authToken, function (err, statusCode, h, dataOut) {
+     //                SQ(err, null);
+     //                SQ(statusCode, 200);
+     //                SQ(JSON.parse(h).balance, 4)
+     //                done()
+     //           });
+     //      });
+     // });
 
      it('1.21. should return user data', function (done) {
           var url = '/api/v1/auth/users/' + global.sessionUID;
