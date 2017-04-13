@@ -7,8 +7,8 @@
      "process_user": "ubuntu",
      "process_group": "ubuntu",
 
-     "cluster":1,
-     "cluster_nodes": 10,
+     "cluster":0,
+     "cluster_nodes": 1,
 
      "enable_http":1,
      "enable_https":0,
