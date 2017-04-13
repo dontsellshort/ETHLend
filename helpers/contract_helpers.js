@@ -2,7 +2,7 @@ var solc = require('solc');
 var Web3 = require('web3');
 var fs = require('fs');
 var winston = require('winston');
-var sleep = require('sleep');
+//var sleep = require('sleep');
 
 var helpers = require('../helpers/helpers.js');
 var db_helpers = require('../helpers/db_helpers.js');
@@ -152,7 +152,7 @@ function waitForTransactionInt(indexTry,txHash,cb){
                return cb(null,result);
           }
 
-          sleep.sleep(3);
+          //sleep.sleep(3);
 
           // recurse
           winston.info('Trying again for tx: ' + txHash);
