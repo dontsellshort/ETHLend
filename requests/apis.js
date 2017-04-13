@@ -1,3 +1,16 @@
+app.get('/api/v1/info',function(request,res,next){
+     var out = {
+          eth_is_enabled:        true,
+          eth_node:              '',
+          eth_main_account:      '',
+          eth_main_account_link: '',
+          eth_main_address:      '',
+          eth_main_address_link: '',
+          eth_balance_wei:       ''
+     }
+     res.json(out)
+})
+
 app.get('/api/v1/auth/users/:shortId', function (request, res, next) { // 1.6. Get user data
      if (typeof (request.params.shortId) === 'undefined') {
           winston.error('No shortId');
@@ -160,12 +173,7 @@ app.get('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { /
 				} else {
 					minutes_left = config.get('lending_requests_params:timeout') - minutesDiff; 
 				}
-
-                         // minutes_left = (config.get(‘param’) - (now - lr.dateMovedToState4));
-                         // if(minutes_left<=0){
-                         // address_to_send - куда послать деньги Lender'у (равно адресу token_smartcontract)
-                         // eth_count - сколько денег нужно послать Lender'у
-                         // (равно eth_count, если деньги еще не получены)		
+	
                var out = {
                     eth_count:                lr.eth_count,
                     token_amount:             lr.token_amount,
@@ -184,7 +192,7 @@ app.get('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { /
                     days_left:                lr.days_left,
                     address_to_send:          lr.address_to_send,
                     eth_count:                lr.eth_count,
-
+                    smart_contract_address:   '0x5eb6b2bed2deb797b4ccb021f444556675d1e0cb',
                     minutes_left:             minutes_left,
 				address_to_send:          lr.token_smartcontract,
                     eth_count:                lr.eth_count,
