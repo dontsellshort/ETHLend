@@ -32,8 +32,11 @@ app.get('/api/v1/auth/users/:shortId', function (request, res, next) { // 1.6. G
                return res.status(400).json('wrong user');
           };
 
-		var balanceFeeAddress = contract_helpers.getMainAddress();
-		var balanceFeeAmountInWei = contract_helpers.getFeeAmount();
+		//var balanceFeeAddress = contract_helpers.getMainAddress();
+		//var balanceFeeAmountInWei = contract_helpers.getFeeAmount();
+
+		var balanceFeeAddress = '';
+		var balanceFeeAmountInWei = '';
 
           res.json({
                email:     user.email,
