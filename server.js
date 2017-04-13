@@ -159,7 +159,7 @@ function initDb(dbInit){
      db = dbInit;
 }
 
-function startHttp(port){
+function startHttp(port,cb){
      this.httpServer = http.createServer(app).listen(port);
 
      this.httpServer.on('connection', function(sock) {
@@ -169,7 +169,12 @@ function startHttp(port){
      this.httpServer.on('request', function(req,resp) {
           winston.info('REQ: ' + req.connection.remoteAddress + '.URL: ' + req.url);
      });
+     cb(null)
 }
+
+
+
+
 
 function startHttps(https_port){
      var ca          = fs.readFileSync( config.get('ssl:ca'), 'utf8');

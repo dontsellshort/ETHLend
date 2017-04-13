@@ -156,15 +156,8 @@ function createLendingRequest(data, cb){
           if(err){
                winston.error('Can not save lending request to DB: ' + err);
                return cb(err);
-          }
-
-          changeBalanceBy(data.borrower_id, -1, function(err,user){
-               if(err){
-                    winston.error('Can`t change user`s balance: ' + err);
-                    return cb(err);
-               }     
-               return cb(null,lendingRequest,user);
-          })
+          }    
+               return cb(null,lendingRequest);
      })
 }
 
