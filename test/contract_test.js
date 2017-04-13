@@ -190,6 +190,46 @@ function deployContract(data,cb){
      });
 }
 
+describe('Contracts 0 - Deploy', function() {
+     before("Initialize everything", function(done) {
+          web3.eth.getAccounts(function(err, as) {
+               if(err) {
+                    done(err);
+                    return;
+               }
+
+               accounts = as;
+               creator = accounts[0];
+
+               var contractName = ':Ledger';
+               getContractAbi(contractName,function(err,abi){
+                    ledgerAbi = abi;
+
+                    contractName = ':LendingRequest';
+                    getContractAbi(contractName,function(err,abi){
+                         requestAbi = abi;
+
+                         done();
+                    });
+               });
+          });
+     });
+
+     after("Deinitialize everything", function(done) {
+          done();
+     });
+
+     it('should deploy Ledger contract',function(done){
+          var data = {};
+          deployLedgerContract(data,function(err){
+               assert.equal(err,null);
+
+               done();
+          });
+     });
+});
+
+
 describe('Contracts 1', function() {
      before("Initialize everything", function(done) {
           web3.eth.getAccounts(function(err, as) {
