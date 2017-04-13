@@ -1,15 +1,23 @@
+var contract_helpers = require('./helpers/contract_helpers.js');
+
 app.get('/api/v1/info',function(request,res,next){
+     var enabled = (typeof(process.env.ETH_NODE)!=='undefined');
+
      var out = {
-          eth_is_enabled:        true,
-          eth_node:              '',
-          eth_main_account:      '',
-          eth_main_account_link: '',
-          eth_main_address:      '',
-          eth_main_address_link: '',
-          eth_balance_wei:       ''
-     }
-     res.json(out)
-})
+          eth_is_enabled: enabled,
+          eth_node: process.env.ETH_NODE,
+
+          eth_main_address: contract_helpers.g_ledgerAddress,
+          eth_main_address_link: contract_helpers.getMainAddressLink(),
+
+          eth_main_account: contract_helpers.getMainAccount(),
+          eth_main_account_link: contract_helpers.getMainAccountLink(),
+
+          eth_balance_wei: contract_helpers.getBalance(contract_helpers.getMainAccount())
+     };
+
+     return res.json(out);
+});
 
 app.get('/api/v1/auth/users/:shortId', function (request, res, next) { // 1.6. Get user data
      if (typeof (request.params.shortId) === 'undefined') {
@@ -228,7 +236,7 @@ app.post('/api/v1/auth/users/:shortId/lrs/:id/lend', function (request, res, nex
                lender_id: userId,
                lender_account_address: '',
 			current_state: 4
-          }
+          };
 
           db.LendingRequestModel.findByIdAndUpdate(lrId, {$set: setObj}, {new: true}, function (err, lr) {
                if (err) {
@@ -241,8 +249,9 @@ app.post('/api/v1/auth/users/:shortId/lrs/:id/lend', function (request, res, nex
                     eth_count: 120, //TODO: ????
                     minutes_left: 1440, // 1 day left until this LR moves back to 'waiting for lender' state
                     id:  lrId
-            }
-               res.json(responseObj)        
-          })
-     })
-})
+               };
+               
+               res.json(responseObj);
+          });
+     });
+});
