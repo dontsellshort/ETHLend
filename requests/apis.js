@@ -93,7 +93,7 @@ app.post('/api/v1/auth/users/:shortId/lrs', function (request, res, next) { //2.
      if (typeof (request.params.shortId) === 'undefined') {
           winston.error('undefined shortId');
           return res.status(400).json('No shortId');
-     };
+     }
      var shortId = request.params.shortId;
      db_helpers.getUser(request.user, shortId, function (err, user) {
           if (err) {
@@ -108,7 +108,7 @@ app.post('/api/v1/auth/users/:shortId/lrs', function (request, res, next) { //2.
                if (err) {
                     winston.error('Can`t createLendingRequest: ' + err);
                     return res.status(400).json('can`t createLendingRequest');
-               };
+               }
                return res.json({id:lr._id})
           })
      });
@@ -118,11 +118,11 @@ app.put('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { /
      if (typeof (request.params.shortId) === 'undefined') {
           winston.error('Undefined shortId');
           return res.status(400).json('No shortId');
-     };
+     }
      if (typeof (request.params.id) === 'undefined') {
           winston.error('Undefined id');
           return res.status(400).json('No id');
-     };     
+     }  
      var shortId = request.params.shortId;
      var lrId    = request.params.id;
 
@@ -138,7 +138,7 @@ app.put('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { /
                if (err) {
                     winston.error('Can`t setDataForLendingRequest: ' + err);
                     return res.status(400).json('can`t setDataForLendingRequest');
-               };
+               }
                return res.json(200)
           })
      });
@@ -148,31 +148,31 @@ app.get('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { /
      if (typeof (request.params.shortId) === 'undefined') {
           winston.error('Undefined shortId');
           return res.status(400).json('No id');
-     };
+     }
      if (typeof (request.params.id) === 'undefined') {
           winston.error('Undefined id');
           return res.status(400).json('No id');
-     };
+     }
      var userId = request.params.shortId;
      var lrId = request.params.id;
      
      db_helpers.getUser(request.user, userId, function (err, user) {
           if (err) {
                return res.status(400);
-          };
+          }
           db.LendingRequestModel.findById(lrId, function (err, lr) {
                if (err) {
                     winston.error('Can`t get LR');
                     return res.status(400).json('can`t get LR');
                }
-				var minutes_left = 0;
-				var now = new Date;
-				var minutesDiff = (now.getTime() - lr.waiting_for_loan_from.getTime())%60000;
-				if (minutesDiff >= config.get('lending_requests_params:timeout')){
-					minutes_left = 0;
-				} else {
-					minutes_left = config.get('lending_requests_params:timeout') - minutesDiff; 
-				}
+               var minutes_left = 0;
+               var now = new Date;
+               var minutesDiff = (now.getTime() - lr.waiting_for_loan_from.getTime())%60000;
+               if (minutesDiff >= config.get('lending_requests_params:timeout')){
+                    minutes_left = 0;
+               } else {
+                    minutes_left = config.get('lending_requests_params:timeout') - minutesDiff; 
+               }
 	
                var out = {
                     eth_count:                lr.eth_count,
@@ -207,17 +207,17 @@ app.post('/api/v1/auth/users/:shortId/lrs/:id/lend', function (request, res, nex
      if (typeof (request.params.shortId) === 'undefined') {
           winston.error('Undefined shortId');
           return res.status(400).json('No id');
-     };
+     }
      if (typeof (request.params.id) === 'undefined') {
           winston.error('Undefined id');
           return res.status(400).json('No id');
-     };
+     }
      var userId = request.params.shortId;
      var lrId = request.params.id;
      db_helpers.getUser(request.user, userId, function (err, user) {
           if (err) {
                return res.status(400);
-          };
+          }
 
           var setObj = {
                date_modified: Date.now(),
@@ -225,13 +225,13 @@ app.post('/api/v1/auth/users/:shortId/lrs/:id/lend', function (request, res, nex
                lender_id: userId,
                lender_account_address: '',
 			current_state: 4
-          };
+          }
 
           db.LendingRequestModel.findByIdAndUpdate(lrId, {$set: setObj}, {new: true}, function (err, lr) {
                if (err) {
                     winston.error('Can`t Lend: ' + err);
                     return res.status(400).json('can`t lend');
-               };
+               }
 
                var responseObj = {
                     address_to_send: "",
