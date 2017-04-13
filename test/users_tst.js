@@ -45,6 +45,9 @@ describe('Users module and lending requests', function (T) {
           getData(9091, url, '', function (err, statusCode, h, dataOut) {
                SQ(err,null);             
                NQ(JSON.parse(h).eth_is_enabled,null)
+
+               // TODO: add tests for all fields
+
                done()
           });
      });

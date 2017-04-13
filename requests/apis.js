@@ -1,15 +1,23 @@
+var contract_helpers = require('./helpers/contract_helpers.js');
+
 app.get('/api/v1/info',function(request,res,next){
+     var enabled = (typeof(process.env.ETH_NODE)!=='undefined');
+
      var out = {
-          eth_is_enabled:        true,
-          eth_node:              '',
-          eth_main_account:      '',
-          eth_main_account_link: '',
-          eth_main_address:      '',
-          eth_main_address_link: '',
-          eth_balance_wei:       ''
-     }
-     res.json(out)
-})
+          eth_is_enabled: enabled,
+          eth_node: process.env.ETH_NODE,
+
+          eth_main_address: contract_helpers.getMainAddress(), 
+          eth_main_address_link: contract_helpers.getMainAddressLink(),
+
+          eth_main_account: contract_helpers.getMainAccount(),
+          eth_main_account_link: contract_helpers.getMainAccountLink(),
+
+          eth_balance_wei: contract_helpers.getBalance(contract_helpers.getMainAccount())
+     };
+
+     return res.json(out);
+});
 
 app.get('/api/v1/auth/users/:shortId', function (request, res, next) { // 1.6. Get user data
      if (typeof (request.params.shortId) === 'undefined') {
@@ -23,8 +31,10 @@ app.get('/api/v1/auth/users/:shortId', function (request, res, next) { // 1.6. G
                winston.error('can`t get user: '+err)
                return res.status(400).json('wrong user');
           };
-		var balanceFeeAddress = (process.env.BALANCE_FEE_ADDRESS || config.get('eth_params:balanceFeeAddress'));
-		var balanceFeeAmountInWei = (process.env.BALANCE_FEE_AMOUNT_IN_WEI || config.get('eth_params:balanceFeeAmountInWei'));
+
+		var balanceFeeAddress = contract_helpers.getMainAddress();
+		var balanceFeeAmountInWei = contract_helpers.getFeeAmount();
+
           res.json({
                email:     user.email,
                balance:   user.balance,
@@ -165,6 +175,7 @@ app.get('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { /
                     winston.error('Can`t get LR');
                     return res.status(400).json('can`t get LR');
                }
+
                var minutes_left = 0;
                var now = new Date;
                var minutesDiff = (now.getTime() - lr.waiting_for_loan_from.getTime())%60000;
@@ -173,7 +184,7 @@ app.get('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { /
                } else {
                     minutes_left = config.get('lending_requests_params:timeout') - minutesDiff; 
                }
-	
+
                var out = {
                     eth_count:                lr.eth_count,
                     token_amount:             lr.token_amount,
@@ -187,17 +198,18 @@ app.get('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { /
                     current_state:            lr.current_state,
                     lender_id:                lr.lender_id,
                     date_created:             lr.date_created,
-				waiting_for_loan_from:    lr.waiting_for_loan_from,
+                    waiting_for_loan_from:    lr.waiting_for_loan_from,
                     date_modified:            lr.date_modified,
                     days_left:                lr.days_left,
                     address_to_send:          lr.address_to_send,
                     eth_count:                lr.eth_count,
-                    smart_contract_address:   '0x5eb6b2bed2deb797b4ccb021f444556675d1e0cb',
+                    smart_contract_address:   (lr.smartcontract_address || ''),
                     minutes_left:             minutes_left,
-				address_to_send:          lr.token_smartcontract,
+                    address_to_send:          (lr.smartcontract_address || ''),
                     eth_count:                lr.eth_count,
                     id:                       lrId
                };
+
                res.json(out);
           })
      });
@@ -214,6 +226,7 @@ app.post('/api/v1/auth/users/:shortId/lrs/:id/lend', function (request, res, nex
      }
      var userId = request.params.shortId;
      var lrId = request.params.id;
+
      db_helpers.getUser(request.user, userId, function (err, user) {
           if (err) {
                return res.status(400);
@@ -225,7 +238,7 @@ app.post('/api/v1/auth/users/:shortId/lrs/:id/lend', function (request, res, nex
                lender_id: userId,
                lender_account_address: '',
 			current_state: 4
-          }
+          };
 
           db.LendingRequestModel.findByIdAndUpdate(lrId, {$set: setObj}, {new: true}, function (err, lr) {
                if (err) {
@@ -238,8 +251,9 @@ app.post('/api/v1/auth/users/:shortId/lrs/:id/lend', function (request, res, nex
                     eth_count: 120, //TODO: ????
                     minutes_left: 1440, // 1 day left until this LR moves back to 'waiting for lender' state
                     id:  lrId
-            }
-               res.json(responseObj)        
-          })
-     })
-})
+               };
+               
+               res.json(responseObj);
+          });
+     });
+});

@@ -16,6 +16,8 @@ var textParser       = bodyParser.text();
 var app              = express();
 var db;
 
+var contract_helpers = require('./helpers/contract_helpers.js');
+
 var secret = config.get('service_name') + '-backend-secret';
 function pasteFiles(){
      var out='', i$, len$, file;
@@ -160,21 +162,34 @@ function initDb(dbInit){
 }
 
 function startHttp(port,cb){
-     this.httpServer = http.createServer(app).listen(port);
+     contract_helpers.getAccount(function(err){
+          if(err){
+               console.log('Can not get ETH accounts...' + err);
+               winston.error('Can not get ETH accounts... ' + err);
+               return cb(err);
+          }
 
-     this.httpServer.on('connection', function(sock) {
-          winston.info('Client connected from ' + sock.remoteAddress);
+          contract_helpers.compileContracts(function(err){
+               if(err){
+                    console.log('Can not compile contract...' + err);
+                    winston.error('Can not compile contract... ' + err);
+                    return cb(err);
+               }
+
+               this.httpServer = http.createServer(app).listen(port);
+
+               this.httpServer.on('connection', function(sock) {
+                    winston.info('Client connected from ' + sock.remoteAddress);
+               });
+               
+               this.httpServer.on('request', function(req,resp) {
+                    winston.info('REQ: ' + req.connection.remoteAddress + '.URL: ' + req.url);
+               });
+
+               cb(null);
+          });
      });
-     
-     this.httpServer.on('request', function(req,resp) {
-          winston.info('REQ: ' + req.connection.remoteAddress + '.URL: ' + req.url);
-     });
-     cb(null)
 }
-
-
-
-
 
 function startHttps(https_port){
      var ca          = fs.readFileSync( config.get('ssl:ca'), 'utf8');
@@ -198,7 +213,7 @@ function startHttps(https_port){
      this.httpsServer.on('connection', function(sock) {
           winston.info('Client connected from ' + sock.remoteAddress);
      });
-     
+
      this.httpsServer.on('request', function(req,resp) {
           winston.info('HTTPS REQ: ' + req.connection.remoteAddress + '.URL: ' + req.url);
      });

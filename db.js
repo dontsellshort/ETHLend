@@ -40,6 +40,8 @@ User.statics.findByFacebookID = function(id,cb){
 var LendingRequest = new Schema({
      current_state:            {type: Number, required: true},
 
+     smartcontract_address:    {type: String, required: false},
+
      eth_count:                {type: Number, required: false},
      token_amount:             {type: Number, required: false},
      token_name:               {type: String, required: false},

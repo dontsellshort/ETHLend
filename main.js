@@ -92,8 +92,9 @@ if(config.get('enable_http')){
      server.startHttp(port,function(err){
           if (err){
                winston.info("Problem with enable http: " + err);
+          }else{
+               winston.info("Listening (http) on " + port);
           }
-          winston.info("Listening (http) on " + port);
      });
 }
 
