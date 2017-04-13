@@ -96,6 +96,65 @@ function compileContracts(cb){
      });
 }
 
+function deployMain(cb){
+     if(!enabled){
+          return cb(null);
+     }
+
+     var alreadyCalled = false;
+
+     var tempContract = web3.eth.contract(g_abi);
+     tempContract.new(
+          {
+               from: g_creator, 
+               gas: 4995000,
+               data: g_bytecode
+          }, 
+          function(err, c){
+               if(err){return cb(err);}
+
+               // must wait here until TX is mined!
+               // TODO: can fail if still not
+               waitForTransaction(c.transactionHash,function(err,result){
+                    if(err){return cb(err);}
+
+                    if(!alreadyCalled){
+                         alreadyCalled = true;
+
+                         return cb(null,result.contractAddress);
+                    }
+               });
+          });
+}
+
+function waitForTransaction(txHash,cb){
+     return waitForTransactionInt(0,txHash,cb); 
+}
+
+function waitForTransactionInt(indexTry,txHash,cb){
+     if(indexTry>20){
+          return cb(new Error('Can not get tx receipt: ' + txHash));
+     }
+
+     // poll
+     web3.eth.getTransactionReceipt(txHash, function(err, result){
+          if(err){
+               return cb(err);
+          }
+
+          if(result){
+               // stop recursion
+               return cb(null,result);
+          }
+
+          sleep.sleep(3);
+
+          // recurse
+          winston.info('Trying again for tx: ' + txHash);
+          waitForTransactionInt(indexTry + 1,txHash,cb);
+     });
+}
+
 // Exports:
 exports.getAccount = getAccounts;
 exports.compileContracts = compileContracts;

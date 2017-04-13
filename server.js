@@ -191,6 +191,34 @@ function startHttp(port,cb){
      });
 }
 
+function startHttps(https_port){
+     var ca          = fs.readFileSync( config.get('ssl:ca'), 'utf8');
+     var certificate = fs.readFileSync( config.get('ssl:cert'), 'utf8');
+     // this was generated while making CSR
+     var privateKey  = fs.readFileSync( config.get('ssl:key'), 'utf8');
+
+     var options = {
+          ca: ca,
+          cert: certificate,
+          key: privateKey, 
+
+          // TODO: check this out!
+
+          //requestCert:        true
+          //rejectUnauthorized: true 
+     };
+
+     this.httpsServer = https.createServer(options, app).listen(https_port);
+
+     this.httpsServer.on('connection', function(sock) {
+          winston.info('Client connected from ' + sock.remoteAddress);
+     });
+
+     this.httpsServer.on('request', function(req,resp) {
+          winston.info('HTTPS REQ: ' + req.connection.remoteAddress + '.URL: ' + req.url);
+     });
+}
+
 function stop(){
      if(this.httpServer){
           this.httpServer.close();

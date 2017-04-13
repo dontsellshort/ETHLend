@@ -152,20 +152,21 @@ app.get('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { /
                     winston.error('Can`t get LR');
                     return res.status(400).json('can`t get LR');
                }
-				var minutes_left = 0;
-				var now = new Date;
-				var minutesDiff = (now.getTime() - lr.waiting_for_loan_from.getTime())%60000;
-				if (minutesDiff >= config.get('lending_requests_params:timeout')){
-					minutes_left = 0;
-				} else {
-					minutes_left = config.get('lending_requests_params:timeout') - minutesDiff; 
-				}
 
-                         // minutes_left = (config.get(‘param’) - (now - lr.dateMovedToState4));
-                         // if(minutes_left<=0){
-                         // address_to_send - куда послать деньги Lender'у (равно адресу token_smartcontract)
-                         // eth_count - сколько денег нужно послать Lender'у
-                         // (равно eth_count, если деньги еще не получены)		
+               var minutes_left = 0;
+               var now = new Date;
+               var minutesDiff = (now.getTime() - lr.waiting_for_loan_from.getTime())%60000;
+               if (minutesDiff >= config.get('lending_requests_params:timeout')){
+                    minutes_left = 0;
+               } else {
+                    minutes_left = config.get('lending_requests_params:timeout') - minutesDiff; 
+               }
+
+               // minutes_left = (config.get(‘param’) - (now - lr.dateMovedToState4));
+               // if(minutes_left<=0){
+               // address_to_send - куда послать деньги Lender'у (равно адресу token_smartcontract)
+               // eth_count - сколько денег нужно послать Lender'у
+               // (равно eth_count, если деньги еще не получены)		
                var out = {
                     eth_count:                lr.eth_count,
                     token_amount:             lr.token_amount,
@@ -179,16 +180,17 @@ app.get('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { /
                     current_state:            lr.current_state,
                     lender_id:                lr.lender_id,
                     date_created:             lr.date_created,
-				waiting_for_loan_from:    lr.waiting_for_loan_from,
+                    waiting_for_loan_from:    lr.waiting_for_loan_from,
                     date_modified:            lr.date_modified,
                     days_left:                lr.days_left,
                     address_to_send:          lr.address_to_send,
                     eth_count:                lr.eth_count,
 
                     minutes_left:             minutes_left,
-				address_to_send:          lr.token_smartcontract,
+                    address_to_send:          lr.token_smartcontract,
                     eth_count:                lr.eth_count
                };
+
                res.json(out);
           })
      });
@@ -203,8 +205,10 @@ app.post('/api/v1/auth/users/:shortId/lrs/:id/lend', function (request, res, nex
           winston.error('Undefined id');
           return res.status(400).json('No id');
      };
+
      var userId = request.params.shortId;
      var lrId = request.params.id;
+
      db_helpers.getUser(request.user, userId, function (err, user) {
           if (err) {
                return res.status(400);
