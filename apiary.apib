@@ -184,12 +184,13 @@ LR will be in 'waiting for data' state
             id: 123123123
         }
 
-### Set data to the Lending Request [PUT /api/v1/auth/users/{shortId}/lrs]
+### Set data to the Lending Request [PUT /api/v1/auth/users/{shortId}/lrs/{id}]
 
 If LR is in 'waiting for data' state -> borrower should set basic data
             
 + Parameters
     + shortId - User ID
+    + id - Lending Request ID
 
 + Request (application/json)
     
