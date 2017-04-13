@@ -145,7 +145,7 @@ app.get('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { /
                }
 				var minutes_left = 0;
 				var now = new Date;
-				var minutesDiff = (now.getTime() - lr.date_moved_to_state_4.getTime())%60000;
+				var minutesDiff = (now.getTime() - lr.waiting_for_loan_from.getTime())%60000;
 				if (minutesDiff >= config.get('lending_requests_params:timeout')){
 					minutes_left = 0;
 				} else {
@@ -169,7 +169,7 @@ app.get('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { /
                     borrower_id:              lr.borrower_id,
                     lender_id:                lr.lender_id,
                     date_created:             lr.date_created,
-				date_moved_to_state_4:    lr.date_moved_to_state_4,
+				waiting_for_loan_from:    lr.waiting_for_loan_from,
                     date_modified:            lr.date_modified,
                     days_to_lend:             lr.days_to_lend,
                     days_left:                lr.days_left,
@@ -203,7 +203,7 @@ app.post('/api/v1/auth/users/:shortId/lrs/:id/lend', function (request, res, nex
 
           var setObj = {
                date_modified: Date.now(),
-			date_moved_to_state_4: Date.now(),
+			waiting_for_loan_from: Date.now(),
                lender_id: userId,
                lender_account_address: '',
 			current_state: 4

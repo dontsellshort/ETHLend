@@ -157,7 +157,7 @@ function createLendingRequest(data, cb){
                winston.error('Can not save lending request to DB: ' + err);
                return cb(err);
           }    
-               return cb(null,lendingRequest);
+          return cb(null,lendingRequest);
      })
 }
 
