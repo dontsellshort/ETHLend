@@ -1,6 +1,5 @@
 var solc = require('solc');
 var Web3 = require('web3');
-var sleep = require('sleep');
 
 var config = require('../config');
 //var contract_helpers = require('../helpers/contracts.js');
