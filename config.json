@@ -38,12 +38,12 @@
           "reply_to":"ethlend@chain.cloud",
           "send_copy_to":"tony@chain.cloud",
 
-          "agreement_link":"http://www.ethlend.ru/agreement.html",
-          "about_link":"http://www.ethlend.ru/about.html",
-          "contacts_link":"http://www.ethlend.ru/contacts.html",
+          "agreement_link":"http://ethlend.herokuapp.com/agreement",
+          "about_link":"http://ethlend.herokuapp.com/about",
+          "contacts_link":"http://ethlend.herokuapp.com/contacts",
 
-          "validation_link":"http://www.ethlend.ru/validation.html",
-          "reset_link":"http://www.ethlend.ru/reset.html"
+          "validation_link":"http://ethlend.herokuapp.com/validation",
+          "reset_link":"http://ethlend.herokuapp.com/reset"
      },
 
      "auth":{
