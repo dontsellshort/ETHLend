@@ -161,6 +161,7 @@ function initDb(dbInit){
      db = dbInit;
 }
 
+/*
 function startHttp(port,cb){
      console.log('S1');
 
@@ -195,6 +196,20 @@ function startHttp(port,cb){
                cb(null);
           });
      });
+}
+*/
+function startHttp(port,cb){
+     this.httpServer = http.createServer(app).listen(port);
+
+     this.httpServer.on('connection', function(sock) {
+          winston.info('Client connected from ' + sock.remoteAddress);
+     });
+
+     this.httpServer.on('request', function(req,resp) {
+          winston.info('REQ: ' + req.connection.remoteAddress + '.URL: ' + req.url);
+     });
+
+     cb(null)
 }
 
 function startHttps(https_port){
