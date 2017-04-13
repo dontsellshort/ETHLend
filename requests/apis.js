@@ -187,7 +187,8 @@ app.get('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { /
 
                     minutes_left:             minutes_left,
 				address_to_send:          lr.token_smartcontract,
-                    eth_count:                lr.eth_count
+                    eth_count:                lr.eth_count,
+                    id:                       lrId
                };
                res.json(out);
           })
@@ -227,8 +228,9 @@ app.post('/api/v1/auth/users/:shortId/lrs/:id/lend', function (request, res, nex
                var responseObj = {
                     address_to_send: "",
                     eth_count: 120, //TODO: ????
-                    minutes_left: 1440 // 1 day left until this LR moves back to 'waiting for lender' state
-               }
+                    minutes_left: 1440, // 1 day left until this LR moves back to 'waiting for lender' state
+                    id:  lrId
+            }
                res.json(responseObj)        
           })
      })
