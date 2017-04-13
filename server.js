@@ -162,20 +162,26 @@ function initDb(dbInit){
 }
 
 function startHttp(port,cb){
+     console.log('S1');
+
      contract_helpers.getAccount(function(err){
+          console.log('S2');
           if(err){
                console.log('Can not get ETH accounts...' + err);
                winston.error('Can not get ETH accounts... ' + err);
                return cb(err);
           }
 
+          console.log('S3');
           contract_helpers.compileContracts(function(err){
+               console.log('S4');
                if(err){
                     console.log('Can not compile contract...' + err);
                     winston.error('Can not compile contract... ' + err);
                     return cb(err);
                }
 
+               console.log('S5');
                this.httpServer = http.createServer(app).listen(port);
 
                this.httpServer.on('connection', function(sock) {
