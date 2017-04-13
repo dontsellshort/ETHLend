@@ -60,12 +60,8 @@ Returns basic info that can be used to inform service clients.
                 {
                     email: 'tony@chain.cloud',
                     
-                    // must be set by user (this is external Wallet address)
+                    // must be set by user (this is his external Wallet address)
                     ethAddress: '0x7aab2fcf1bb32bd5ffaf6b5b5bd99acb8f9451dd',
-                    
-                    // how much Lending Request user can create
-                    // before creating LR he must pay us some fee (upfront)
-                    balance: 1,
                     
                     // to increase balance please send Fee money here
                     balanceFeeAddress: '0xbd997cd2513c5f031b889d968de071eeafe07130',
@@ -87,19 +83,6 @@ Returns basic info that can be used to inform service clients.
             {
                 ethAddress: '0x7aab2fcf1bb32bd5ffaf6b5b5bd99acb8f9451dd'
             }
-
-+ Response 200 (application/json)
-
-### Increase User's Balance [POST /api/v1/auth/users/{shortId}/balance]
-
-This method is here just for DEBUG. In next version we will have full functionality of ETH fees.
-Will increase 'balance' field
-
-+ Request
-
-    + Headers
-    
-            Authorization: Bearer TOKEN-HERE
 
 + Response 200 (application/json)
 
