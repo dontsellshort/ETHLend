@@ -40,6 +40,15 @@ describe('Users module and lending requests', function (T) {
           done();
      });
 
+     it('0.1. Should return json on /api/v1/info', function(done){
+          var url = '/api/v1/info';
+          getData(9091, url, '', function (err, statusCode, h, dataOut) {
+               SQ(err,null);             
+               NQ(JSON.parse(h).eth_is_enabled,null)
+               done()
+          });
+     });
+
      it('1.1. should not create user if no email in body', function (done) {
           var url, data;
           url = '/api/v1/users';
