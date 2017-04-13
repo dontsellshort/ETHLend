@@ -156,9 +156,7 @@ app.get('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { /
 // if(minutes_left<=0){
 // address_to_send - куда послать деньги Lender'у (равно адресу token_smartcontract)
 // eth_count - сколько денег нужно послать Lender'у
-// (равно eth_count, если деньги еще не получены)
-  	
-			
+// (равно eth_count, если деньги еще не получены)		
                var out = {
                     current_state:            lr.current_state,
                     eth_count:                lr.eth_count,
