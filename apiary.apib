@@ -197,6 +197,9 @@ If LR is in 'waiting for data' state -> borrower should set basic data
     + Body
     
             {
+                // current object ID
+                id: '12312312311',
+                
                 eth_count: 120,
                 token_amount: 10000,
                 token_name: 'Augur tokens',
@@ -229,6 +232,9 @@ If LR is in 'waiting for data' state -> borrower should set basic data
 + Response 200 (application/json)
     
         {
+            // current object ID
+            id: '12312312311',
+                
             // 0 - waiting for data
             // 1 - waiting for tokens
             // 2 - cancelled
@@ -286,6 +292,9 @@ LR should move from 'waiting for lender' to 'waiting for loan' state.
 + Response 200 (application/json)
 
         {
+            // current object ID
+            id: '12312312311',
+                
             "address_to_send": "0xbd997cd2513c5f031b889d968de071eeafe07130",
             "eth_count": 120,
             "minutes_left": 1440    // 1 day left until this LR moves back to 'waiting for lender' state
