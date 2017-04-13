@@ -190,7 +190,7 @@ function deployContract(data,cb){
      });
 }
 
-describe('Contract - Ledger', function() {
+describe('Contracts 1', function() {
      before("Initialize everything", function(done) {
           web3.eth.getAccounts(function(err, as) {
                if(err) {
@@ -487,15 +487,14 @@ describe('Contract - Ledger', function() {
           var lr = web3.eth.contract(requestAbi).at(a);
 
           var state = lr.getState();
-          // "Waiting for lender" state
+          // "Funded" state
           assert.equal(state.toString(),5);
           done();
      })
 })
 
 
-/*
-describe('Contract1', function() {
+describe('Contracts 2 - cancell', function() {
      before("Initialize everything", function(done) {
           web3.eth.getAccounts(function(err, as) {
                if(err) {
@@ -505,6 +504,9 @@ describe('Contract1', function() {
 
                accounts = as;
                creator = accounts[0];
+               borrower = accounts[1];
+               feeCollector = accounts[2];
+               lender = accounts[3];
 
                var contractName = ':Ledger';
                getContractAbi(contractName,function(err,abi){
@@ -533,13 +535,266 @@ describe('Contract1', function() {
           });
      });
 
-     it('should deploy LendingRequest contract',function(done){
-          deployContract({},function(err){
+     it('should issue new LR',function(done){
+          // 0.2 ETH
+          var amount = 200000000000000000;
+
+          // this should be called by borrower
+          ledgerContract.createNewLendingRequest(
+               {
+                    from: borrower,               
+                    value: amount,
+                    gas: 2900000 
+               },function(err,result){
+                    assert.equal(err,null);
+
+                    web3.eth.getTransactionReceipt(result, function(err, r2){
+                         assert.equal(err, null);
+
+                         done();
+                    });
+               }
+          );
+     });
+
+     it('should get updated count of LR',function(done){
+          var count = ledgerContract.getLrCount();
+          assert.equal(count,1);
+          done();
+     })
+     
+     it('should get correct LR state',function(done){
+          var a = ledgerContract.getLr(0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          var state = lr.getState();
+          // "Waiting for data" state
+          assert.equal(state.toString(),0);
+          done();
+     })
+
+     it('should cancell LR',function(done){
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          // should be called by platform
+          lr.cancell(
+               {
+                    // can be sent from ledger, main, borrower
+                    from: borrower,               
+                    gas: 2900000 
+               },function(err,result){
+                    assert.equal(err,null);
+
+                    web3.eth.getTransactionReceipt(result, function(err, r2){
+                         assert.equal(err, null);
+
+                         done();
+                    });
+               }
+          );
+     });
+
+     it('should get correct LR state',function(done){
+          var a = ledgerContract.getLr(0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          var state = lr.getState();
+          // "Cancelled" state
+          assert.equal(state.toString(),2);
+          done();
+     })
+
+     it('should not cancell LR again',function(done){
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          // should be called by platform
+          lr.cancell(
+               {
+                    // can be sent from ledger, main, borrower
+                    from: borrower,               
+                    gas: 2900000 
+               },function(err,result){
+                    assert.notEqual(err,null);
+                    done();
+               }
+          );
+     });
+
+     it('should get correct LR state again',function(done){
+          var a = ledgerContract.getLr(0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          var state = lr.getState();
+          // "Cancelled" state
+          assert.equal(state.toString(),2);
+          done();
+     })
+});
+
+describe('Contracts 3 - cancell with refund', function() {
+     before("Initialize everything", function(done) {
+          web3.eth.getAccounts(function(err, as) {
+               if(err) {
+                    done(err);
+                    return;
+               }
+
+               accounts = as;
+               creator = accounts[0];
+               borrower = accounts[1];
+               feeCollector = accounts[2];
+               lender = accounts[3];
+
+               var contractName = ':Ledger';
+               getContractAbi(contractName,function(err,abi){
+                    ledgerAbi = abi;
+
+                    contractName = ':LendingRequest';
+                    getContractAbi(contractName,function(err,abi){
+                         requestAbi = abi;
+
+                         done();
+                    });
+               });
+          });
+     });
+
+     after("Deinitialize everything", function(done) {
+          done();
+     });
+
+     it('should deploy Ledger contract',function(done){
+          var data = {};
+          deployLedgerContract(data,function(err){
                assert.equal(err,null);
 
                done();
           });
      });
+
+     it('should get initial creator balance',function(done){
+          initialBalanceCreator = web3.eth.getBalance(creator);
+
+          console.log('Creator initial balance is: ');
+          console.log(initialBalanceCreator.toString(10));
+
+          done();
+     });
+
+     it('should get initial borrower balance',function(done){
+          initialBalanceBorrower = web3.eth.getBalance(borrower);
+
+          console.log('Borrower initial balance is: ');
+          console.log(initialBalanceCreator.toString(10));
+
+          done();
+     });
+
+     it('should get initial feeCollector balance',function(done){
+          initialBalanceFeeCollector = web3.eth.getBalance(feeCollector);
+
+          console.log('FeeCollector initial balance is: ');
+          console.log(initialBalanceFeeCollector.toString(10));
+          done();
+     });
+
+     it('should get initial lender balance',function(done){
+          initialBalanceLender = web3.eth.getBalance(lender);
+
+          console.log('Lender initial balance is: ');
+          console.log(initialBalanceLender.toString(10));
+          done();
+     });
+
+     it('should get current count of LR',function(done){
+          var count = ledgerContract.getLrCount();
+          assert.equal(count,0);
+          done();
+     })
+
+     it('should get intial count of LR for borrower',function(done){
+          var count = ledgerContract.getLrCountForUser(borrower);
+          assert.equal(count,0);
+          done();
+     })
+
+     it('should issue new LR',function(done){
+          // 0.2 ETH
+          var amount = 200000000000000000;
+
+          // this should be called by borrower
+          ledgerContract.createNewLendingRequest(
+               {
+                    from: borrower,               
+                    value: amount,
+                    gas: 2900000 
+               },function(err,result){
+                    assert.equal(err,null);
+
+                    web3.eth.getTransactionReceipt(result, function(err, r2){
+                         assert.equal(err, null);
+
+                         done();
+                    });
+               }
+          );
+     });
+
+     it('should get updated count of LR',function(done){
+          var count = ledgerContract.getLrCount();
+          assert.equal(count,1);
+          done();
+     })
+
+     it('should get updated count of LR for borrower',function(done){
+          var count = ledgerContract.getLrCountForUser(borrower);
+          assert.equal(count,1);
+          done();
+     })
+
+     it('should get updated feeCollector balance',function(done){
+          var current = web3.eth.getBalance(feeCollector);
+          var feeAmount = 100000000000000000;
+
+          var diff = current - initialBalanceFeeCollector;
+          assert.equal(diff.toString(10),feeAmount);
+          done();
+     });
+
+     it('should get updated borrower balance',function(done){
+          var current = web3.eth.getBalance(borrower);
+          var mustBe = 200000000000000000;
+
+          var diff = initialBalanceBorrower - current;
+          assert.equal(diffWithGas(mustBe,diff),true);
+          done();
+     });
+
+     it('should get LR contract',function(done){
+          assert.equal(ledgerContract.getLrCount(),1);
+
+          var a = ledgerContract.getLr(0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          var state = lr.getState();
+          // "Waiting for data" state
+          assert.equal(state.toString(),0);
+          done();
+     })
+
+     it('should get LR contract for user',function(done){
+          assert.equal(ledgerContract.getLrCountForUser(borrower),1);
+          
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          var state = lr.getState();
+          // "Waiting for data" state
+          assert.equal(state.toString(),0);
+          done();
+     })
 
      it('should set data',function(done){
           var data = {
@@ -552,8 +807,80 @@ describe('Contract1', function() {
                token_smartcontract_address: '0xCF965Cfe7C30323E9C9E41D4E398e2167506f764'
           };
 
-          // TODO:
-          contract.setData(data)
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          // this is set by creator (from within platform)
+          lr.setData(
+               data.wanted_wei,
+               data.token_amount,
+               data.token_name,
+               data.token_infolink,
+               data.token_smartcontract_address,
+               {
+                    from: creator,               
+                    //value: amount,
+                    gas: 2900000 
+               },function(err,result){
+                    assert.equal(err,null);
+
+                    web3.eth.getTransactionReceipt(result, function(err, r2){
+                         assert.equal(err, null);
+
+                         done();
+                    });
+               }
+          );
      });
-})
-*/
+
+     it('should move to Waiting for tokens state',function(done){
+          assert.equal(ledgerContract.getLrCountForUser(borrower),1);
+          
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          var state = lr.getState();
+          // "Waiting for tokens" state
+          assert.equal(state.toString(),1);
+          done();
+     })
+
+     it('should check if tokens are transferred (fake)',function(done){
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          // should be called by platform
+          lr.checkTokens(
+               {
+                    from: creator,               
+                    //value: amount,
+                    gas: 2900000 
+               },function(err,result){
+                    assert.equal(err,null);
+
+                    web3.eth.getTransactionReceipt(result, function(err, r2){
+                         assert.equal(err, null);
+
+                         done();
+                    });
+               }
+          );
+     });
+
+     it('should move to Waiting for lender state',function(done){
+          assert.equal(ledgerContract.getLrCountForUser(borrower),1);
+          
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          var state = lr.getState();
+          // "Waiting for lender" state
+          assert.equal(state.toString(),3);
+          done();
+     })
+
+     // TODO: test that tokens are returned to founder
+     it('should return tokens to founder',function(done){
+          done();
+     })
+});

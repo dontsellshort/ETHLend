@@ -1,4 +1,4 @@
-//pragma solidity ^0.4.4;
+pragma solidity ^0.4.4;
 
 contract Ledger {
      // who deployed Ledger
@@ -89,9 +89,11 @@ contract LendingRequest {
           // lender must send money
           Funded,
 
+          // borrower clicked on 'Return ETH' button
           WaitingForPayback,
-          Default,
           PaybackReceived,
+
+          Default,
           Finished
      }
 
@@ -131,6 +133,12 @@ contract LendingRequest {
           _;
      }
 
+     modifier byLedgerMainOrBorrower(){
+          if((msg.sender!=mainAddress) && (msg.sender!=ledger) && (msg.sender!=borrower))
+               throw;
+          _;
+     }
+
      modifier onlyInState(State state){
           if(currentState!=state)
                throw;
@@ -165,7 +173,7 @@ contract LendingRequest {
 // 
      function setData(uint wanted_wei_, uint token_amount_, 
           string token_name_, string token_infolink_, address token_smartcontract_address_) 
-               byLedgerOrMain onlyInState(State.WaitingForData)
+               byLedgerMainOrBorrower onlyInState(State.WaitingForData)
      {
           wanted_wei = wanted_wei_;
           token_amount = token_amount_;
@@ -176,14 +184,33 @@ contract LendingRequest {
           currentState = State.WaitingForTokens;
      }
 
+     function cancell() byLedgerMainOrBorrower {
+          // 1 - check current state
+          if((currentState!=State.WaitingForData) && (currentState!=State.WaitingForLender))
+               throw;
+
+          if(currentState==State.WaitingForLender){
+               // TODO: 
+               // we should return back to Borrower tokens 
+          }
+          currentState = State.Cancelled;
+     }
+
      // Should check if tokens are 'trasferred' to this contracts address and controlled
-     function checkTokens()byLedgerOrMain onlyInState(State.WaitingForTokens){
+     function checkTokens()byLedgerMainOrBorrower onlyInState(State.WaitingForTokens){
           // TODO:
           // !!! DOES NO CHECKS!!!
           
           // we are ready to search someone that has money
           // to give us
           currentState = State.WaitingForLender;
+     }
+
+     // Borrower wants his tokens back
+     // He clicks on "Return ETH" button 
+     function returnEth()byLedgerMainOrBorrower onlyInState(State.Funded){
+            
+          currentState = State.WaitingForPayback;
      }
 
 
