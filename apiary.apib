@@ -179,8 +179,31 @@ Get a list of LRs for a selected user. Returns a JSON list of IDs.
 
 ### Create new Lending Request [POST /api/v1/auth/users/{shortId}/lrs]
 
-If user's *balance* is non-null -> user can Create new Lending Request.
-LR will be in 'waiting for tokens' state
+LR will be in 'waiting for data' state
+            
++ Parameters
+    + shortId - User ID
+
++ Request (application/json)
+    
+    + Body
+    
+            {
+            }    
+
+    + Headers
+    
+            Authorization: Bearer TOKEN-HERE
+            
++ Response 200 (application/json)
+    
+        {
+            id: 123123123
+        }
+
+### Set data to the Lending Request [PUT /api/v1/auth/users/{shortId}/lrs]
+
+If LR is in 'waiting for data' state -> borrower should set basic data
             
 + Parameters
     + shortId - User ID
@@ -205,10 +228,6 @@ LR will be in 'waiting for tokens' state
             Authorization: Bearer TOKEN-HERE
             
 + Response 200 (application/json)
-    
-        {
-            id: 123123123
-        }
 
 
 ### Get a Lending Request [GET /api/v1/auth/users/{shortId}/lrs/{id}]
