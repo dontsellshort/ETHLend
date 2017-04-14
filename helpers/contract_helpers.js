@@ -132,6 +132,31 @@ function deployMain(cb){
           });
 }
 
+function getAllLrs(cb){
+     winston.info('Asking Ledger contract for a list of all LRs');
+
+     var out = [];
+     // TODO: 
+     return cb(out);
+}
+
+function getLrById(id,cb){
+     winston.info('Asking Ledger contract for a LR: ' + id);
+
+     var lr = null;
+     // TODO:
+     return cb(null,lr);
+}
+
+function createNewLr(borrowerAddress,cb){
+     // TODO:
+     winston.info('Creating new LR smart contract for Borrower: ' + borrowerAddress);
+
+     return cb(null);
+}
+
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
 function waitForTransaction(txHash,cb){
      return waitForTransactionInt(0,txHash,cb); 
 }
@@ -187,6 +212,11 @@ function getBalance(address){
      return web3.eth.getBalance(address);
 }
 
+function isSmartContractsEnabled(){
+     var enabled = (typeof(process.env.ETH_NODE)!=='undefined');
+     return enabled;
+}
+
 // Exports:
 exports.getAccount = getAccounts;
 exports.compileContracts = compileContracts;
@@ -198,3 +228,8 @@ exports.getMainAddressLink = getMainAddressLink;
 exports.getMainAccount = getMainAccount;
 exports.getMainAccountLink = getMainAccountLink;
 exports.getBalance = getBalance;
+
+exports.isSmartContractsEnabled = isSmartContractsEnabled;
+
+exports.getAllLrs = getAllLrs;
+exports.getLrById = getLrById;

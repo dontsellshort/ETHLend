@@ -9,7 +9,7 @@ var assert = require('assert');
 var BigNumber = require('bignumber.js');
 
 // You must set this ENV VAR before testing
-assert.notEqual(typeof(process.env.ETH_NODE),'undefined');
+//assert.notEqual(typeof(process.env.ETH_NODE),'undefined');
 var web3 = new Web3(new Web3.providers.HttpProvider(process.env.ETH_NODE));
 
 var accounts;

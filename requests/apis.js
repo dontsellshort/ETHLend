@@ -89,13 +89,24 @@ app.get('/api/v1/auth/users/:shortId/lrs', function (request, res, next) { //2.1
                return res.status(400).json('Wrong user');
           }
 
-          db_helpers.getAllLRforUser(user, function (err, allLR) {
-               if (err) {
-                    winston.error('Can`t return all LR`s');
-                    return res.status(400).json('Can`t return all LR`s');
-               }
-               res.json({ids:allLR});
-          })
+          if(contract_helpers.isSmartContractsEnabled()){
+               contract_helpers.getAllLrs(function(err,lrsIdsArr){
+                    if (err) {
+                         winston.error('Can`t return all LR`s');
+                         return res.status(400).json('Can`t return all LR`s');
+                    }
+                    
+                    res.json({ids:lrsIdsArr});
+               });
+          }else{
+               db_helpers.getAllLRforUser(user, function (err, allLR) {
+                    if (err) {
+                         winston.error('Can`t return all LR`s');
+                         return res.status(400).json('Can`t return all LR`s');
+                    }
+                    res.json({ids:allLR});
+               });
+          }
      });
 });
 
@@ -107,20 +118,37 @@ app.post('/api/v1/auth/users/:shortId/lrs', function (request, res, next) { //2.
      var shortId = request.params.shortId;
      db_helpers.getUser(request.user, shortId, function (err, user) {
           if (err) {
-               return res.status(400).json('wrong user');
+               return res.status(400).json('Wrong user');
           }
 
-          var data = {
-               borrower_id: user.shortId
+          if(!user.ethAddress || !user.ethAddress.length){
+               return res.status(400).json('Please set ethAddress first!');
           }
 
-          db_helpers.createLendingRequest(data, function (err, lr) {
-               if (err) {
-                    winston.error('Can`t createLendingRequest: ' + err);
-                    return res.status(400).json('can`t createLendingRequest');
+          if(contract_helpers.isSmartContractsEnabled()){
+               contract_helpers.createNewLr(user.ethAddress,function(err){
+                    if (err) {
+                         winston.error('Can`t createLendingRequest: ' + err);
+                         return res.status(400).json('can`t createLendingRequest');
+                    }
+
+                    // TODO: no ID!
+                    return res.json({id:0});
+               });
+          }else{
+               var data = {
+                    borrower_id: user.shortId
                }
-               return res.json({id:lr._id})
-          })
+
+               db_helpers.createLendingRequest(data, function (err, lr) {
+                    if (err) {
+                         winston.error('Can`t createLendingRequest: ' + err);
+                         return res.status(400).json('can`t createLendingRequest');
+                    }
+
+                    return res.json({id:lr._id});
+               });
+          }
      });
 });
 
@@ -170,50 +198,72 @@ app.get('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { /
           if (err) {
                return res.status(400);
           }
-          db.LendingRequestModel.findById(lrId, function (err, lr) {
-               if (err) {
-                    winston.error('Can`t get LR');
-                    return res.status(400).json('can`t get LR');
-               }
 
-               var minutes_left = 0;
-               var now = new Date;
-               var minutesDiff = (now.getTime() - lr.waiting_for_loan_from.getTime())%60000;
-               if (minutesDiff >= config.get('lending_requests_params:timeout')){
-                    minutes_left = 0;
-               } else {
-                    minutes_left = config.get('lending_requests_params:timeout') - minutesDiff; 
-               }
+          if(contract_helpers.isSmartContractsEnabled()){
+               contract_helpers.getLrById(lrId,function(err,lr){
+                    if (err) {
+                         winston.error('Can`t return all LR`s');
+                         return res.status(400).json('Can`t return all LR`s');
+                    }
 
-               var out = {
-                    eth_count:                lr.eth_count,
-                    token_amount:             lr.token_amount,
-                    token_name:               lr.token_name,
-                    token_smartcontract:      lr.token_smartcontract,
-                    token_infolink:           lr.token_infolink,
-                    borrower_account_address: lr.borrower_account_address,
-                    lender_account_address:   lr.lender_account_address,
-                    borrower_id:              lr.borrower_id,
-                    days_to_lend:             lr.days_to_lend,
-                    current_state:            lr.current_state,
-                    lender_id:                lr.lender_id,
-                    date_created:             lr.date_created,
-                    waiting_for_loan_from:    lr.waiting_for_loan_from,
-                    date_modified:            lr.date_modified,
-                    days_left:                lr.days_left,
-                    address_to_send:          lr.address_to_send,
-                    eth_count:                lr.eth_count,
-                    smart_contract_address:   (lr.smartcontract_address || ''),
-                    minutes_left:             minutes_left,
-                    address_to_send:          (lr.smartcontract_address || ''),
-                    eth_count:                lr.eth_count,
-                    id:                       lrId
-               };
-
-               res.json(out);
-          })
+                    // TODO:
+                    // convert
+                    var out = {
+                    };
+                    
+                    res.json(out);
+               });
+          }else{
+               getLr_DB(lrId,res);
+          }
      });
 });
+
+// Get from DB
+function getLr_DB(lrId,res){
+     db.LendingRequestModel.findById(lrId, function (err, lr) {
+          if (err) {
+               winston.error('Can`t get LR');
+               return res.status(400).json('can`t get LR');
+          }
+
+          var minutes_left = 0;
+          var now = new Date;
+          var minutesDiff = (now.getTime() - lr.waiting_for_loan_from.getTime())%60000;
+          if (minutesDiff >= config.get('lending_requests_params:timeout')){
+               minutes_left = 0;
+          } else {
+               minutes_left = config.get('lending_requests_params:timeout') - minutesDiff; 
+          }
+
+          var out = {
+               eth_count:                lr.eth_count,
+               token_amount:             lr.token_amount,
+               token_name:               lr.token_name,
+               token_smartcontract:      lr.token_smartcontract,
+               token_infolink:           lr.token_infolink,
+               borrower_account_address: lr.borrower_account_address,
+               lender_account_address:   lr.lender_account_address,
+               borrower_id:              lr.borrower_id,
+               days_to_lend:             lr.days_to_lend,
+               current_state:            lr.current_state,
+               lender_id:                lr.lender_id,
+               date_created:             lr.date_created,
+               waiting_for_loan_from:    lr.waiting_for_loan_from,
+               date_modified:            lr.date_modified,
+               days_left:                lr.days_left,
+               address_to_send:          lr.address_to_send,
+               eth_count:                lr.eth_count,
+               smart_contract_address:   (lr.smartcontract_address || ''),
+               minutes_left:             minutes_left,
+               address_to_send:          (lr.smartcontract_address || ''),
+               eth_count:                lr.eth_count,
+               id:                       lrId
+          };
+
+          res.json(out);
+     });
+}
 
 app.post('/api/v1/auth/users/:shortId/lrs/:id/lend', function (request, res, next) { //2.5. Lend
      if (typeof (request.params.shortId) === 'undefined') {
