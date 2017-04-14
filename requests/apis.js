@@ -88,11 +88,13 @@ app.get('/api/v1/auth/users/:shortId/lrs', function (request, res, next) { //2.1
           if (err) {
                return res.status(400).json('Wrong user');
           }
-
-          db_helpers.getAllLRforUser(user, function (err, allLR) {
+          var allLR = [];
+          db.LendingRequestModel.find({}, function(err, all){
                if (err) {
-                    winston.error('Can`t return all LR`s');
-                    return res.status(400).json('Can`t return all LR`s');
+                    return res.status(400).json('Can`t find LR`s');
+               }               
+               for (it in all){
+                   allLR.push( all[it]._id )
                }
                res.json({ids:allLR});
           })
@@ -135,6 +137,10 @@ app.put('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { /
      }  
      var shortId = request.params.shortId;
      var lrId    = request.params.id;
+     if (lrId===userId) {
+          winston.error('You can`t lend your own borrow');
+          return res.status(400).json('You can`t lend your own borrow');
+     }     
 
      db_helpers.getUser(request.user, shortId, function (err, user) {
           if (err) {
@@ -144,13 +150,24 @@ app.put('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { /
           var data  = request.body;
           data.lrId = lrId;
 
-          db_helpers.setDataForLendingRequest(data, function (err, lr) {
+          db.LendingRequestModel.findById(lrId,function(err,lr){
                if (err) {
-                    winston.error('Can`t setDataForLendingRequest: ' + err);
-                    return res.status(400).json('can`t setDataForLendingRequest');
-               }
-               return res.json(200)
-          })
+                    winston.error('Can`t Lend: ' + err);
+                    return res.status(400).json('can`t lend');
+               }  
+               if(userId !== lr.borrower_id){
+                    winston.error('Tried to update someone else`s LR: '+userId);
+                    return res.status(400).json('It`s not your LR');
+               }   
+
+               db_helpers.setDataForLendingRequest(data, function (err, lr) {
+                    if (err) {
+                         winston.error('Can`t setDataForLendingRequest: ' + err);
+                         return res.status(400).json('can`t setDataForLendingRequest');
+                    }
+                    return res.json(200)
+               })
+          });
      });
 });
 
@@ -240,20 +257,31 @@ app.post('/api/v1/auth/users/:shortId/lrs/:id/lend', function (request, res, nex
 			current_state: 4
           };
 
-          db.LendingRequestModel.findByIdAndUpdate(lrId, {$set: setObj}, {new: true}, function (err, lr) {
+          db.LendingRequestModel.findById(lrId,function(err,lr){
                if (err) {
                     winston.error('Can`t Lend: ' + err);
                     return res.status(400).json('can`t lend');
-               }
+               }  
+               if(userId===lr.borrower_id){
+                    winston.error('Tried to lend his own borrow: '+userId);
+                    return res.status(400).json('You can`t lend your own borrow');
+               }   
 
-               var responseObj = {
-                    address_to_send: "",
-                    eth_count: 120, //TODO: ????
-                    minutes_left: 1440, // 1 day left until this LR moves back to 'waiting for lender' state
-                    id:  lrId
-               };
-               
-               res.json(responseObj);
+               db.LendingRequestModel.findByIdAndUpdate(lrId, {$set: setObj}, {new: true}, function (err, lr) {
+                    if (err) {
+                         winston.error('Can`t Lend: ' + err);
+                         return res.status(400).json('can`t lend');
+                    }
+
+                    var responseObj = {
+                         address_to_send: "",
+                         eth_count: 120, //TODO: ????
+                         minutes_left: 1440, // 1 day left until this LR moves back to 'waiting for lender' state
+                         id:  lrId
+                    };
+                    
+                    res.json(responseObj);
+               });
           });
      });
 });

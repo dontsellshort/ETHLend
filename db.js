@@ -144,7 +144,7 @@ function removeDb(cb){
 }
 
 // Exports:
-var TokenModel         = mongoose.model('Token', Token);
+var TokenModel        = mongoose.model('Token', Token);
 var UserModel         = mongoose.model('User', User);
 var SubscriptionModel = mongoose.model('Subscription', Subscription);
 var LendingRequestModel = mongoose.model('LendingRequest', LendingRequest);
