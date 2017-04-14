@@ -134,11 +134,11 @@ Create new password (after reset was requested)
                     shortId: '123456'
                 }
 
-## Lending Requests [/api/v1/auth/users/{shortId}/lrs]
+## Lending Requests [/api/v1/auth/lrs]
 
-### Get a list of Lending Requests for user [GET /api/v1/auth/users/{shortId}/lrs]
+### Get a list of Lending Requests for user [GET /api/v1/auth/lrs]
 
-Get a list of LRs for a selected user. Returns a JSON list of IDs. 
+Get a list of LRs for all users. Returns a JSON list of IDs. 
 
 + Request
 
@@ -146,9 +146,6 @@ Get a list of LRs for a selected user. Returns a JSON list of IDs.
     
             Authorization: Bearer TOKEN-HERE
             
-+ Parameters
-    + shortId - User ID
-    
 + Response 200 (application/json)
     
         {
@@ -160,13 +157,10 @@ Get a list of LRs for a selected user. Returns a JSON list of IDs.
             ]
         }
 
-### Create new Lending Request [POST /api/v1/auth/users/{shortId}/lrs]
+### Create new Lending Request [POST /api/v1/auth/lrs]
 
 LR will be in 'waiting for data' state
             
-+ Parameters
-    + shortId - User ID
-
 + Request (application/json)
     
     + Body
@@ -184,12 +178,12 @@ LR will be in 'waiting for data' state
             id: 123123123
         }
 
-### Set data to the Lending Request [PUT /api/v1/auth/users/{shortId}/lrs/{id}]
+### Set data to the Lending Request [PUT /api/v1/auth/lrs/{id}]
 
 If LR is in 'waiting for data' state -> borrower should set basic data
-            
+This method should be only available to Borrower.
+
 + Parameters
-    + shortId - User ID
     + id - Lending Request ID
 
 + Request (application/json)
@@ -270,13 +264,13 @@ If LR is in 'waiting for data' state -> borrower should set basic data
             "minutes_left": 1440    // lender should send us eth_count ETHs until time is left
         }
         
-### Lend [POST /api/v1/auth/users/{shortId}/lrs/{id}/lend]
+### Lend [POST /api/v1/auth/lrs/{id}/lend]
 
 Lender can select any Lending Request and lend it.
+This should be called by any user, except the Borrower.
 LR should move from 'waiting for lender' to 'waiting for loan' state.
 
 + Parameters
-    + shortId - User ID
     + id - Lending Request ID
 
 + Request (application/json) 
