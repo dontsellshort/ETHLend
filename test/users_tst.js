@@ -27,7 +27,7 @@ describe('Users module and lending requests', function (T) {
                server.initDb(db);
                server.startHttp(9091,function(err){
                     if (err){
-                         winston.info("Problem with http: " + err);
+                         console.log("Problem with http: " + err);
                     }
                     done();
                });

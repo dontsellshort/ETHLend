@@ -193,6 +193,11 @@ function sendUserValidation(sendTo,validationLink,dontSend,cb){
           var subjText = helpers.capitalizeFirst(config.get('service_name')) + ': Подтверждение регистрации';
           var text     = 'Подтверждение регистрации.';
 
+          if(config.get('mail:lang')=='eng'){
+               subjText = helpers.capitalizeFirst(config.get('service_name')) + ': Verification link.';
+               text     = "Verification linkg.";
+          }
+
           // 3 - send email with attachement
           sendEmail(
             sendTo,
@@ -226,6 +231,11 @@ function sendRegComplete(sendTo,dontSend,cb){
           var subjText = helpers.capitalizeFirst(config.get('service_name')) + ': Регистрация завершена.';
           var text     = "Регистрация успешно завершена.";
 
+          if(config.get('mail:lang')=='eng'){
+               subjText = helpers.capitalizeFirst(config.get('service_name')) + ': Registration complete.';
+               text     = "Registration complete.";
+          }
+
           // 3 - send email with attachement
           sendEmail(
             sendTo,
@@ -258,6 +268,11 @@ function sendResetPassword(sendTo,resetLink,dontSend,cb){
           var subjText = helpers.capitalizeFirst(config.get('service_name')) + ': Сброс пароля.';
           var text     = "Сброс пароля.";
 
+          if(config.get('mail:lang')=='eng'){
+               subjText = helpers.capitalizeFirst(config.get('service_name')) + ': Password reset.';
+               text     = "Password reset.";
+          }
+
           // 3 - send email with attachement
           sendEmail(
             sendTo,
@@ -289,6 +304,11 @@ function sendPassChanged(sendTo,dontSend,cb){
           
           var subjText = helpers.capitalizeFirst(config.get('service_name')) + ': Пароль изменен.';
           var text     = "Пароль изменен.";
+
+          if(config.get('mail:lang')=='eng'){
+               subjText = helpers.capitalizeFirst(config.get('service_name')) + ': Password is changed.';
+               text     = "Password is changed.";
+          }
 
           // 3 - send email with attachement
           sendEmail(
