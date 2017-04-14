@@ -60,6 +60,11 @@ var LendingRequest = new Schema({
      days_left:                {type: Number, required: false}
 });
 
+var Token = new Schema({
+     token:       {type: String, required:true},
+     expire_date: {type: Date, required:true}
+})
+
 var Subscription = new Schema({
      userShortId: {type: String, required:true},
 
@@ -139,10 +144,13 @@ function removeDb(cb){
 }
 
 // Exports:
+var TokenModel        = mongoose.model('Token', Token);
 var UserModel         = mongoose.model('User', User);
 var SubscriptionModel = mongoose.model('Subscription', Subscription);
 var LendingRequestModel = mongoose.model('LendingRequest', LendingRequest);
 
+
+module.exports.TokenModel        = TokenModel;
 module.exports.UserModel         = UserModel;
 module.exports.SubscriptionModel = SubscriptionModel;
 module.exports.LendingRequestModel = LendingRequestModel;

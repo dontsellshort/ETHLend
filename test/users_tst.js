@@ -428,7 +428,7 @@ describe('Users module and lending requests', function (T) {
           });
      });
 
-     it('2.5. should Lend', function (done) {
+     it('2.5. Shouldn`t Lend my own borrow', function (done) {
           var lrId = global.oneOfLrId;
           var j = {
                date_modified: Date.now(),
@@ -441,18 +441,19 @@ describe('Users module and lending requests', function (T) {
  
           postDataAuth(9091, url, data, global.authToken, function (err, statusCode, h, dataOut) {
                SQ(err, null);
-               SQ(statusCode, 200);
+               SQ(statusCode, 400);
                var parsed = JSON.parse(dataOut)
-               SQ(parsed.minutes_left,1440)
-               var url = '/api/v1/auth/users/' + global.sessionUID + '/lrs/' + global.oneOfLrId;
+               // SQ(parsed.minutes_left,1440)
+               done();
+               // var url = '/api/v1/auth/users/' + global.sessionUID + '/lrs/' + global.oneOfLrId;
 
-               getData(9091, url, global.authToken, function (err, statusCode, h, dataOut) {
-                    SQ(err, null);
-                    SQ(statusCode, 200);
-                    var parsed = JSON.parse(h);
-                    SQ(parsed.current_state,4);
-                    done();
-               });
+               // getData(9091, url, global.authToken, function (err, statusCode, h, dataOut) {
+               //      SQ(err, null);
+               //      SQ(statusCode, 400);
+               //      // var parsed = JSON.parse(h);
+               //      // SQ(parsed.current_state,4);
+               //      done();
+               // });
           });
      });
 
