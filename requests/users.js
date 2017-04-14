@@ -441,6 +441,8 @@ function returnJwt(user,res){
      };
 
      // We are sending the profile inside the token
+     // db.
+
      var token = jwt.sign(profile, secret, 
           { expiresInMinutes: config.get('auth:expires_minutes') });
 
@@ -449,3 +451,15 @@ function returnJwt(user,res){
 
      res.json({ token: token, shortId: user.shortId });
 }
+
+
+function refreshThisToken(token){
+     var originalDecoded = jwt.decode(token, {complete: true});
+     var refreshed = jwt.refresh(originalDecoded, config.get('auth:expires_minutes'), secret);
+     return refreshed
+}
+
+function saveTokenForUser(token,user){
+     var newToken = new db.TokenModel;
+}
+
