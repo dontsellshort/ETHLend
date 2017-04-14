@@ -379,6 +379,8 @@ describe('Users module and lending requests', function (T) {
                SQ(err, null);
                NQ(JSON.parse(dataOut).id, null);
                LR = JSON.parse(dataOut);
+               NQ(LR.id,0);
+
                global.oneOfLrId = LR.id;
                done();
           });       

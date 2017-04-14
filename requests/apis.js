@@ -126,14 +126,13 @@ app.post('/api/v1/auth/users/:shortId/lrs', function (request, res, next) { //2.
           }
 
           if(contract_helpers.isSmartContractsEnabled()){
-               contract_helpers.createNewLr(user.ethAddress,function(err){
+               contract_helpers.createNewLr(user.ethAddress,function(err,idOut){
                     if (err) {
                          winston.error('Can`t createLendingRequest: ' + err);
                          return res.status(400).json('can`t createLendingRequest');
                     }
 
-                    // TODO: no ID!
-                    return res.json({id:0});
+                    return res.json({id:idOut});
                });
           }else{
                var data = {

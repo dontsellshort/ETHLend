@@ -152,7 +152,8 @@ function createNewLr(borrowerAddress,cb){
      // TODO:
      winston.info('Creating new LR smart contract for Borrower: ' + borrowerAddress);
 
-     return cb(null);
+     var idOut = 23131;  // TODO
+     return cb(null,idOut);
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -233,3 +234,4 @@ exports.isSmartContractsEnabled = isSmartContractsEnabled;
 
 exports.getAllLrs = getAllLrs;
 exports.getLrById = getLrById;
+exports.createNewLr = createNewLr;
