@@ -76,38 +76,34 @@ app.put('/api/v1/auth/users/:shortId', function (request, res, next) { // 1.8. U
      });
 });
 
-app.get('/api/v1/auth/users/:shortId/lrs', function (request, res, next) { //2.1. Get a list of Lending Requests for user 
-     if (typeof (request.params.shortId) === 'undefined') {
-          winston.error('Undefined shortId');
-          return res.status(400).json('No shortId');
+app.get('/api/v1/auth/lrs', function (request, res, next) { //2.1. Get a list of Lending Requests for all users 
+     var user = request.user;
+     if (typeof (user.id) === 'undefined') {
+          winston.error('Not a user');
+          return res.status(400).json('Not a user');
      }
+     var userId = user.id;
 
-     var shortId = request.params.shortId;
-
-     db_helpers.getUser(request.user, shortId, function (err, user) { 
+     var allLR = [];
+     db.LendingRequestModel.find({}, function(err, all){
           if (err) {
-               return res.status(400).json('Wrong user');
+               return res.status(400).json('Can`t find LR`s');
+          }               
+          for (it in all){
+               allLR.push( all[it]._id )
           }
-          var allLR = [];
-          db.LendingRequestModel.find({}, function(err, all){
-               if (err) {
-                    return res.status(400).json('Can`t find LR`s');
-               }               
-               for (it in all){
-                   allLR.push( all[it]._id )
-               }
-               res.json({ids:allLR});
-          })
+          res.json({ids:allLR})
      });
 });
 
-app.post('/api/v1/auth/users/:shortId/lrs', function (request, res, next) { //2.2. Create new Lending Request 
-     if (typeof (request.params.shortId) === 'undefined') {
-          winston.error('undefined shortId');
-          return res.status(400).json('No shortId');
+app.post('/api/v1/auth/lrs', function (request, res, next) { //2.2. Create new Lending Request 
+     var user = request.user;
+     if (typeof (user.id) === 'undefined') {
+          winston.error('Not a user');
+          return res.status(400).json('Not a user');
      }
-     var shortId = request.params.shortId;
-     db_helpers.getUser(request.user, shortId, function (err, user) {
+     var userId = user.id;
+     db_helpers.getUser(user, userId, function (err, user) {
           if (err) {
                return res.status(400).json('wrong user');
           }
@@ -126,35 +122,33 @@ app.post('/api/v1/auth/users/:shortId/lrs', function (request, res, next) { //2.
      });
 });
 
-app.put('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { //2.3. Set data for Lending Request 
-     if (typeof (request.params.shortId) === 'undefined') {
-          winston.error('Undefined shortId');
-          return res.status(400).json('No shortId');
+app.put('/api/v1/auth/lrs/:id', function (request, res, next) { //2.3. Set data for Lending Request 
+     var user = request.user;
+     if (typeof (user.id) === 'undefined') {
+          winston.error('Not a user');
+          return res.status(400).json('Not a user');
      }
+     var userId = user.id;
      if (typeof (request.params.id) === 'undefined') {
           winston.error('Undefined id');
           return res.status(400).json('No id');
      }  
-     var shortId = request.params.shortId;
-     var lrId    = request.params.id;
-     if (lrId===userId) {
-          winston.error('You can`t lend your own borrow');
-          return res.status(400).json('You can`t lend your own borrow');
-     }     
+     var id = request.params.id;
 
-     db_helpers.getUser(request.user, shortId, function (err, user) {
+     db_helpers.getUser(request.user, userId, function (err, user) {
           if (err) {
                return res.status(400).json('wrong user');
           }
 
           var data  = request.body;
-          data.lrId = lrId;
+          data.lrId = id;
 
-          db.LendingRequestModel.findById(lrId,function(err,lr){
+          db.LendingRequestModel.findById(id,function(err,lr){
                if (err) {
                     winston.error('Can`t Lend: ' + err);
                     return res.status(400).json('can`t lend');
                }  
+
                if(userId !== lr.borrower_id){
                     winston.error('Tried to update someone else`s LR: '+userId);
                     return res.status(400).json('It`s not your LR');
@@ -171,23 +165,25 @@ app.put('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { /
      });
 });
 
-app.get('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { //2.4. Get a Lending Request 
-     if (typeof (request.params.shortId) === 'undefined') {
-          winston.error('Undefined shortId');
-          return res.status(400).json('No id');
+app.get('/api/v1/auth/lrs/:id', function (request, res, next) { //2.4. Get a Lending Request 
+     var user = request.user;
+     if (typeof (user.id) === 'undefined') {
+          winston.error('Not a user');
+          return res.status(400).json('Not a user');
      }
+     var userId = user.id;
+
      if (typeof (request.params.id) === 'undefined') {
           winston.error('Undefined id');
           return res.status(400).json('No id');
      }
-     var userId = request.params.shortId;
-     var lrId = request.params.id;
+     var id = request.params.id;
      
-     db_helpers.getUser(request.user, userId, function (err, user) {
+     db_helpers.getUser(user, userId, function (err, user) {
           if (err) {
-               return res.status(400);
+               return res.status(400).json('wrong user: '+err);
           }
-          db.LendingRequestModel.findById(lrId, function (err, lr) {
+          db.LendingRequestModel.findById(id, function (err, lr) {
                if (err) {
                     winston.error('Can`t get LR');
                     return res.status(400).json('can`t get LR');
@@ -224,7 +220,7 @@ app.get('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { /
                     minutes_left:             minutes_left,
                     address_to_send:          (lr.smartcontract_address || ''),
                     eth_count:                lr.eth_count,
-                    id:                       lrId
+                    id:                       id
                };
 
                res.json(out);
@@ -232,19 +228,21 @@ app.get('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { /
      });
 });
 
-app.post('/api/v1/auth/users/:shortId/lrs/:id/lend', function (request, res, next) { //2.5. Lend
-     if (typeof (request.params.shortId) === 'undefined') {
-          winston.error('Undefined shortId');
-          return res.status(400).json('No id');
+app.post('/api/v1/auth/lrs/:id/lend', function (request, res, next) { //2.5. Lend
+     var user = request.user;
+     if (typeof (user.id) === 'undefined') {
+          winston.error('Not a user');
+          return res.status(400).json('Not a user');
      }
+     var userId = user.id;
      if (typeof (request.params.id) === 'undefined') {
           winston.error('Undefined id');
           return res.status(400).json('No id');
      }
-     var userId = request.params.shortId;
-     var lrId = request.params.id;
 
-     db_helpers.getUser(request.user, userId, function (err, user) {
+     var id = request.params.id;
+
+     db_helpers.getUser(user, userId, function (err, user) {
           if (err) {
                return res.status(400);
           }
@@ -257,7 +255,7 @@ app.post('/api/v1/auth/users/:shortId/lrs/:id/lend', function (request, res, nex
 			current_state: 4
           };
 
-          db.LendingRequestModel.findById(lrId,function(err,lr){
+          db.LendingRequestModel.findById(id,function(err,lr){
                if (err) {
                     winston.error('Can`t Lend: ' + err);
                     return res.status(400).json('can`t lend');
@@ -267,7 +265,7 @@ app.post('/api/v1/auth/users/:shortId/lrs/:id/lend', function (request, res, nex
                     return res.status(400).json('You can`t lend your own borrow');
                }   
 
-               db.LendingRequestModel.findByIdAndUpdate(lrId, {$set: setObj}, {new: true}, function (err, lr) {
+               db.LendingRequestModel.findByIdAndUpdate(id, {$set: setObj}, {new: true}, function (err, lr) {
                     if (err) {
                          winston.error('Can`t Lend: ' + err);
                          return res.status(400).json('can`t lend');
@@ -277,7 +275,7 @@ app.post('/api/v1/auth/users/:shortId/lrs/:id/lend', function (request, res, nex
                          address_to_send: "",
                          eth_count: 120, //TODO: ????
                          minutes_left: 1440, // 1 day left until this LR moves back to 'waiting for lender' state
-                         id:  lrId
+                         id:  id
                     };
                     
                     res.json(responseObj);

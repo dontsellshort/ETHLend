@@ -367,7 +367,7 @@ describe('Users module and lending requests', function (T) {
      });
 
      it('2.1. Should create new Lending Request', function (done) {
-          var url = '/api/v1/auth/users/' + global.sessionUID + '/lrs';
+          var url = '/api/v1/auth/lrs';
 
           var j = {
                borrower_id: global.sessionUID // creator shortId
@@ -385,7 +385,7 @@ describe('Users module and lending requests', function (T) {
      });
 
      it('2.2. Should set data for Lending Request', function (done) {
-          var url = '/api/v1/auth/users/' + global.sessionUID + '/lrs/' + global.oneOfLrId;
+          var url = '/api/v1/auth/lrs/' + global.oneOfLrId;
 
           var j = {
                eth_count: 120,
@@ -407,8 +407,8 @@ describe('Users module and lending requests', function (T) {
           });
      });
 
-     it('2.3. should return a list of LRs for a selected user. Returns a JSON list of IDs.', function (done) {
-          var url = '/api/v1/auth/users/' + global.sessionUID + '/lrs';
+     it('2.3. should return a list of LRs for all users. Returns a JSON list of IDs.', function (done) {
+          var url = '/api/v1/auth/lrs';
           getData(9091, url, global.authToken, function (err, statusCode, h, dataOut) {
                SQ(err, null);
                SQ(statusCode, 200);
@@ -419,7 +419,7 @@ describe('Users module and lending requests', function (T) {
      });
 
      it('2.4. should return a Lending Request', function (done) {
-          var url = '/api/v1/auth/users/' + global.sessionUID + '/lrs/' + global.oneOfLrId;
+          var url = '/api/v1/auth/lrs/' + global.oneOfLrId;
           getData(9091, url, global.authToken, function (err, statusCode, h, dataOut) {
                SQ(err, null);
                SQ(statusCode, 200);
@@ -437,7 +437,7 @@ describe('Users module and lending requests', function (T) {
           };
 
           var data = JSON.stringify(j);
-          var url = '/api/v1/auth/users/'+global.sessionUID+'/lrs/'+global.oneOfLrId+'/lend'
+          var url = '/api/v1/auth/lrs/'+global.oneOfLrId+'/lend'
  
           postDataAuth(9091, url, data, global.authToken, function (err, statusCode, h, dataOut) {
                SQ(err, null);
