@@ -440,7 +440,6 @@ describe('Users module and lending requests', function (T) {
                SQ(err, null);
                SQ(statusCode, 200);
 
-               // TODO:
                SQ(JSON.parse(h).days_to_lend,30);
                SQ(JSON.parse(h).days_left,30);
 

@@ -230,12 +230,11 @@ app.get('/api/v1/auth/lrs/:id', function (request, res, next) { //2.4. Get a Len
                          return res.status(400).json('Can`t return all LR`s');
                     }
 
-                    // TODO:
-                    // convert
-                    var out = {
+                    var out = contract_helpers.convertLrToOut(lr,id);
 
-                    };
-                    
+                    console.log('OUT: ');
+                    console.log(out);
+
                     res.json(out);
                });
           }else{
@@ -278,11 +277,9 @@ function getLr_DB(lrId,res){
                date_modified:            lr.date_modified,
                days_left:                lr.days_left,
                address_to_send:          lr.address_to_send,
-               eth_count:                lr.eth_count,
                smart_contract_address:   (lr.smartcontract_address || ''),
                minutes_left:             minutes_left,
                address_to_send:          (lr.smartcontract_address || ''),
-               eth_count:                lr.eth_count,
                id:                       lrId
           };
 
