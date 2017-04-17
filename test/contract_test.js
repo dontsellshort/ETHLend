@@ -400,7 +400,8 @@ describe('Contracts 1', function() {
                token_name: 'Cosmos',
                token_infolink: 'https://cosmos.network',
                // https://etherscan.io/address/0xCF965Cfe7C30323E9C9E41D4E398e2167506f764
-               token_smartcontract_address: '0xCF965Cfe7C30323E9C9E41D4E398e2167506f764'
+               token_smartcontract_address: '0xCF965Cfe7C30323E9C9E41D4E398e2167506f764',
+               days_to_lend: 10
           };
 
           var a = ledgerContract.getLrForUser(borrower,0);
@@ -413,6 +414,7 @@ describe('Contracts 1', function() {
                data.token_name,
                data.token_infolink,
                data.token_smartcontract_address,
+               data.days_to_lend,
                {
                     from: creator,               
                     //value: amount,
@@ -843,7 +845,8 @@ describe('Contracts 3 - cancell with refund', function() {
                token_name: 'Cosmos',
                token_infolink: 'https://cosmos.network',
                // https://etherscan.io/address/0xCF965Cfe7C30323E9C9E41D4E398e2167506f764
-               token_smartcontract_address: '0xCF965Cfe7C30323E9C9E41D4E398e2167506f764'
+               token_smartcontract_address: '0xCF965Cfe7C30323E9C9E41D4E398e2167506f764',
+               days_to_lend: 10
           };
 
           var a = ledgerContract.getLrForUser(borrower,0);
@@ -856,6 +859,7 @@ describe('Contracts 3 - cancell with refund', function() {
                data.token_name,
                data.token_infolink,
                data.token_smartcontract_address,
+               data.days_to_lend,
                {
                     from: creator,               
                     //value: amount,

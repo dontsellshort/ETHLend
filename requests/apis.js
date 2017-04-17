@@ -129,13 +129,13 @@ app.post('/api/v1/auth/users/:shortId/lrs', function (request, res, next) { //2.
           }
 
           if(contract_helpers.isSmartContractsEnabled()){
-               contract_helpers.createNewLr(user.ethAddress,function(err,idOut){
+               contract_helpers.createNewLr(user.ethAddress,function(err,txId){
                     if (err) {
                          winston.error('Can`t createLendingRequest: ' + err);
                          return res.status(400).json('can`t createLendingRequest');
                     }
 
-                    return res.json({id:idOut});
+                    return res.json({});
                });
           }else{
                var data = {
@@ -148,7 +148,7 @@ app.post('/api/v1/auth/users/:shortId/lrs', function (request, res, next) { //2.
                          return res.status(400).json('can`t createLendingRequest');
                     }
 
-                    return res.json({id:lr._id});
+                    return res.json({/*id:lr._id*/});
                });
           }
      });
@@ -172,32 +172,46 @@ app.put('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { /
 
      db_helpers.getUser(request.user, shortId, function (err, user) {
           if (err) {
-               return res.status(400).json('wrong user');
+               return res.status(400).json('Wrong user');
           }
 
           var data  = request.body;
           data.lrId = lrId;
 
-          db.LendingRequestModel.findById(lrId,function(err,lr){
-               if (err) {
-                    winston.error('Can`t Lend: ' + err);
-                    return res.status(400).json('can`t lend');
-               }  
-               if(userId !== lr.borrower_id){
-                    winston.error('Tried to update someone else`s LR: '+userId);
-                    return res.status(400).json('It`s not your LR');
-               }   
-
-               db_helpers.setDataForLendingRequest(data, function (err, lr) {
+          if(contract_helpers.isSmartContractsEnabled()){
+               contract_helpers.updateLr(lrId,data,function(err){
                     if (err) {
-                         winston.error('Can`t setDataForLendingRequest: ' + err);
-                         return res.status(400).json('can`t setDataForLendingRequest');
+                         winston.error('Can`t update: ' + err);
+                         return res.status(400).json('Can`t update');
                     }
-                    return res.json(200)
-               })
-          });
+                    res.send(200);
+               });
+          }else{
+               lendRequestSync(lrId,data,res);
+          }
      });
 });
+
+function lendRequestSync(lrId,data,res){
+     db.LendingRequestModel.findById(lrId,function(err,lr){
+          if (err) {
+               winston.error('Can`t find by ID: ' + err);
+               return res.status(400).json('can`t lend');
+          }  
+          if(userId !== lr.borrower_id){
+               winston.error('Tried to update someone else`s LR: '+userId);
+               return res.status(400).json('It`s not your LR');
+          }   
+
+          db_helpers.setDataForLendingRequest(data, function (err, lr) {
+               if (err) {
+                    winston.error('Can`t setDataForLendingRequest: ' + err);
+                    return res.status(400).json('can`t setDataForLendingRequest');
+               }
+               return res.json(200)
+          })
+     });
+}
 
 app.get('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { //2.4. Get a Lending Request 
      if (typeof (request.params.shortId) === 'undefined') {

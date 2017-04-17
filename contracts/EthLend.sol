@@ -25,6 +25,10 @@ contract Ledger {
           // 1 - send Fee to wherToSendFee 
           // 0.1 ETH
           uint feeAmount = 100000000000000000;
+          if(msg.value<feeAmount){
+               throw;
+          }
+
           if(!whereToSendFee.call.gas(200000).value(feeAmount)()){
                throw;
           }
@@ -107,6 +111,7 @@ contract LendingRequest {
      string public token_name = "";
      string public token_infolink = "";
      address public token_smartcontract_address = 0x0;
+     uint public days_to_lend = 0;
 
      // This must be set by
      address public lender = 0x0;
@@ -172,7 +177,7 @@ contract LendingRequest {
 
 // 
      function setData(uint wanted_wei_, uint token_amount_, 
-          string token_name_, string token_infolink_, address token_smartcontract_address_) 
+          string token_name_, string token_infolink_, address token_smartcontract_address_, uint days_to_lend_) 
                byLedgerMainOrBorrower onlyInState(State.WaitingForData)
      {
           wanted_wei = wanted_wei_;
@@ -180,6 +185,7 @@ contract LendingRequest {
           token_name = token_name_;
           token_infolink = token_infolink_;
           token_smartcontract_address = token_smartcontract_address_;
+          days_to_lend = days_to_lend_;
 
           currentState = State.WaitingForTokens;
      }

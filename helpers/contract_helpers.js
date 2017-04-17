@@ -21,6 +21,8 @@ var g_abi;
 var g_abiRequest;
 
 var g_bytecode;
+var g_bytecodeRequest;
+
 var g_ledgerAddress = process.env.ETH_MAIN_ADDRESS;
 var g_ledger = 0;
 
@@ -75,6 +77,7 @@ function compileContracts(cb){
                if(err){return cb(err);}
 
                g_abiRequest = abi;
+               g_bytecodeRequest = bytecode;
 
                if(!g_ledgerAddress || !g_ledgerAddress.length){
                     winston.info('Deploying new main contract...');
@@ -133,27 +136,88 @@ function deployMain(cb){
 }
 
 function getAllLrs(cb){
+     if(!enabled){
+          return cb(null,[]);
+     }
+
      winston.info('Asking Ledger contract for a list of all LRs');
 
      var out = [];
-     // TODO: 
-     return cb(out);
+
+     var count = g_ledger.getLrCount();
+     for(var i=0; i<count; ++i){
+          var addr = g_ledger.getLr(i);
+          out.push(addr);
+     }
+
+     return cb(null,out);
 }
 
 function getLrById(id,cb){
-     winston.info('Asking Ledger contract for a LR: ' + id);
+     if(!enabled){
+          return cb(null,null);
+     }
 
-     var lr = null;
-     // TODO:
+     winston.info('Asking Ledger contract for a LR: ' + id);
+     var addr = id;
+     var lr = web3.eth.contract(g_abiRequest).at(addr);
      return cb(null,lr);
 }
 
+// This should not be called from production code.
+// Because 'createNewLendingRequest' must be called directly by borrower from his 
+// Ethereum Wallet
 function createNewLr(borrowerAddress,cb){
-     // TODO:
-     winston.info('Creating new LR smart contract for Borrower: ' + borrowerAddress);
+     if(!enabled){
+          return cb(null);
+     }
 
-     var idOut = 23131;  // TODO
-     return cb(null,idOut);
+     winston.info('Creating new LR smart contract from Creator');
+
+     // this is a fee 
+     // 0.2 ETH
+     var amount = 200000000000000000;
+     g_ledger.createNewLendingRequest(
+          {
+               from: g_creator,               
+               value: amount,
+               gas: 2900000 
+          },function(err,txHash){
+               winston.info('TX hash: ' + txHash);
+
+               return cb(null,txHash);
+          }
+     );
+}
+
+function updateLr(id,data,cb){
+     winston.info('Updating contract: ' + id);
+
+     var addr = id;
+     var lr = web3.eth.contract(g_abiRequest).at(addr);
+     
+     console.log('Address: ' + addr);
+     console.log('Data: ');
+     console.log(data.token_smartcontract);
+
+     lr.setData(
+          web3.toWei(data.eth_count,'ether'),
+          data.token_amount,
+          data.token_name,
+          data.token_infolink,
+          data.token_smartcontract,
+          data.days_to_lend,
+          
+          // TODO: 
+          //setObj.borrower_account_address = data.borrower_account_address;
+          {
+               from: g_creator,               
+               //value: amount,
+               gas: 2900000 
+          },function(err,result){
+               cb(err);
+          }
+     );
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -235,3 +299,4 @@ exports.isSmartContractsEnabled = isSmartContractsEnabled;
 exports.getAllLrs = getAllLrs;
 exports.getLrById = getLrById;
 exports.createNewLr = createNewLr;
+exports.updateLr = updateLr;

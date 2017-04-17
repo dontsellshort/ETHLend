@@ -348,7 +348,7 @@ describe('Users module and lending requests', function (T) {
      it('1.22. should update user data', function (done) {
           var url = '/api/v1/auth/users/' + global.sessionUID;
           var j = {
-               ethAddress:'0xoloololololo'
+               ethAddress:'0xC63bCefdaE4369291F4a1407C05c3C48220aE4a4'
           }
           var data = JSON.stringify(j);
 
@@ -360,7 +360,7 @@ describe('Users module and lending requests', function (T) {
                getData(9091, url, global.authToken, function (err, statusCode, h, dataOut) {
                     SQ(err, null);
                     SQ(statusCode, 200);
-                    SQ(JSON.parse(h).ethAddress, '0xoloololololo')
+                    SQ(JSON.parse(h).ethAddress, '0xC63bCefdaE4369291F4a1407C05c3C48220aE4a4')
                     done();
                });              
           });
@@ -377,13 +377,26 @@ describe('Users module and lending requests', function (T) {
           postDataAuth(9091, url, data, global.authToken, function (err, statusCode, h, dataOut) {
                SQ(statusCode, 200);
                SQ(err, null);
-               NQ(JSON.parse(dataOut).id, null);
-               LR = JSON.parse(dataOut);
-               NQ(LR.id,0);
+               //LR = JSON.parse(dataOut);
+               //NQ(LR.id,0);
 
-               global.oneOfLrId = LR.id;
+               //global.oneOfLrId = LR.id;
                done();
           });       
+     });
+
+     it('2.1.2. should return a list of LRs for a selected user. Returns a JSON list of IDs.', function (done) {
+          var url = '/api/v1/auth/users/' + global.sessionUID + '/lrs';
+          getData(9091, url, global.authToken, function (err, statusCode, h, dataOut) {
+               SQ(err, null);
+               SQ(statusCode, 200);
+               NQ(JSON.parse(h).ids, null);
+               SQ(JSON.parse(h).ids.length, 1);
+
+               global.oneOfLrId = JSON.parse(h).ids[0];
+               console.log('ID: ' + global.oneOfLrId);
+               done();
+          });
      });
 
      it('2.2. Should set data for Lending Request', function (done) {
@@ -393,9 +406,10 @@ describe('Users module and lending requests', function (T) {
                eth_count: 120,
                token_amount: 10000,
                token_name: 'Augur tokens',
-               token_smartcontract: 'https://etherscan.io/address/0xb533aae346245e2e05b23f420C140bCA2529b8a6#code',
-               token_infolink: 'www.augur.com',
-               borrower_account_address: 'ololo',
+
+               token_smartcontract: '0xb533aae346245e2e05b23f420C140bCA2529b8a6',
+               token_infolink: 'https://etherscan.io/address/0xb533aae346245e2e05b23f420C140bCA2529b8a6#code',
+               borrower_account_address: '0xC63bCefdaE4369291F4a1407C05c3C48220aE4a4',
                borrower_id: global.sessionUID, // creator shortId
                days_to_lend: 30,
                lrId: global.oneOfLrId
@@ -425,7 +439,11 @@ describe('Users module and lending requests', function (T) {
           getData(9091, url, global.authToken, function (err, statusCode, h, dataOut) {
                SQ(err, null);
                SQ(statusCode, 200);
+
+               // TODO:
+               SQ(JSON.parse(h).days_to_lend,30);
                SQ(JSON.parse(h).days_left,30);
+
                done();
           });
      });
