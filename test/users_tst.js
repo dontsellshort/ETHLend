@@ -386,7 +386,7 @@ describe('Users module and lending requests', function (T) {
      });
 
      it('2.1.2. should return a list of LRs for a selected user. Returns a JSON list of IDs.', function (done) {
-          var url = '/api/v1/auth/users/' + global.sessionUID + '/lrs';
+          var url = '/api/v1/auth/lrs';
           getData(9091, url, global.authToken, function (err, statusCode, h, dataOut) {
                SQ(err, null);
                SQ(statusCode, 200);

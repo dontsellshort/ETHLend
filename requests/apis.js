@@ -171,7 +171,7 @@ app.put('/api/v1/auth/lrs/:id', function (request, res, next) { //2.3. Set data 
           data.lrId = id;
 
           if(contract_helpers.isSmartContractsEnabled()){
-               contract_helpers.updateLr(lrId,data,function(err){
+               contract_helpers.updateLr(id,data,function(err){
                     if (err) {
                          winston.error('Can`t update: ' + err);
                          return res.status(400).json('Can`t update');
@@ -224,7 +224,7 @@ app.get('/api/v1/auth/lrs/:id', function (request, res, next) { //2.4. Get a Len
                return res.status(400).json('wrong user: '+err);
           }
           if(contract_helpers.isSmartContractsEnabled()){
-               contract_helpers.getLrById(lrId,function(err,lr){
+               contract_helpers.getLrById(id,function(err,lr){
                     if (err) {
                          winston.error('Can`t return all LR`s');
                          return res.status(400).json('Can`t return all LR`s');
