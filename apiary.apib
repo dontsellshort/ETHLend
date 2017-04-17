@@ -159,7 +159,8 @@ Get a list of LRs for all users. Returns a JSON list of IDs.
 
 ### Create new Lending Request [POST /api/v1/auth/lrs]
 
-LR will be in 'waiting for data' state
+LR will be in 'waiting for data' state. 
+WARNING: Does not return any ID...
             
 + Request (application/json)
     
@@ -175,7 +176,6 @@ LR will be in 'waiting for data' state
 + Response 200 (application/json)
     
         {
-            id: 123123123
         }
 
 ### Set data to the Lending Request [PUT /api/v1/auth/lrs/{id}]
@@ -211,7 +211,7 @@ This method should be only available to Borrower.
 + Response 200 (application/json)
 
 
-### Get a Lending Request [GET /api/v1/auth/users/{shortId}/lrs/{id}]
+### Get a Lending Request [GET /api/v1/auth/lrs/{id}]
 
 + Request
 
@@ -220,7 +220,6 @@ This method should be only available to Borrower.
             Authorization: Bearer TOKEN-HERE
             
 + Parameters
-    + shortId - User ID
     + id - Lending Request ID
     
 + Response 200 (application/json)
