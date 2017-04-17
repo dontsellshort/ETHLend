@@ -231,10 +231,6 @@ app.get('/api/v1/auth/lrs/:id', function (request, res, next) { //2.4. Get a Len
                     }
 
                     var out = contract_helpers.convertLrToOut(lr,id);
-
-                    console.log('OUT: ');
-                    console.log(out);
-
                     res.json(out);
                });
           }else{
