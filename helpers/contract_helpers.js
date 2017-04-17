@@ -10,7 +10,11 @@ var db_helpers = require('../helpers/db_helpers.js');
 var config = require('../config');
 
 // You must set this ENV VAR before
-var enabled = (typeof(process.env.ETH_NODE)!=='undefined');
+var enabled = 
+     (typeof(process.env.ETH_NODE)!=='undefined') && 
+     (typeof(process.env.SMART_CONTRACTS_ENABLED)!=='undefined') &&
+     (process.env.SMART_CONTRACTS_ENABLED);
+
 var web3 = null;
 if(enabled){
      web3 = new Web3(new Web3.providers.HttpProvider(process.env.ETH_NODE));
@@ -191,6 +195,10 @@ function createNewLr(borrowerAddress,cb){
 }
 
 function updateLr(id,data,cb){
+     if(!enabled){
+          return cb(null);
+     }
+
      winston.info('Updating contract: ' + id);
 
      var addr = id;
