@@ -76,50 +76,45 @@ app.put('/api/v1/auth/users/:shortId', function (request, res, next) { // 1.8. U
      });
 });
 
-app.get('/api/v1/auth/users/:shortId/lrs', function (request, res, next) { //2.1. Get a list of Lending Requests for user 
-     if (typeof (request.params.shortId) === 'undefined') {
-          winston.error('Undefined shortId');
-          return res.status(400).json('No shortId');
+app.get('/api/v1/auth/lrs', function (request, res, next) { //2.1. Get a list of Lending Requests for all users 
+     var user = request.user;
+     if (typeof (user.id) === 'undefined') {
+          winston.error('Not a user');
+          return res.status(400).json('Not a user');
      }
+     var userId = user.id;
 
-     var shortId = request.params.shortId;
-
-     db_helpers.getUser(request.user, shortId, function (err, user) { 
-          if (err) {
-               return res.status(400).json('Wrong user');
-          }
-
-          if(contract_helpers.isSmartContractsEnabled()){
-               contract_helpers.getAllLrs(function(err,lrsIdsArr){
-                    if (err) {
-                         winston.error('Can`t return all LR`s');
-                         return res.status(400).json('Can`t return all LR`s');
-                    }
-                    
-                    res.json({ids:lrsIdsArr});
-               });
-          }else{
-               var allLR = [];
-               db.LendingRequestModel.find({}, function(err, all){
-                    if (err) {
-                         return res.status(400).json('Can`t find LR`s');
-                    }               
-                    for (it in all){
-                        allLR.push( all[it]._id )
-                    }
-                    res.json({ids:allLR});
-               });
-          }
-     });
+     if(contract_helpers.isSmartContractsEnabled()){
+          contract_helpers.getAllLrs(function(err,lrsIdsArr){
+               if (err) {
+                    winston.error('Can`t return all LR`s');
+                    return res.status(400).json('Can`t return all LR`s');
+               }
+               
+               res.json({ids:lrsIdsArr});
+          });
+     }else{
+          var allLR = [];
+          db.LendingRequestModel.find({}, function(err, all){
+               if (err) {
+                    return res.status(400).json('Can`t find LR`s');
+               }               
+               for (it in all){
+                   allLR.push( all[it]._id )
+               }
+               res.json({ids:allLR});
+          });
+     }
 });
 
-app.post('/api/v1/auth/users/:shortId/lrs', function (request, res, next) { //2.2. Create new Lending Request 
-     if (typeof (request.params.shortId) === 'undefined') {
-          winston.error('undefined shortId');
-          return res.status(400).json('No shortId');
+app.post('/api/v1/auth/lrs', function (request, res, next) { //2.2. Create new Lending Request 
+     var user = request.user;
+     if (typeof (user.id) === 'undefined') {
+          winston.error('Not a user');
+          return res.status(400).json('Not a user');
      }
-     var shortId = request.params.shortId;
-     db_helpers.getUser(request.user, shortId, function (err, user) {
+     var userId = user.id;
+     db_helpers.getUser(user, userId, function (err, user) {
           if (err) {
                return res.status(400).json('Wrong user');
           }
@@ -154,29 +149,26 @@ app.post('/api/v1/auth/users/:shortId/lrs', function (request, res, next) { //2.
      });
 });
 
-app.put('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { //2.3. Set data for Lending Request 
-     if (typeof (request.params.shortId) === 'undefined') {
-          winston.error('Undefined shortId');
-          return res.status(400).json('No shortId');
+app.put('/api/v1/auth/lrs/:id', function (request, res, next) { //2.3. Set data for Lending Request 
+     var user = request.user;
+     if (typeof (user.id) === 'undefined') {
+          winston.error('Not a user');
+          return res.status(400).json('Not a user');
      }
+     var userId = user.id;
      if (typeof (request.params.id) === 'undefined') {
           winston.error('Undefined id');
           return res.status(400).json('No id');
      }  
-     var shortId = request.params.shortId;
-     var lrId    = request.params.id;
-     if (lrId===userId) {
-          winston.error('You can`t lend your own borrow');
-          return res.status(400).json('You can`t lend your own borrow');
-     }     
+     var id = request.params.id;
 
-     db_helpers.getUser(request.user, shortId, function (err, user) {
+     db_helpers.getUser(request.user, userId, function (err, user) {
           if (err) {
                return res.status(400).json('Wrong user');
           }
 
           var data  = request.body;
-          data.lrId = lrId;
+          data.lrId = id;
 
           if(contract_helpers.isSmartContractsEnabled()){
                contract_helpers.updateLr(lrId,data,function(err){
@@ -213,23 +205,24 @@ function lendRequestSync(lrId,data,res){
      });
 }
 
-app.get('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { //2.4. Get a Lending Request 
-     if (typeof (request.params.shortId) === 'undefined') {
-          winston.error('Undefined shortId');
-          return res.status(400).json('No id');
+app.get('/api/v1/auth/lrs/:id', function (request, res, next) { //2.4. Get a Lending Request 
+     var user = request.user;
+     if (typeof (user.id) === 'undefined') {
+          winston.error('Not a user');
+          return res.status(400).json('Not a user');
      }
+     var userId = user.id;
+
      if (typeof (request.params.id) === 'undefined') {
           winston.error('Undefined id');
           return res.status(400).json('No id');
      }
-     var userId = request.params.shortId;
-     var lrId = request.params.id;
+     var id = request.params.id;
      
-     db_helpers.getUser(request.user, userId, function (err, user) {
+     db_helpers.getUser(user, userId, function (err, user) {
           if (err) {
-               return res.status(400);
+               return res.status(400).json('wrong user: '+err);
           }
-
           if(contract_helpers.isSmartContractsEnabled()){
                contract_helpers.getLrById(lrId,function(err,lr){
                     if (err) {
@@ -240,6 +233,7 @@ app.get('/api/v1/auth/users/:shortId/lrs/:id', function (request, res, next) { /
                     // TODO:
                     // convert
                     var out = {
+
                     };
                     
                     res.json(out);
@@ -296,19 +290,21 @@ function getLr_DB(lrId,res){
      });
 }
 
-app.post('/api/v1/auth/users/:shortId/lrs/:id/lend', function (request, res, next) { //2.5. Lend
-     if (typeof (request.params.shortId) === 'undefined') {
-          winston.error('Undefined shortId');
-          return res.status(400).json('No id');
+app.post('/api/v1/auth/lrs/:id/lend', function (request, res, next) { //2.5. Lend
+     var user = request.user;
+     if (typeof (user.id) === 'undefined') {
+          winston.error('Not a user');
+          return res.status(400).json('Not a user');
      }
+     var userId = user.id;
      if (typeof (request.params.id) === 'undefined') {
           winston.error('Undefined id');
           return res.status(400).json('No id');
      }
-     var userId = request.params.shortId;
-     var lrId = request.params.id;
 
-     db_helpers.getUser(request.user, userId, function (err, user) {
+     var id = request.params.id;
+
+     db_helpers.getUser(user, userId, function (err, user) {
           if (err) {
                return res.status(400);
           }
@@ -321,7 +317,7 @@ app.post('/api/v1/auth/users/:shortId/lrs/:id/lend', function (request, res, nex
 			current_state: 4
           };
 
-          db.LendingRequestModel.findById(lrId,function(err,lr){
+          db.LendingRequestModel.findById(id,function(err,lr){
                if (err) {
                     winston.error('Can`t Lend: ' + err);
                     return res.status(400).json('can`t lend');
@@ -331,7 +327,7 @@ app.post('/api/v1/auth/users/:shortId/lrs/:id/lend', function (request, res, nex
                     return res.status(400).json('You can`t lend your own borrow');
                }   
 
-               db.LendingRequestModel.findByIdAndUpdate(lrId, {$set: setObj}, {new: true}, function (err, lr) {
+               db.LendingRequestModel.findByIdAndUpdate(id, {$set: setObj}, {new: true}, function (err, lr) {
                     if (err) {
                          winston.error('Can`t Lend: ' + err);
                          return res.status(400).json('can`t lend');
@@ -341,7 +337,7 @@ app.post('/api/v1/auth/users/:shortId/lrs/:id/lend', function (request, res, nex
                          address_to_send: "",
                          eth_count: 120, //TODO: ????
                          minutes_left: 1440, // 1 day left until this LR moves back to 'waiting for lender' state
-                         id:  lrId
+                         id:  id
                     };
                     
                     res.json(responseObj);
