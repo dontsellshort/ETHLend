@@ -15,8 +15,10 @@ var enabled =
      (typeof(process.env.SMART_CONTRACTS_ENABLED)!=='undefined') &&
      ((process.env.SMART_CONTRACTS_ENABLED==true));
 
+var startNode = (typeof(process.env.ETH_NODE)!=='undefined');
+
 var web3 = null;
-if(enabled){
+if(startNode){
      web3 = new Web3(new Web3.providers.HttpProvider(process.env.ETH_NODE));
 }
 
