@@ -927,4 +927,3 @@ describe('Contracts 3 - cancell with refund', function() {
           done();
      })
 });
-

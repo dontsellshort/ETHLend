@@ -10,10 +10,13 @@ var db_helpers = require('../helpers/db_helpers.js');
 var config = require('../config');
 
 // You must set this ENV VAR before
-var enabled = 
-     (typeof(process.env.ETH_NODE)!=='undefined') && 
-     (typeof(process.env.SMART_CONTRACTS_ENABLED)!=='undefined') &&
-     (process.env.SMART_CONTRACTS_ENABLED);
+function isEnabled(){
+     var enabled = 
+          (typeof(process.env.ETH_NODE)!=='undefined') && 
+          (typeof(process.env.SMART_CONTRACTS_ENABLED)!=='undefined') &&
+          (process.env.SMART_CONTRACTS_ENABLED=='true');
+     return enabled;
+}
 
 var startNode = (typeof(process.env.ETH_NODE)!=='undefined');
 
@@ -53,7 +56,7 @@ function getContractAbi(contractName,cb){
 }
 
 function getAccounts(cb){
-     if(!enabled){
+     if(!isEnabled()){
           return cb(null);
      }
 
@@ -73,7 +76,7 @@ function getAccounts(cb){
 }
 
 function compileContracts(cb){
-     if(!enabled){
+     if(!isEnabled()){
           return cb(null);
      }
 
@@ -112,7 +115,7 @@ function compileContracts(cb){
 }
 
 function deployMain(cb){
-     if(!enabled){
+     if(!isEnabled()){
           return cb(null);
      }
 
@@ -148,7 +151,7 @@ function deployMain(cb){
 }
 
 function getAllLrs(cb){
-     if(!enabled){
+     if(!isEnabled()){
           return cb(null,[]);
      }
 
@@ -166,7 +169,7 @@ function getAllLrs(cb){
 }
 
 function getLrById(id,cb){
-     if(!enabled){
+     if(!isEnabled()){
           return cb(null,null);
      }
 
@@ -180,7 +183,7 @@ function getLrById(id,cb){
 // Because 'createNewLendingRequest' must be called directly by borrower from his 
 // Ethereum Wallet
 function createNewLr(borrowerAddress,cb){
-     if(!enabled){
+     if(!isEnabled()){
           return cb(null);
      }
 
@@ -203,7 +206,7 @@ function createNewLr(borrowerAddress,cb){
 }
 
 function updateLr(id,data,cb){
-     if(!enabled){
+     if(!isEnabled()){
           return cb(null);
      }
 
@@ -324,7 +327,7 @@ function getBalance(address){
 }
 
 function isSmartContractsEnabled(){
-     return enabled;
+     return isEnabled();
 }
 
 // Exports:
