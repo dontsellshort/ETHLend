@@ -23,6 +23,10 @@ if(startNode){
 }
 
 var g_creator = 0;
+if(typeof(process.env.ETH_CREATOR_ADDRESS)!=='undefined'){
+     g_creator = process.env.ETH_CREATOR_ADDRESS;
+}
+
 var g_abi;
 var g_abiRequest;
 
@@ -59,7 +63,9 @@ function getAccounts(cb){
                return;
           }
 
-          g_creator = accounts[0];
+          if(!g_creator && !g_creator.length){
+               g_creator = accounts[0];
+          }
 
           console.log('CREATOR: ' + g_creator);
           cb(null);
