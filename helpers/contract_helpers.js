@@ -13,7 +13,7 @@ var config = require('../config');
 var enabled = 
      (typeof(process.env.ETH_NODE)!=='undefined') && 
      (typeof(process.env.SMART_CONTRACTS_ENABLED)!=='undefined') &&
-     (process.env.SMART_CONTRACTS_ENABLED);
+     ((process.env.SMART_CONTRACTS_ENABLED==true));
 
 var web3 = null;
 if(enabled){

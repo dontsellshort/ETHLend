@@ -89,8 +89,9 @@ contract LendingRequest {
           WaitingForLender,
           // lender is set 
           // TODO: not used, moving immediately to Funded
-          WaitingForLoan,
           // lender must send money
+          WaitingForLoan,
+
           Funded,
 
           // borrower clicked on 'Return ETH' button
