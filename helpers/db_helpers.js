@@ -153,16 +153,18 @@ function createLendingRequest(data, cb){
 
 function setDataForLendingRequest(data,cb){
      var setObj = {};
+
      setObj.eth_count                = data.eth_count;
      setObj.token_amount             = data.token_amount;
      setObj.token_name               = data.token_name;
      setObj.token_smartcontract      = data.token_smartcontract;
      setObj.token_infolink           = data.token_infolink;
-     setObj.borrower_account_address = data.borrower_account_address;
+     //setObj.borrower_account_address = data.borrower_account_address;
      setObj.days_to_lend             = data.days_to_lend;
-     setObj.current_state            = 1;                 
      setObj.date_modified            = Date.now();  
      setObj.days_left                = data.days_to_lend;       
+
+     setObj.current_state            = 1;                 
 
      db.LendingRequestModel.findByIdAndUpdate(data.lrId, {$set: setObj}, {new: true}, function (err, lr) {
           if(err){
