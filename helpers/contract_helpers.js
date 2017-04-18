@@ -13,7 +13,7 @@ var config = require('../config');
 var enabled = 
      (typeof(process.env.ETH_NODE)!=='undefined') && 
      (typeof(process.env.SMART_CONTRACTS_ENABLED)!=='undefined') &&
-     ((process.env.SMART_CONTRACTS_ENABLED==true));
+     (process.env.SMART_CONTRACTS_ENABLED);
 
 var startNode = (typeof(process.env.ETH_NODE)!=='undefined');
 
@@ -217,9 +217,6 @@ function updateLr(id,data,cb){
           data.token_infolink,
           data.token_smartcontract,
           data.days_to_lend,
-          
-          // TODO: 
-          //setObj.borrower_account_address = data.borrower_account_address;
           {
                from: g_creator,               
                //value: amount,
@@ -242,10 +239,10 @@ function convertLrToOut(lr,id){
 
           borrower_account_address: lr.borrower(),
           lender_account_address:   lr.lender(),
-          //borrower_id:              lr.borrower_id,
+
           days_to_lend:             '' + lr.days_to_lend(),
           current_state:            '' + lr.currentState(),
-          //lender_id:                lr.lender_id,
+
           //date_created:             lr.date_created,
           //waiting_for_loan_from:    lr.waiting_for_loan_from,
           //date_modified:            lr.date_modified,
