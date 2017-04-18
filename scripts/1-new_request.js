@@ -54,7 +54,8 @@ web3.eth.getAccounts(function(err, as) {
                assert.notEqual(typeof(creator),'undefined');
                assert.notEqual(typeof(ledgerContractAddress),'undefined');
 
-               var ledgerContract = web3.eth.contract(abi).at(ledgerContractAddress);
+               var ledgerContract = web3.eth.contract(ledgerAbi).at(ledgerContractAddress);
+
                ledgerContract.createNewLendingRequest(
                     {
                          from: creator,               
@@ -68,7 +69,10 @@ web3.eth.getAccounts(function(err, as) {
                          web3.eth.getTransactionReceipt(result, function(err, r2){
                               assert.equal(err, null);
 
-                              console.log('Good!');
+                              console.log('Contract: ');
+                              console.log(r2);
+
+                              //console.log('Good!');
                          });
                     }
                );
