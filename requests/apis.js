@@ -134,7 +134,8 @@ app.post('/api/v1/auth/lrs', function (request, res, next) { //2.2. Create new L
                });
           }else{
                var data = {
-                    borrower_id: user.shortId
+                    borrower_id: user.shortId,
+                    borrower_account_address: user.ethAddress 
                }
 
                db_helpers.createLendingRequest(data, function (err, lr) {
@@ -179,12 +180,12 @@ app.put('/api/v1/auth/lrs/:id', function (request, res, next) { //2.3. Set data 
                     res.send(200);
                });
           }else{
-               lendRequestSync(userId,id,data,res);
+               setDataSync(userId,id,data,res);
           }
      });
 });
 
-function lendRequestSync(userId,lrId,data,res){
+function setDataSync(userId,lrId,data,res){
      db.LendingRequestModel.findById(lrId,function(err,lr){
           if (err) {
                winston.error('Can`t find by ID: ' + err);
@@ -328,8 +329,8 @@ app.post('/api/v1/auth/lrs/:id/lend', function (request, res, next) { //2.5. Len
 
                     var responseObj = {
                          address_to_send: "",
-                         eth_count: 120, //TODO: ????
-                         minutes_left: 1440, // 1 day left until this LR moves back to 'waiting for lender' state
+                         eth_count: 120,          //TODO: ????
+                         minutes_left: 1440,      // 1 day left until this LR moves back to 'waiting for lender' state
                          id:  id
                     };
                     

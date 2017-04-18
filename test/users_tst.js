@@ -370,7 +370,6 @@ describe('Users module and lending requests', function (T) {
           var url = '/api/v1/auth/lrs';
 
           var j = {
-               borrower_id: global.sessionUID // creator shortId
           };
           data = JSON.stringify(j);
 
@@ -406,13 +405,9 @@ describe('Users module and lending requests', function (T) {
                eth_count: 120,
                token_amount: 10000,
                token_name: 'Augur tokens',
-
                token_smartcontract: '0xb533aae346245e2e05b23f420C140bCA2529b8a6',
                token_infolink: 'https://etherscan.io/address/0xb533aae346245e2e05b23f420C140bCA2529b8a6#code',
-               borrower_account_address: '0xC63bCefdaE4369291F4a1407C05c3C48220aE4a4',
-               borrower_id: global.sessionUID, // creator shortId
                days_to_lend: 30,
-               lrId: global.oneOfLrId
           };
           data = JSON.stringify(j);
 

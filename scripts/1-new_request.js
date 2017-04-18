@@ -26,6 +26,15 @@ function getContractAbi(contractName,cb){
      });
 }
 
+// ************ READ THIS: ***********************
+// This script will call Ledger contract's method that will then deploy new LendingRequest contract
+// 
+// 
+// !!! This address should be set in ENV VARS or manually (see line below)
+var creator = process.env.ETH_CREATOR_ADDRESS;
+// https://kovan.etherscan.io/address/0xb9af8aa42c97f5a1f73c6e1a683c4bf6353b83e7
+//var creator = '0xb9af8aa42c97f5a1f73c6e1a683c4bf6353b83e7';
+
 // 1 - get accounts
 web3.eth.getAccounts(function(err, as) {
      if(err) {
@@ -48,7 +57,6 @@ web3.eth.getAccounts(function(err, as) {
                var amount = 200000000000000000;
 
                // this should be called by borrower
-               var creator = process.env.ETH_CREATOR_ADDRESS;
                var ledgerContractAddress = process.env.ETH_MAIN_ADDRESS;
 
                assert.notEqual(typeof(creator),'undefined');
@@ -60,7 +68,7 @@ web3.eth.getAccounts(function(err, as) {
                     {
                          from: creator,               
                          value: amount,
-                         gas: 2900000 
+                         gas: 2000000 
                     },function(err,result){
                          assert.equal(err,null);
 

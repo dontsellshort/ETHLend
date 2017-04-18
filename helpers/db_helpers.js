@@ -138,7 +138,9 @@ function createLendingRequest(data, cb){
      var lendingRequest = new db.LendingRequestModel;
      lendingRequest.current_state = 0;            
      lendingRequest.date_created  = Date.now();            
+
      lendingRequest.borrower_id   = data.borrower_id;    
+     lendingRequest.borrower_account_address = data.borrower_account_address;
 
      lendingRequest.save(function(err,lendingRequest){
           if(err){
