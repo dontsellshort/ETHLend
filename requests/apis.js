@@ -179,7 +179,7 @@ app.put('/api/v1/auth/lrs/:id', function (request, res, next) { //2.3. Set data 
                     res.send(200);
                });
           }else{
-               lendRequestSync(lrId,data,res);
+               lendRequestSync(id,data,res);
           }
      });
 });
@@ -234,7 +234,7 @@ app.get('/api/v1/auth/lrs/:id', function (request, res, next) { //2.4. Get a Len
                     res.json(out);
                });
           }else{
-               getLr_DB(lrId,res);
+               getLr_DB(id,res);
           }
      });
 });

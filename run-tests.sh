@@ -9,7 +9,8 @@
 
 #env SMART_CONTRACTS_ENABLED=true ETH_NODE=http://ethnode.chain.cloud:8545 ETH_MAIN_ADDRESS=0xf776478BCb25829C2FC07F14f2854B79C17E98d8 mocha --reporter spec -t 90000 -g "Contracts 0"
 
-env SMART_CONTRACTS_ENABLED=false ETH_NODE=http://localhost:8989 mocha --reporter spec -t 90000 -g "Users"
+#env SMART_CONTRACTS_ENABLED=false ETH_NODE=http://localhost:8989 mocha --reporter spec -t 90000 -g "Users"
+mocha --reporter spec -t 90000 -g "Users"
 
 #-g "Contracts"
 
