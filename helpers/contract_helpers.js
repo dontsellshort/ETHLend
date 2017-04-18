@@ -321,7 +321,6 @@ function getBalance(address){
 }
 
 function isSmartContractsEnabled(){
-     var enabled = (typeof(process.env.ETH_NODE)!=='undefined');
      return enabled;
 }
 
