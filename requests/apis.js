@@ -179,18 +179,18 @@ app.put('/api/v1/auth/lrs/:id', function (request, res, next) { //2.3. Set data 
                     res.send(200);
                });
           }else{
-               lendRequestSync(id,data,res);
+               lendRequestSync(userId,id,data,res);
           }
      });
 });
 
-function lendRequestSync(lrId,data,res){
+function lendRequestSync(userId,lrId,data,res){
      db.LendingRequestModel.findById(lrId,function(err,lr){
           if (err) {
                winston.error('Can`t find by ID: ' + err);
                return res.status(400).json('can`t lend');
           }  
-          if(userId !== lr.borrower_id){
+          if(userId!==lr.borrower_id){
                winston.error('Tried to update someone else`s LR: '+userId);
                return res.status(400).json('It`s not your LR');
           }   
