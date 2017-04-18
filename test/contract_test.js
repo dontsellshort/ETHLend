@@ -189,7 +189,7 @@ function deployContract(data,cb){
      });
 }
 
-describe('Contracts 0 - Deploy', function() {
+describe('Contracts 0 - Deploy Ledger', function() {
      before("Initialize everything", function(done) {
           web3.eth.getAccounts(function(err, as) {
                if(err) {
@@ -927,3 +927,4 @@ describe('Contracts 3 - cancell with refund', function() {
           done();
      })
 });
+
