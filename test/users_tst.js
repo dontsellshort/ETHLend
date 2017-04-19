@@ -1,4 +1,4 @@
-var server, db, db_helpers, config, helpers, fs, http, assert, globalToken, SQ, NQ, targetEmail;
+var targetEmail2, server, db, db_helpers, config, helpers, fs, http, assert, globalToken, SQ, NQ, targetEmail;
 server     = require('../server.js');
 db         = require('../db.js');
 db_helpers = require('../helpers/db_helpers.js');
@@ -14,6 +14,7 @@ globalToken = '';
 SQ = assert.equal;
 NQ = assert.notEqual;
 targetEmail = 'kirill@chain.cloud';
+targetEmail2 = 'gerodot@chain.cloud';
 global.sessionUID = '';
 global.authToken = '';
 global.oneOfLrId = '';
@@ -418,6 +419,31 @@ describe('Users module and lending requests', function (T) {
           });
      });
 
+     it('2.2.2. Shouldn`t set data for Lending Request (data not complete)', function (done) {
+          var url = '/api/v1/auth/lrs/' + global.oneOfLrId;
+          var j = {
+               eth_count: 120,
+               token_smartcontract: '0xb533aae346245e2e05b23f420C140bCA2529b8a6',
+               token_infolink: 'https://etherscan.io/address/0xb533aae346245e2e05b23f420C140bCA2529b8a6#code',
+               days_to_lend: 30
+          };
+          data = JSON.stringify(j);
+
+          putDataAuth(9091, url, data, global.authToken, function (err, statusCode, h, dataOut) {
+               SQ(statusCode, 400);        
+               done();
+          });
+     });
+
+     it('2.2.1. Shouldn`t set data for Lending Request (no data)', function (done) {
+          var url = '/api/v1/auth/lrs/' + global.oneOfLrId;
+
+          putDataAuth(9091, url, '', global.authToken, function (err, statusCode, h, dataOut) {
+               SQ(statusCode, 400);        
+               done();
+          });
+     });
+
      it('2.3. should return a list of LRs for all users. Returns a JSON list of IDs.', function (done) {
           var url = '/api/v1/auth/lrs';
           getData(9091, url, global.authToken, function (err, statusCode, h, dataOut) {
@@ -457,42 +483,169 @@ describe('Users module and lending requests', function (T) {
                SQ(err, null);
                SQ(statusCode, 400);
                var parsed = JSON.parse(dataOut)
-               // SQ(parsed.minutes_left,1440)
                done();
-               // var url = '/api/v1/auth/users/' + global.sessionUID + '/lrs/' + global.oneOfLrId;
-
-               // getData(9091, url, global.authToken, function (err, statusCode, h, dataOut) {
-               //      SQ(err, null);
-               //      SQ(statusCode, 400);
-               //      // var parsed = JSON.parse(h);
-               //      // SQ(parsed.current_state,4);
-               //      done();
-               // });
           });
      });
 
-     // // it('2.6. Shouldn`t create new Lending Request if user`s balance is null', function(done){
-     // // });
+     it('2.x We`ll create new user to perform the next tests', function (done) {
+          var url, j, data;
+          url = '/api/v1/users?do_not_send_email=1';
+          j = {
+               email: targetEmail2,
+               pass: '123456',
+               ethAddress: 'some-stuff'
+          };
+          data = JSON.stringify(j);
+          return postData(9091, url, data, function (err, statusCode, h, dataOut) {
+               var p;
+               SQ(err, null);
+               SQ(statusCode, 200);
+               p = JSON.parse(dataOut);
+               SQ(p.statusCode, 1);
+               assert.notEqual(p.shortId, 0);
+               return db.UserModel.findByEmail(j.email, function (err, users) {
+                    SQ(err, null);
+                    SQ(users.length, 1);
+                    SQ(users[0].shortId, p.shortId);
+                    SQ(users[0].validated, false);
+                    return db.UserModel.findByShortId(p.shortId, function (err, users) {
+                         SQ(err, null);
+                         SQ(users.length, 1);
+                         SQ(users[0].shortId, p.shortId);
+                         NQ(users[0].validationSig, '');
+                         global.userId2 = users[0].shortId;
+                         global.sessionUID2 = users[0].shortId;
+                         global.signature2 = users[0].validationSig;
+                         return db.SubscriptionModel.findByShortId(userId, function (err, subs) {
+                              SQ(err, null);
+                              SQ(subs.length, 1);
+                              SQ(subs[0].type, 1);
+                              db.UserModel.find({},function(err,users){
+                                   SQ(users.length, 2)
+                                   return done();
+                              })
+                              
+                         });
+                    });
+               });
+          });
+     });
 
-     // // it('2.7. Shouldn`t create new Lending Request if currentUser!=req.userId', function(done){
-     // // });
+     it('2.x. ...then validate', function (done) {
+          var url;
+          url = '/api/v1/users/' + userId2 + '/validation?sig=' + signature2 + '&do_not_send_email=1';
+          postData(9091, url, '', function (err, statusCode, h, dataOut) {
+               var str;
+               SQ(err, null);
+               SQ(statusCode, 200);
+               SQ(dataOut, 200);
+               str = targetEmail2;
+               db.UserModel.findByEmail(str, function (err, users) {
+                    SQ(err, null);
+                    SQ(users.length, 1);
+                    SQ(users[0].validated, true);
+                    SQ(users[0].validationSig, '');
+                    done();
+               });
+          });
+     });
 
-     // // //------------
-     // // it('2.8. Should return a list of LRs for a selected user', function (done) {
-     // // });
+     it('2.x. ... and login', function (done) {
+          var url, j, data;
+          url = '/api/v1/users/' + helpers.encodeUrlDec(targetEmail2) + '/login';
+          j = {
+               pass: '123456'
+          };
+          data = JSON.stringify(j);
+          postData(9091, url, data, function (err, statusCode, h, dataOut) {
+               var parsed, globalToken;
+               SQ(err, null);
+               SQ(statusCode, 200);
+               parsed = JSON.parse(dataOut);
+               globalToken = parsed.token;
+               global.authToken2 = parsed.token;
+               NQ(globalToken.length, 0);
+               done();
+          });
+     });
 
-     // // it('2.9. Shouldn`t return a list of LRs for a selected user if currentUser!=req.userId', function (done) {
-     // // });
+     it('2.6. Gerodot (new user) shouldn`t lend borrow (no token)', function (done) {
+          var lrId = global.oneOfLrId;
+          var url = '/api/v1/auth/lrs/'+global.oneOfLrId+'/lend'
+ 
+          postDataAuth(9091, url, '', '', function (err, statusCode, h, dataOut) {
+               SQ(err, null);
+               SQ(statusCode, 401);
+               done();
+          });
+     });
+     
+     it('2.7. Gerodot (new user) shouldn`t lend borrow (bad LR id)', function (done) {
+          var lrId = global.oneOfLrId;
+          var url  = '/api/v1/auth/lrs/trolololo/lend';
+ 
+          postDataAuth(9091, url, '', global.authToken2, function (err, statusCode, h, dataOut) {
+               SQ(err, null);
+               SQ(statusCode, 400);
+               done();
+          });
+     });
 
-     // // it('2.10. Should return a Lending Request', function (done) {
-     // // });
+     it('2.8. Gerodot should lend Kirill`s borrow', function (done) {
+          var lrId = global.oneOfLrId;
+          var url  = '/api/v1/auth/lrs/'+global.oneOfLrId+'/lend';
 
-     // // it('2.11. Shouldn`t return a Lending Request if currentUser!=req.userId', function (done) {
-     // // });
+          postDataAuth(9091, url, '', global.authToken2, function (err, statusCode, h, dataOut) {
+               SQ(err, null);
+               SQ(statusCode, 200);
+               var parsed = JSON.parse(dataOut);
+               SQ(parsed.minutes_left,1440);
+               done();
+          });
+     });
 
-     // // it('2.12. Should lend', function (done) {
-     // // });
+     it('2.9. Shouldn`t create new Lending Request (no token)', function (done) {
+          var url = '/api/v1/auth/lrs';
 
-     // // it('2.13. Shouldn`t lend if currentUser!=req.userId', function (done) {
-     // // });
+          postDataAuth(9091, url, '', '', function (err, statusCode, h, dataOut) {
+               SQ(statusCode, 401);
+               SQ(err, null);
+               done();
+          });       
+     });
+
+     it('2.10. Shouldn`t return a list of LRs (no token)', function (done) {
+          var url = '/api/v1/auth/lrs';
+          getData(9091, url, '', function (err, statusCode, h, dataOut) {
+               SQ(statusCode, 401);
+               done();
+          });
+     });
+
+     it('2.11. Gerodot shouldn`t set data for Kirill`s Lending Request', function (done) {
+          var url = '/api/v1/auth/lrs/' + global.oneOfLrId;
+
+          var j = {
+               eth_count: 120,
+               token_amount: 10000,
+               token_name: 'Augur tokens',
+               token_smartcontract: '0xb533aae346245e2e05b23f420C140bCA2529b8a6',
+               token_infolink: 'https://etherscan.io/address/0xb533aae346245e2e05b23f420C140bCA2529b8a6#code',
+               days_to_lend: 30,
+          };
+          data = JSON.stringify(j);
+
+          putDataAuth(9091, url, data, global.authToken2, function (err, statusCode, h, dataOut) {
+               SQ(statusCode, 400);      
+               done();
+          });
+     });
+
+     it('2.12. Shouldn`t return a Lending Request (no token)', function (done) {
+          var url = '/api/v1/auth/lrs/' + global.oneOfLrId;
+          getData(9091, url, '', function (err, statusCode, h, dataOut) {
+               SQ(statusCode, 401);
+               done();
+          });
+     });
 })
