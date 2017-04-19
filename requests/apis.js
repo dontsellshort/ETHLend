@@ -116,10 +116,12 @@ app.post('/api/v1/auth/lrs', function (request, res, next) { //2.2. Create new L
      var userId = user.id;
      db_helpers.getUser(user, userId, function (err, user) {
           if (err) {
+               winston.error('Wrong user');
                return res.status(400).json('Wrong user');
           }
 
           if(!user.ethAddress || !user.ethAddress.length){
+               winston.error('Please set ethAddress first');
                return res.status(400).json('Please set ethAddress first!');
           }
 
@@ -172,13 +174,23 @@ app.put('/api/v1/auth/lrs/:id', function (request, res, next) { //2.3. Set data 
           data.lrId = id;
 
           if(contract_helpers.isSmartContractsEnabled()){
-               contract_helpers.updateLr(id,data,function(err){
-                    if (err) {
-                         winston.error('Can`t update: ' + err);
-                         return res.status(400).json('Can`t update');
-                    }
-                    res.send(200);
-               });
+
+               if (data.token_amount 
+               && data.token_name 
+               && data.token_infolink 
+               && data.token_smartcontract 
+               && data.days_to_lend ){
+
+                    contract_helpers.updateLr(id,data,function(err){
+                         if (err) {
+                              winston.error('Can`t update: ' + err);
+                              return res.status(400).json('Can`t update');
+                         }
+                         res.send(200);
+                    });
+               } else { 
+                    return res.sendStatus(400).json('Need more data; can`t update LR')
+               }
           }else{
                setDataSync(userId,id,data,res);
           }
