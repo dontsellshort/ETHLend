@@ -240,8 +240,8 @@ function convertLrToOut(lr,id){
      // TODO: convert/calculate other fields
 
      var out = {
-          eth_count:                '' + web3.fromWei(lr.wanted_wei(),'ether'),
-          token_amount:             '' + lr.token_amount(),
+          eth_count:                web3.fromWei(lr.wanted_wei(),'ether'),
+          token_amount:             lr.token_amount(),
           token_name:               lr.token_name(),
           token_smartcontract:      lr.token_smartcontract,
           token_infolink:           lr.token_infolink,
@@ -249,21 +249,21 @@ function convertLrToOut(lr,id){
           borrower_account_address: lr.borrower(),
           lender_account_address:   lr.lender(),
 
-          days_to_lend:             '' + lr.days_to_lend(),
-          current_state:            '' + lr.currentState(),
+          days_to_lend:             lr.days_to_lend(),
+          current_state:            lr.currentState(),
 
           //date_created:             lr.date_created,
           //waiting_for_loan_from:    lr.waiting_for_loan_from,
           //date_modified:            lr.date_modified,
 
           // TODO: fix it!!!!
-          days_left:                '' + lr.days_to_lend(),
+          days_left:               lr.days_to_lend(),
 
           //address_to_send:          lr.address_to_send,
-          smart_contract_address:   '' + id,
+          smart_contract_address:   id,
           //minutes_left:             minutes_left,
-          address_to_send:          '' + id,
-          id:                       '' + id 
+          address_to_send:          id,
+          id:                       id 
      };
                     
      return out;
@@ -330,6 +330,27 @@ function isSmartContractsEnabled(){
      return isEnabled();
 }
 
+function checkTokens(id,cb){
+     if(!isEnabled()){
+          return cb(null);
+     }
+
+     winston.info('Checking tokens for contract: ' + id);
+
+     var addr = id;
+     var lr = web3.eth.contract(g_abiRequest).at(addr);
+     
+     lr.checkTokens(
+          {
+               from: g_creator,               
+               //value: amount,
+               gas: 2900000 
+          },function(err,result){
+               cb(err);
+          }
+     );
+}
+
 // Exports:
 exports.getAccount = getAccounts;
 exports.compileContracts = compileContracts;
@@ -349,3 +370,4 @@ exports.getLrById = getLrById;
 exports.createNewLr = createNewLr;
 exports.updateLr = updateLr;
 exports.convertLrToOut = convertLrToOut;
+exports.checkTokens = checkTokens;

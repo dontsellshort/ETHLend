@@ -431,6 +431,26 @@ describe('Users module and lending requests', function (T) {
           });
      });
 
+     it('2.2.2 Should not set data again', function (done) {
+          var url = '/api/v1/auth/lrs/' + global.oneOfLrId;
+
+          var j = {
+               eth_count: 120,
+               token_amount: 10000,
+               token_name: 'Augur tokens',
+               token_smartcontract: '0xb533aae346245e2e05b23f420C140bCA2529b8a6',
+               token_infolink: 'https://etherscan.io/address/0xb533aae346245e2e05b23f420C140bCA2529b8a6#code',
+               days_to_lend: 30,
+          };
+          data = JSON.stringify(j);
+
+          putDataAuth(9091, url, data, global.authToken, function (err, statusCode, h, dataOut) {
+               SQ(statusCode, 400);
+               SQ(err, null);        
+               done();
+          });
+     });
+
      it('2.2.1 should return a valid state', function (done) {
           var url = '/api/v1/auth/lrs/' + global.oneOfLrId;
           getData(9091, url, global.authToken, function (err, statusCode, h, dataOut) {
@@ -438,7 +458,14 @@ describe('Users module and lending requests', function (T) {
                SQ(statusCode, 200);
 
                // 'waiting for tokens'
-               SQ(JSON.parse(h).current_state,1);
+               var p = JSON.parse(h);
+
+               SQ(p.current_state,1);
+               SQ(p.eth_count,120);
+               SQ(p.token_amount,10000);
+               SQ(p.days_to_lend,30);
+               SQ(p.days_to_lend,30);
+
                done();
           });
      });
