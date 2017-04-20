@@ -399,6 +399,18 @@ describe('Users module and lending requests', function (T) {
           });
      });
 
+     it('2.1.3 should return a valid state', function (done) {
+          var url = '/api/v1/auth/lrs/' + global.oneOfLrId;
+          getData(9091, url, global.authToken, function (err, statusCode, h, dataOut) {
+               SQ(err, null);
+               SQ(statusCode, 200);
+
+               // 'waiting for data'
+               SQ(JSON.parse(h).current_state,0);
+               done();
+          });
+     });
+
      it('2.2. Should set data for Lending Request', function (done) {
           var url = '/api/v1/auth/lrs/' + global.oneOfLrId;
 
@@ -419,6 +431,18 @@ describe('Users module and lending requests', function (T) {
           });
      });
 
+     it('2.2.1 should return a valid state', function (done) {
+          var url = '/api/v1/auth/lrs/' + global.oneOfLrId;
+          getData(9091, url, global.authToken, function (err, statusCode, h, dataOut) {
+               SQ(err, null);
+               SQ(statusCode, 200);
+
+               // 'waiting for tokens'
+               SQ(JSON.parse(h).current_state,1);
+               done();
+          });
+     });
+
      it('2.2.2. Shouldn`t set data for Lending Request (data not complete)', function (done) {
           var url = '/api/v1/auth/lrs/' + global.oneOfLrId;
           var j = {
@@ -435,7 +459,7 @@ describe('Users module and lending requests', function (T) {
           });
      });
 
-     it('2.2.1. Shouldn`t set data for Lending Request (no data)', function (done) {
+     it('2.2.3. Shouldn`t set data for Lending Request (no data)', function (done) {
           var url = '/api/v1/auth/lrs/' + global.oneOfLrId;
 
           putDataAuth(9091, url, '', global.authToken, function (err, statusCode, h, dataOut) {
@@ -591,6 +615,40 @@ describe('Users module and lending requests', function (T) {
           });
      });
 
+     it('2.8. Gerodot should`t lend Kirill`s borrow in wrong state', function (done) {
+          var lrId = global.oneOfLrId;
+          var url  = '/api/v1/auth/lrs/'+global.oneOfLrId+'/lend';
+
+          postDataAuth(9091, url, '', global.authToken2, function (err, statusCode, h, dataOut) {
+               SQ(err, null);
+               SQ(statusCode, 400);
+               done();
+          });
+     });
+
+     // any user can call this method
+     it('2.9. Should check for tokens', function (done) {
+          var lrId = global.oneOfLrId;
+          var url  = '/api/v1/auth/lrs/' + global.oneOfLrId + '/check_for_tokens';
+
+          getData(9091, url, global.authToken2, function (err, statusCode, h, dataOut) {
+               SQ(err, null);
+               SQ(statusCode, 200);
+               done();
+          });
+     });
+
+     it('2.9.2 Should not allow to move again', function (done) {
+          var lrId = global.oneOfLrId;
+          var url  = '/api/v1/auth/lrs/' + global.oneOfLrId + '/check_for_tokens';
+
+          getData(9091, url, global.authToken2, function (err, statusCode, h, dataOut) {
+               SQ(err, null);
+               SQ(statusCode, 400);
+               done();
+          });
+     });
+
      it('2.8. Gerodot should lend Kirill`s borrow', function (done) {
           var lrId = global.oneOfLrId;
           var url  = '/api/v1/auth/lrs/'+global.oneOfLrId+'/lend';
@@ -600,6 +658,18 @@ describe('Users module and lending requests', function (T) {
                SQ(statusCode, 200);
                var parsed = JSON.parse(dataOut);
                SQ(parsed.minutes_left,1440);
+               done();
+          });
+     });
+
+     it('2.8.2 should return a valid state', function (done) {
+          var url = '/api/v1/auth/lrs/' + global.oneOfLrId;
+          getData(9091, url, global.authToken, function (err, statusCode, h, dataOut) {
+               SQ(err, null);
+               SQ(statusCode, 200);
+
+               // 'waiting for loan'
+               SQ(JSON.parse(h).current_state,4);
                done();
           });
      });

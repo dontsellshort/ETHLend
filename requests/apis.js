@@ -323,6 +323,8 @@ app.post('/api/v1/auth/lrs/:id/lend', function (request, res, next) { //2.5. Len
 			current_state: 4
           };
 
+          // TODO: smart contracts code?
+
           db.LendingRequestModel.findById(id,function(err,lr){
                if (err) {
                     winston.error('Can`t Lend: ' + err);
@@ -332,6 +334,10 @@ app.post('/api/v1/auth/lrs/:id/lend', function (request, res, next) { //2.5. Len
                     winston.error('Tried to lend his own borrow: '+userId);
                     return res.status(400).json('You can`t lend your own borrow');
                }   
+               if(lr.current_state!==3){
+                    winston.error('Must be in state <waiting for lender>');
+                    return res.status(400).json('Must be in state <waiting for lender>');
+               }
 
                db.LendingRequestModel.findByIdAndUpdate(id, {$set: setObj}, {new: true}, function (err, lr) {
                     if (err) {
@@ -347,6 +353,58 @@ app.post('/api/v1/auth/lrs/:id/lend', function (request, res, next) { //2.5. Len
                     };
                     
                     res.json(responseObj);
+               });
+          });
+     });
+});
+
+// We must check if Borrower has transferred tokens to LR
+// And move LR from <waiting for tokens> to <waiting for lender> state
+app.get('/api/v1/auth/lrs/:id/check_for_tokens', function (request, res, next) { //2.5. Lend
+     var user = request.user;
+     if (typeof (user.id) === 'undefined') {
+          winston.error('Not a user');
+          return res.status(400).json('Not a user');
+     }
+     var userId = user.id;
+     if (typeof (request.params.id) === 'undefined') {
+          winston.error('Undefined id');
+          return res.status(400).json('No id');
+     }
+
+     var id = request.params.id;
+
+     db_helpers.getUser(user, userId, function (err, user) {
+          if (err) {
+               return res.status(400);
+          }
+
+          // TODO: this method does no real 'tokens' check 
+          // and immediately moves LR into 3 state 
+          var setObj = {
+               date_modified: Date.now(),
+			current_state: 3    // waiting for lender
+          };
+
+          // TODO: smart contracts code???
+
+          db.LendingRequestModel.findById(id,function(err,lr){
+               if (err) {
+                    winston.error('Can`t Lend: ' + err);
+                    return res.status(400).json('can`t lend');
+               }  
+               if(lr.current_state!==1){
+                    winston.error('Must be in state <waiting for tokens>');
+                    return res.status(400).json('Must be in state <waiting for tokens>');
+               }
+
+               db.LendingRequestModel.findByIdAndUpdate(id, {$set: setObj}, {new: true}, function (err, lr) {
+                    if (err) {
+                         winston.error('Can`t Lend: ' + err);
+                         return res.status(400).json('can`t lend');
+                    }
+
+                    res.json({});
                });
           });
      });
