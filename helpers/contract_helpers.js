@@ -231,6 +231,9 @@ function updateLr(id,data,cb){
                //value: amount,
                gas: 2900000 
           },function(err,result){
+               console.log('E: ' + err);
+               console.log('R: ' + result);
+
                cb(err);
           }
      );
