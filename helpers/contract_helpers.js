@@ -241,7 +241,7 @@ function convertLrToOut(lr,id){
 
      var out = {
           eth_count:                web3.fromWei(lr.wanted_wei(),'ether'),
-          token_amount:             lr.token_amount(),
+          token_amount:             parseInt(lr.token_amount()),
           token_name:               lr.token_name(),
           token_smartcontract:      lr.token_smartcontract,
           token_infolink:           lr.token_infolink,
@@ -249,15 +249,15 @@ function convertLrToOut(lr,id){
           borrower_account_address: lr.borrower(),
           lender_account_address:   lr.lender(),
 
-          days_to_lend:             lr.days_to_lend(),
-          current_state:            lr.currentState(),
+          days_to_lend:             parseInt(lr.days_to_lend()),
+          current_state:            parseInt(lr.currentState()),
 
           //date_created:             lr.date_created,
           //waiting_for_loan_from:    lr.waiting_for_loan_from,
           //date_modified:            lr.date_modified,
 
           // TODO: fix it!!!!
-          days_left:               lr.days_to_lend(),
+          days_left:               parseInt(lr.days_to_lend()),
 
           //address_to_send:          lr.address_to_send,
           smart_contract_address:   id,
