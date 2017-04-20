@@ -287,3 +287,22 @@ LR should move from 'waiting for lender' to 'waiting for loan' state.
             "eth_count": 120,
             "minutes_left": 1440    // 1 day left until this LR moves back to 'waiting for lender' state
         }
+        
+### Check if tokens are transferred [GET /api/v1/auth/lrs/{id}/check_for_tokens]
+
+If current LR is in state 'waiting for tokens' -> this method will check EXPLICITLY if tokens are transferred.
+Can be used for debugging.
+
++ Parameters
+    + id - Lending Request ID
+
++ Request (application/json) 
+    
+    + Headers
+    
+            Authorization: Bearer TOKEN-HERE
+            
++ Response 200 (application/json)
+
+        {
+        }
