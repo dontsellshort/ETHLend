@@ -285,7 +285,7 @@ function getLr_DB(lrId,res){
                waiting_for_loan_from:    lr.waiting_for_loan_from,
                date_modified:            lr.date_modified,
                days_left:                lr.days_left,
-               address_to_send:          lr.address_to_send,
+               address_to_send:          (lr.smartcontract_address || ''),
                smart_contract_address:   (lr.smartcontract_address || ''),
                minutes_left:             minutes_left,
                address_to_send:          (lr.smartcontract_address || ''),
