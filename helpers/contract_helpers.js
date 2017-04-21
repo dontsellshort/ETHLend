@@ -354,6 +354,68 @@ function checkTokens(id,cb){
      );
 }
 
+/*
+function lend(id,lenderAddress,wantedWei,cb){
+     if(!isEnabled()){
+          return cb(null);
+     }
+
+     winston.info('Lending request: ' + id);
+
+     var addr = id;
+     var lr = web3.eth.contract(g_abiRequest).at(addr);
+     
+     // should be sent by a 'lender' 
+     console.log('ID: ' + id);
+     console.log('LA: ' + lenderAddress);
+     console.log('WW: ' + wantedWei);
+
+     web3.eth.sendTransaction(
+          {
+               from: lenderAddress,               
+               to: lr,
+               value: wantedWei,
+          },function(err,result){
+               cb(err);
+          }
+     );
+}
+*/
+
+function getWantedWei(id){
+     var addr = id;
+     var lr = web3.eth.contract(g_abiRequest).at(addr);
+
+     var out = parseInt(lr.wanted_wei());
+     return out;
+}
+
+function getLendInfo(id,lenderAddress,cb){
+     var addr = id;
+     var lr = web3.eth.contract(g_abiRequest).at(addr);
+
+     try {
+          if(lr.currentState()!=parseInt(3)){
+               return cb(new Error('Must be in state <waiting for lender>. Current state=' + lr.currentState()));
+          }
+          if(lr.borrower()==lenderAddress){
+               return cb(new Error('Can`t lend my own borrow'));
+          }
+          
+          var out = {
+               address_to_send: '' + id,
+               eth_count: web3.fromWei(lr.wanted_wei(),'ether'),
+               // TODO
+               minutes_left: 1440, 
+               id: '' + id 
+          };
+
+          return cb(null,out);
+     }catch(err){
+          return cb(err);
+     }
+}
+
 // Exports:
 exports.getAccount = getAccounts;
 exports.compileContracts = compileContracts;
@@ -374,3 +436,6 @@ exports.createNewLr = createNewLr;
 exports.updateLr = updateLr;
 exports.convertLrToOut = convertLrToOut;
 exports.checkTokens = checkTokens;
+//exports.lend = lend;
+exports.getWantedWei = getWantedWei;
+exports.getLendInfo = getLendInfo;

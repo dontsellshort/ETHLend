@@ -314,17 +314,17 @@ app.post('/api/v1/auth/lrs/:id/lend', function (request, res, next) { //2.5. Len
                return res.status(400);
           }
 
-          var setObj = {
-               date_modified: Date.now(),
-			waiting_for_loan_from: Date.now(),
-               lender_id: userId,
-               lender_account_address: '',
-			current_state: 4
-          };
-
           if(contract_helpers.isSmartContractsEnabled()){
-               winston.error('This is not implemented. And will not be');
-               return res.status(400).json('This is not implemented. And will not be');
+               //winston.error('This is not implemented. And will not be');
+               //return res.status(400).json('This is not implemented. And will not be');
+
+               contract_helpers.getLendInfo(id,user.ethAddress,function(err,out){
+                    if(err){
+                         winston.error('Error: ' + err);
+                         return res.status(400).json('Error: ' + err);
+                    }
+                    res.json(out);
+               });
           }else{
                lendSync(id,res,userId);
           }
@@ -342,9 +342,17 @@ function lendSync(id,res,userId){
                return res.status(400).json('You can`t lend your own borrow');
           }   
           if(lr.current_state!==3){
-               winston.error('Must be in state <waiting for lender>');
-               return res.status(400).json('Must be in state <waiting for lender>');
+               winston.error('Must be in state <waiting for lender>. Current state=' + lr.current_state);
+               return res.status(400).json('Must be in state <waiting for lender>. Current state=' + lr.current_state);
           }
+
+          var setObj = {
+               date_modified: Date.now(),
+			waiting_for_loan_from: Date.now(),
+               lender_id: userId,
+               lender_account_address: '',
+			current_state: 4
+          };
 
           db.LendingRequestModel.findByIdAndUpdate(id, {$set: setObj}, {new: true}, function (err, lr) {
                if (err) {
