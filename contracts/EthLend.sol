@@ -1,5 +1,10 @@
 pragma solidity ^0.4.4;
 
+contract ERC20Token {
+     function balanceOf(address _address) constant returns (uint balance);
+     function transfer(address _to, uint _value) returns (bool success);
+}
+
 contract Ledger {
      // who deployed Ledger
      address public mainAddress;
@@ -66,8 +71,8 @@ contract Ledger {
           return;
      }
 
-     function(){
-          throw;
+     function() payable{
+          createNewLendingRequest();
      }
 }
 
@@ -87,8 +92,8 @@ contract LendingRequest {
 
           // borrower sent us tokens
           WaitingForLender,
-          // lender is set 
-          // TODO: not used, moving immediately to Funded
+
+          // not used
           // lender must send money
           WaitingForLoan,
 
@@ -205,17 +210,27 @@ contract LendingRequest {
 
      // Should check if tokens are 'trasferred' to this contracts address and controlled
      function checkTokens()byLedgerMainOrBorrower onlyInState(State.WaitingForTokens){
-          // TODO:
-          // !!! DOES NO CHECKS!!!
-          
-          // we are ready to search someone that has money
-          // to give us
-          currentState = State.WaitingForLender;
+          ERC20Token token = ERC20Token(token_smartcontract_address);
+
+          uint tokenBalance = token.balanceOf(this);
+          if(tokenBalance >= token_amount){
+               // we are ready to search someone 
+               // to give us the money
+               currentState = State.WaitingForLender;
+          }
      }
 
      // Borrower wants his tokens back
      // He clicks on "Return ETH" button 
      function returnEth()byLedgerMainOrBorrower onlyInState(State.Funded){
+          ERC20Token token = ERC20Token(token_smartcontract_address);
+
+          // move back tokens: LR -> borrower
+          uint tokenBalance = token.balanceOf(this);
+          token.transfer(borrower,tokenBalance);
+
+          // TODO: 
+          // move back ETH: borrower -> lender
             
           currentState = State.WaitingForPayback;
      }
@@ -231,6 +246,9 @@ contract LendingRequest {
           }
 
           lender = msg.sender;     
+
+          // ETH is sent to borrower
+          
 
           currentState = State.Funded;
      }

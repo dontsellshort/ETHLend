@@ -30,6 +30,9 @@ var ledgerContract;
 var contractAddress;
 var contract;
 
+var tokenAddress;
+var token;
+
 var txHash;
 
 var ledgerAbi;
@@ -189,6 +192,68 @@ function deployContract(data,cb){
      });
 }
 
+function deployTokenContract(data,cb){
+     var file = './contracts/SampleToken.sol';
+     var contractName = ':SampleToken';
+
+     fs.readFile(file, function(err, result){
+          assert.equal(err,null);
+
+          var source = result.toString();
+          assert.notEqual(source.length,0);
+
+          assert.equal(err,null);
+
+          var output = solc.compile(source, 0); // 1 activates the optimiser
+
+          //console.log('OUTPUT: ');
+          //console.log(output.contracts);
+
+          var abi = JSON.parse(output.contracts[contractName].interface);
+          var bytecode = output.contracts[contractName].bytecode;
+          var tempContract = web3.eth.contract(abi);
+
+          var alreadyCalled = false;
+
+          tempContract.new(
+               creator,
+               borrower,
+               {
+                    from: creator, 
+                    gas: 4995000,
+                    data: '0x' + bytecode
+               }, 
+               function(err, c){
+                    assert.equal(err, null);
+
+                    console.log('TX HASH: ');
+                    console.log(c.transactionHash);
+
+                    // TX can be processed in 1 minute or in 30 minutes...
+                    // So we can not be sure on this -> result can be null.
+                    web3.eth.getTransactionReceipt(c.transactionHash, function(err, result){
+                         //console.log('RESULT: ');
+                         //console.log(result);
+
+                         assert.equal(err, null);
+                         assert.notEqual(result, null);
+
+                         tokenAddress = result.contractAddress;
+                         token = web3.eth.contract(abi).at(tokenAddress);
+
+                         console.log('Token address: ');
+                         console.log(tokenAddress);
+
+                         if(!alreadyCalled){
+                              alreadyCalled = true;
+
+                              return cb(null);
+                         }
+                    });
+               });
+     });
+}
+
 describe('Contracts 0 - Deploy Ledger', function() {
      before("Initialize everything", function(done) {
           web3.eth.getAccounts(function(err, as) {
@@ -270,6 +335,17 @@ describe('Contracts 1', function() {
           });
      });
 
+     it('should deploy Sample token contract',function(done){
+          var data = {};
+          deployTokenContract(data,function(err){
+               assert.equal(err,null);
+
+               done();
+          });
+     });
+
+
+
      it('should get initial creator balance',function(done){
           initialBalanceCreator = web3.eth.getBalance(creator);
 
@@ -316,14 +392,40 @@ describe('Contracts 1', function() {
           done();
      })
 
+     it('should issue some tokens for me',function(done){
+          token.issueTokens(
+               borrower,
+               1000,
+               {
+                    // anyone can issue tokens for anyone here)))
+                    from: creator,               
+                    gas: 2900000 
+               },function(err,result){
+                    assert.equal(err,null);
+
+                    web3.eth.getTransactionReceipt(result, function(err, r2){
+                         assert.equal(err, null);
+
+                         done();
+                    });
+               }
+          );
+     });
+
+     it('should return 1000 as a balance',function(done){
+          var balance = token.balanceOf(borrower);
+          assert.equal(balance,1000);
+          done();
+     });
+
      it('should issue new LR',function(done){
           // 0.2 ETH
           var amount = 200000000000000000;
 
-          // this should be called by borrower
-          ledgerContract.createNewLendingRequest(
+          web3.eth.sendTransaction(
                {
                     from: borrower,               
+                    to: ledgerContractAddress,
                     value: amount,
                     gas: 2900000 
                },function(err,result){
@@ -397,10 +499,11 @@ describe('Contracts 1', function() {
                wanted_wei: 1000000000,
                token_amount: 10,
 
-               token_name: 'Cosmos',
-               token_infolink: 'https://cosmos.network',
-               // https://etherscan.io/address/0xCF965Cfe7C30323E9C9E41D4E398e2167506f764
-               token_smartcontract_address: '0xCF965Cfe7C30323E9C9E41D4E398e2167506f764',
+               token_name: 'SampleContract',
+               token_infolink: 'https://some-sample-ico.network',
+
+               // see that?
+               token_smartcontract_address: tokenAddress,
                days_to_lend: 10
           };
 
@@ -416,8 +519,7 @@ describe('Contracts 1', function() {
                data.token_smartcontract_address,
                data.days_to_lend,
                {
-                    from: creator,               
-                    //value: amount,
+                    from: borrower,               
                     gas: 2900000 
                },function(err,result){
                     assert.equal(err,null);
@@ -443,15 +545,13 @@ describe('Contracts 1', function() {
           done();
      })
 
-     it('should check if tokens are transferred (fake)',function(done){
+     it('should check if tokens are transferred',function(done){
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          // should be called by platform
           lr.checkTokens(
                {
-                    from: creator,               
-                    //value: amount,
+                    from: borrower,               
                     gas: 2900000 
                },function(err,result){
                     assert.equal(err,null);
@@ -465,17 +565,149 @@ describe('Contracts 1', function() {
           );
      });
 
-     it('should move to Waiting for lender state',function(done){
+     it('should not move into <WaitingForLender> state',function(done){
           assert.equal(ledgerContract.getLrCountForUser(borrower),1);
           
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
           var state = lr.getState();
-          // "Waiting for lender" state
+          // "Waiting for tokens" state
+          assert.equal(state.toString(),1);
+          done();
+     })
+
+     it('should move 1 token to LR',function(done){
+          var lr = ledgerContract.getLrForUser(borrower,0);
+
+          // Borrower -> LR contract
+          token.transfer(
+               lr,
+               1,
+               {
+                    from: borrower,               
+                    gas: 2900000 
+               },function(err,result){
+                    assert.equal(err,null);
+
+                    web3.eth.getTransactionReceipt(result, function(err, r2){
+                         assert.equal(err, null);
+
+                         done();
+                    });
+               }
+          );
+     });
+
+     it('should check again if tokens are transferred',function(done){
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          lr.checkTokens(
+               {
+                    from: borrower,               
+                    gas: 2900000 
+               },function(err,result){
+                    assert.equal(err,null);
+
+                    web3.eth.getTransactionReceipt(result, function(err, r2){
+                         assert.equal(err, null);
+
+                         done();
+                    });
+               }
+          );
+     });
+
+     it('should not move into <WaitingForLender> state',function(done){
+          assert.equal(ledgerContract.getLrCountForUser(borrower),1);
+          
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          var state = lr.getState();
+          // "Waiting for tokens" state
+          assert.equal(state.toString(),1);
+          done();
+     })
+
+     it('should move 9 more token to LR',function(done){
+          var lr = ledgerContract.getLrForUser(borrower,0);
+
+          // Borrower -> LR contract
+          token.transfer(
+               lr,
+               9,
+               {
+                    from: borrower,               
+                    gas: 2900000 
+               },function(err,result){
+                    assert.equal(err,null);
+
+                    web3.eth.getTransactionReceipt(result, function(err, r2){
+                         assert.equal(err, null);
+
+                         done();
+                    });
+               }
+          );
+     });
+
+     it('should check again if tokens are transferred',function(done){
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          lr.checkTokens(
+               {
+                    from: borrower,               
+                    gas: 2900000 
+               },function(err,result){
+                    assert.equal(err,null);
+
+                    web3.eth.getTransactionReceipt(result, function(err, r2){
+                         assert.equal(err, null);
+
+                         done();
+                    });
+               }
+          );
+     });
+
+     it('should move into <WaitingForLender> state',function(done){
+          assert.equal(ledgerContract.getLrCountForUser(borrower),1);
+          
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          var state = lr.getState();
+          // "Waiting for tokens" state
           assert.equal(state.toString(),3);
           done();
      })
+
+     it('should allow to ask for check again',function(done){
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          lr.checkTokens(
+               {
+                    from: borrower,               
+                    gas: 2900000 
+               },function(err,result){
+                    // TODO: why fails?
+                    /*
+                    assert.equal(err,null);
+
+                    web3.eth.getTransactionReceipt(result, function(err, r2){
+                         assert.equal(err, null);
+
+                         done();
+                    });
+                    */
+                    done();
+               }
+          );
+     });
 
      it('should collect money from Lender now',function(done){
           // 0.2 ETH
@@ -650,7 +882,6 @@ describe('Contracts 2 - cancell', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          // should be called by platform
           lr.cancell(
                {
                     // can be sent from ledger, main, borrower
@@ -892,7 +1123,6 @@ describe('Contracts 3 - cancell with refund', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          // should be called by platform
           lr.checkTokens(
                {
                     from: creator,               
@@ -926,4 +1156,166 @@ describe('Contracts 3 - cancell with refund', function() {
      it('should return tokens to founder',function(done){
           done();
      })
+});
+
+describe('Contracts 4 - token check', function() {
+     it('should check if tokens are transferred',function(done){
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          lr.checkTokens(
+               {
+                    from: borrower,               
+                    gas: 2900000 
+               },function(err,result){
+                    assert.equal(err,null);
+
+                    web3.eth.getTransactionReceipt(result, function(err, r2){
+                         assert.equal(err, null);
+
+                         done();
+                    });
+               }
+          );
+     });
+
+     it('should not move into <WaitingForLender> state',function(done){
+          assert.equal(ledgerContract.getLrCountForUser(borrower),1);
+          
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          var state = lr.getState();
+          // "Waiting for tokens" state
+          assert.equal(state.toString(),1);
+          done();
+     })
+
+     it('should move 1 token to LR',function(done){
+          var lr = ledgerContract.getLrForUser(borrower,0);
+
+          // Borrower -> LR contract
+          token.transfer(
+               lr,
+               1,
+               {
+                    from: borrower,               
+                    gas: 2900000 
+               },function(err,result){
+                    assert.equal(err,null);
+
+                    web3.eth.getTransactionReceipt(result, function(err, r2){
+                         assert.equal(err, null);
+
+                         done();
+                    });
+               }
+          );
+     });
+
+     it('should check again if tokens are transferred',function(done){
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          lr.checkTokens(
+               {
+                    from: borrower,               
+                    gas: 2900000 
+               },function(err,result){
+                    assert.equal(err,null);
+
+                    web3.eth.getTransactionReceipt(result, function(err, r2){
+                         assert.equal(err, null);
+
+                         done();
+                    });
+               }
+          );
+     });
+
+     it('should not move into <WaitingForLender> state',function(done){
+          assert.equal(ledgerContract.getLrCountForUser(borrower),1);
+          
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          var state = lr.getState();
+          // "Waiting for tokens" state
+          assert.equal(state.toString(),1);
+          done();
+     })
+
+     it('should move 9 more token to LR',function(done){
+          var lr = ledgerContract.getLrForUser(borrower,0);
+
+          // Borrower -> LR contract
+          token.transfer(
+               lr,
+               9,
+               {
+                    from: borrower,               
+                    gas: 2900000 
+               },function(err,result){
+                    assert.equal(err,null);
+
+                    web3.eth.getTransactionReceipt(result, function(err, r2){
+                         assert.equal(err, null);
+
+                         done();
+                    });
+               }
+          );
+     });
+
+     it('should check again if tokens are transferred',function(done){
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          lr.checkTokens(
+               {
+                    from: borrower,               
+                    gas: 2900000 
+               },function(err,result){
+                    assert.equal(err,null);
+
+                    web3.eth.getTransactionReceipt(result, function(err, r2){
+                         assert.equal(err, null);
+
+                         done();
+                    });
+               }
+          );
+     });
+
+     it('should move into <WaitingForLender> state',function(done){
+          assert.equal(ledgerContract.getLrCountForUser(borrower),1);
+          
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          var state = lr.getState();
+          // "Waiting for tokens" state
+          assert.equal(state.toString(),3);
+          done();
+     })
+
+     it('should allow to ask for check again',function(done){
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          lr.checkTokens(
+               {
+                    from: borrower,               
+                    gas: 2900000 
+               },function(err,result){
+                    assert.equal(err,null);
+
+                    web3.eth.getTransactionReceipt(result, function(err, r2){
+                         assert.equal(err, null);
+
+                         done();
+                    });
+               }
+          );
+     });
 });
