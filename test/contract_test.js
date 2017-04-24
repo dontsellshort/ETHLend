@@ -41,8 +41,10 @@ var requestAbi;
 // init BigNumber
 var unit = new BigNumber(Math.pow(10,18));
 
+var WANTED_WEI = web3.toWei(1,'ether');
+
 function diffWithGas(mustBe,diff){
-     var gasFee = 2000000;
+     var gasFee = 5000000;
      return (diff>=mustBe) && (diff<=mustBe + gasFee);
 }
 
@@ -496,7 +498,7 @@ describe('Contracts 1', function() {
 
      it('should set data',function(done){
           var data = {
-               wanted_wei: 1000000000,
+               wanted_wei: WANTED_WEI,
                token_amount: 10,
 
                token_name: 'SampleContract',
@@ -711,11 +713,14 @@ describe('Contracts 1', function() {
 
      it('should collect money from Lender now',function(done){
           // 0.2 ETH
-          var wanted_wei = 1000000000;
+          var wanted_wei = WANTED_WEI;
           var amount = wanted_wei;
 
           var a = ledgerContract.getLrForUser(borrower,0);
           //var lr = web3.eth.contract(requestAbi).at(a);
+
+          // WARNING: see this
+          initialBalanceBorrower = web3.eth.getBalance(borrower);
 
           // this should be called by borrower
           web3.eth.sendTransaction(
@@ -723,7 +728,7 @@ describe('Contracts 1', function() {
                     from: lender,               
                     to: a,
                     value: wanted_wei,
-                    //gas: 2900000 
+                    gas: 2900000 
                },function(err,result){
                     assert.equal(err,null);
 
@@ -746,24 +751,41 @@ describe('Contracts 1', function() {
 
      it('should get updated lender balance',function(done){
           var current = web3.eth.getBalance(lender);
-          var wantedWei = 1000000000;
+          var wantedWei = WANTED_WEI;
 
           var diff = initialBalanceLender - current;
           assert.equal(diffWithGas(wantedWei,diff),true);
           done();
      })
 
-     it('should move to Funded state',function(done){
+     it('should move to WaitingForPayback state',function(done){
           assert.equal(ledgerContract.getLrCountForUser(borrower),1);
           
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
           var state = lr.getState();
-          // "Funded" state
-          assert.equal(state.toString(),5);
+          // "Waiting For Payback" state
+          assert.equal(state.toString(),6);
           done();
      })
+
+     it('should move all ETH to borrower',function(done){
+          // ETH should be moved to borrower
+          // tokens should be held on contract
+
+          var wantedWei = WANTED_WEI;
+
+          var current = web3.eth.getBalance(borrower);
+          var diff = current - initialBalanceBorrower;
+
+          console.log('DIFF: ', diff);
+          console.log('CURR: ', wantedWei);
+
+          assert.equal(diffWithGas(wantedWei,diff),true);
+
+          done();
+     });
 })
 
 
@@ -1070,7 +1092,7 @@ describe('Contracts 3 - cancell with refund', function() {
 
      it('should set data',function(done){
           var data = {
-               wanted_wei: 1000000000,
+               wanted_wei: WANTED_WEI,
                token_amount: 10,
 
                token_name: 'Cosmos',

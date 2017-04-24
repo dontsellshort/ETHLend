@@ -97,6 +97,7 @@ contract LendingRequest {
           // lender must send money
           WaitingForLoan,
 
+          // not used
           Funded,
 
           // borrower clicked on 'Return ETH' button
@@ -247,9 +248,10 @@ contract LendingRequest {
 
           lender = msg.sender;     
 
-          // ETH is sent to borrower
-          
-
-          currentState = State.Funded;
+          // ETH is sent to borrower in full
+          if(!borrower.call.gas(200000).value(wanted_wei)()){
+               throw;
+          }
+          currentState = State.WaitingForPayback;
      }
 }
