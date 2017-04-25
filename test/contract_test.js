@@ -660,6 +660,12 @@ describe('Contracts 1', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
+          var balance = token.balanceOf(borrower);
+          assert.equal(balance,990);
+
+          var balance2 = token.balanceOf(a);
+          assert.equal(balance2,10);
+
           lr.checkTokens(
                {
                     from: borrower,               
@@ -858,7 +864,16 @@ describe('Contracts 1', function() {
           done();
      })
 
-     // TODO: check tokens
+     it('should release tokens back to borrower',function(done){
+          var balance = token.balanceOf(borrower);
+          assert.equal(balance,1000);
+          
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var balance2 = token.balanceOf(a);
+          assert.equal(balance2,0);
+
+          done();
+     });
 })
 
 
