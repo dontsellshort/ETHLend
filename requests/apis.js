@@ -271,6 +271,7 @@ function getLr_DB(lrId,res){
           var out = {
                eth_count:                lr.eth_count,
                token_amount:             lr.token_amount,
+               premium_wei:              lr.premium_wei,
                token_name:               lr.token_name,
                token_smartcontract:      lr.token_smartcontract,
                token_infolink:           lr.token_infolink,

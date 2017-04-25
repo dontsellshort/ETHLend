@@ -222,9 +222,9 @@ function updateLr(id,data,cb){
      lr.setData(
           web3.toWei(data.eth_count,'ether'),
           data.token_amount,
-          data.token_name,
           // TODO: premium_wei
           web3.toWei(0.1,'ether'),
+          data.token_name,
           data.token_infolink,
           data.token_smartcontract,
           data.days_to_lend,

@@ -440,16 +440,20 @@ describe('Users module and lending requests', function (T) {
           var url = '/api/v1/auth/lrs/' + global.oneOfLrId;
 
           var j = {
-               eth_count: "120",
-               token_amount: "10000",
+               eth_count: 120,
+               token_amount: 10000,
                token_name: 'Augur tokens',
+               premium_wei: 1,
                token_smartcontract: '0xb533aae346245e2e05b23f420C140bCA2529b8a6',
                token_infolink: 'https://etherscan.io/address/0xb533aae346245e2e05b23f420C140bCA2529b8a6#code',
-               days_to_lend: "30",
+               days_to_lend: 30,
           };
           data = JSON.stringify(j);
 
           putDataAuth(9091, url, data, global.authToken, function (err, statusCode, h, dataOut) {
+               console.log('OUT: ');
+               console.log(dataOut);
+
                SQ(statusCode, 200);
                SQ(err, null);        
                done();
@@ -463,6 +467,7 @@ describe('Users module and lending requests', function (T) {
                eth_count: 120,
                token_amount: 10000,
                token_name: 'Augur tokens',
+               premium_wei: "1",
                token_smartcontract: '0xb533aae346245e2e05b23f420C140bCA2529b8a6',
                token_infolink: 'https://etherscan.io/address/0xb533aae346245e2e05b23f420C140bCA2529b8a6#code',
                days_to_lend: 30,
@@ -751,6 +756,7 @@ describe('Users module and lending requests', function (T) {
                eth_count: 120,
                token_amount: 10000,
                token_name: 'Augur tokens',
+               premium_wei: "1",
                token_smartcontract: '0xb533aae346245e2e05b23f420C140bCA2529b8a6',
                token_infolink: 'https://etherscan.io/address/0xb533aae346245e2e05b23f420C140bCA2529b8a6#code',
                days_to_lend: 30,
