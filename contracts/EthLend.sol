@@ -1,11 +1,34 @@
 pragma solidity ^0.4.4;
 
+contract SafeMath {
+     function safeMul(uint a, uint b) internal returns (uint) {
+          uint c = a * b;
+          assert(a == 0 || c / a == b);
+          return c;
+     }
+
+     function safeSub(uint a, uint b) internal returns (uint) {
+          assert(b <= a);
+          return a - b;
+     }
+
+     function safeAdd(uint a, uint b) internal returns (uint) {
+          uint c = a + b;
+          assert(c>=a && c>=b);
+          return c;
+     }
+
+     function assert(bool assertion) internal {
+          if (!assertion) throw;
+     }
+}
+
 contract ERC20Token {
      function balanceOf(address _address) constant returns (uint balance);
      function transfer(address _to, uint _value) returns (bool success);
 }
 
-contract Ledger {
+contract Ledger is SafeMath {
      // who deployed Ledger
      address public mainAddress;
      address public whereToSendFee;
@@ -76,7 +99,7 @@ contract Ledger {
      }
 }
 
-contract LendingRequest {
+contract LendingRequest is SafeMath {
      string public name = "LendingRequest";
      
      address public ledger = 0x0;
@@ -100,8 +123,9 @@ contract LendingRequest {
           // not used
           Funded,
 
-          // borrower clicked on 'Return ETH' button
           WaitingForPayback,
+
+          // not used
           PaybackReceived,
 
           Default,
@@ -115,6 +139,7 @@ contract LendingRequest {
      address public borrower = 0x0;
      uint public wanted_wei = 0;
      uint public token_amount = 0;
+     uint public premium_wei = 0;
      string public token_name = "";
      string public token_infolink = "";
      address public token_smartcontract_address = 0x0;
@@ -183,11 +208,12 @@ contract LendingRequest {
      }
 
 // 
-     function setData(uint wanted_wei_, uint token_amount_, 
+     function setData(uint wanted_wei_, uint token_amount_, uint premium_wei_,
           string token_name_, string token_infolink_, address token_smartcontract_address_, uint days_to_lend_) 
                byLedgerMainOrBorrower onlyInState(State.WaitingForData)
      {
           wanted_wei = wanted_wei_;
+          premium_wei = premium_wei_;
           token_amount = token_amount_;
           token_name = token_name_;
           token_infolink = token_infolink_;
@@ -221,37 +247,55 @@ contract LendingRequest {
           }
      }
 
-     // Borrower wants his tokens back
-     // He clicks on "Return ETH" button 
-     function returnEth()byLedgerMainOrBorrower onlyInState(State.Funded){
-          ERC20Token token = ERC20Token(token_smartcontract_address);
-
-          // move back tokens: LR -> borrower
-          uint tokenBalance = token.balanceOf(this);
-          token.transfer(borrower,tokenBalance);
-
-          // TODO: 
-          // move back ETH: borrower -> lender
-            
-          currentState = State.WaitingForPayback;
-     }
-
-
      // This function is called when someone sends money to this contract directly.
      //
-     // If someone is sending more than wanted_wei amount of money in WaitingForLender state
-     // Then it means it's a Lender. Please remember him
-     function() payable onlyInState(State.WaitingForLender) {
+     // If someone is sending at least 'wanted_wei' amount of money in WaitingForLender state
+     // -> then it means it's a Lender.
+     //
+     // If someone is sending at least 'wanted_wei' amount of money in WaitingForPayback state
+     // -> then it means it's a Borrower returning money back. 
+     function() payable {
+          if(currentState==State.WaitingForLender){
+               waitingForLender();
+          }else if(currentState==State.WaitingForPayback){
+               waitingForPayback();
+          }
+     }
+
+     function waitingForLender()payable onlyInState(State.WaitingForLender){
           if(msg.value<wanted_wei){
                throw;
           }
 
+          // if you sent this -> you are the lender
           lender = msg.sender;     
 
           // ETH is sent to borrower in full
+          // Tokens are kept inside of this contract
           if(!borrower.call.gas(200000).value(wanted_wei)()){
                throw;
           }
           currentState = State.WaitingForPayback;
+     }
+
+     // anyone can call this (not only the borrower)
+     function waitingForPayback()payable onlyInState(State.WaitingForPayback){
+          if(msg.value<safeAdd(wanted_wei,premium_wei)){
+               throw;
+          }
+
+          // ETH is sent back to lender in full
+          // with premium!!!
+          if(!lender.call.gas(200000).value(msg.value)()){
+               throw;
+          }
+
+          // tokens are released back to borrower
+          ERC20Token token = ERC20Token(token_smartcontract_address);
+          uint tokenBalance = token.balanceOf(this);
+          token.transfer(borrower,tokenBalance);
+
+          // finished
+          currentState = State.Finished;
      }
 }

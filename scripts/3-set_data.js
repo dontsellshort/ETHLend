@@ -46,6 +46,7 @@ web3.eth.getAccounts(function(err, as) {
      var data = {
           eth_count:"1",
           token_amount:"100",
+          premium_wei: "1000",
           token_name:"Aeternity",
           token_smartcontract:"0x6cC2D616E56e155D8A06E65542fdb9bD2D7f3c2E",
           token_infolink:"www.aeternity.com",
@@ -64,8 +65,9 @@ web3.eth.getAccounts(function(err, as) {
                var lr = web3.eth.contract(requestAbi).at(contractAddress);
 
                lr.setData(
-                    data.eth_count,
+                    web3.toWei(data.eth_count,'ether'),
                     data.token_amount,
+                    data.premium_wei,
                     data.token_name,
                     data.token_infolink,
                     data.token_smartcontract,

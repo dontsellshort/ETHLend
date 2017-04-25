@@ -42,6 +42,7 @@ var requestAbi;
 var unit = new BigNumber(Math.pow(10,18));
 
 var WANTED_WEI = web3.toWei(1,'ether');
+var PREMIUM_WEI = web3.toWei(0.2,'ether');
 
 function diffWithGas(mustBe,diff){
      var gasFee = 5000000;
@@ -500,6 +501,7 @@ describe('Contracts 1', function() {
           var data = {
                wanted_wei: WANTED_WEI,
                token_amount: 10,
+               premium_wei: PREMIUM_WEI,
 
                token_name: 'SampleContract',
                token_infolink: 'https://some-sample-ico.network',
@@ -516,6 +518,7 @@ describe('Contracts 1', function() {
           lr.setData(
                data.wanted_wei,
                data.token_amount,
+               data.premium_wei,
                data.token_name,
                data.token_infolink,
                data.token_smartcontract_address,
@@ -1094,6 +1097,7 @@ describe('Contracts 3 - cancell with refund', function() {
           var data = {
                wanted_wei: WANTED_WEI,
                token_amount: 10,
+               premium_wei: PREMIUM_WEI,
 
                token_name: 'Cosmos',
                token_infolink: 'https://cosmos.network',
@@ -1110,6 +1114,7 @@ describe('Contracts 3 - cancell with refund', function() {
                data.wanted_wei,
                data.token_amount,
                data.token_name,
+               data.premium_wei,
                data.token_infolink,
                data.token_smartcontract_address,
                data.days_to_lend,
