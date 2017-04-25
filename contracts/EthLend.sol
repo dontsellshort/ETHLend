@@ -113,16 +113,16 @@ contract LendingRequest is SafeMath {
           WaitingForTokens,
           Cancelled,
 
-          // borrower sent us tokens
+          // wneh tokens received from borrower
           WaitingForLender,
 
           // not used
-          // lender must send money
           WaitingForLoan,
 
           // not used
           Funded,
 
+          // when money received from Lender
           WaitingForPayback,
 
           // not used
@@ -174,6 +174,12 @@ contract LendingRequest is SafeMath {
 
      modifier byLedgerMainOrBorrower(){
           if((msg.sender!=mainAddress) && (msg.sender!=ledger) && (msg.sender!=borrower))
+               throw;
+          _;
+     }
+
+     modifier onlyByLender(){
+          if(msg.sender!=lender)
                throw;
           _;
      }
@@ -301,5 +307,13 @@ contract LendingRequest is SafeMath {
 
           // finished
           currentState = State.Finished;
+     }
+
+     // if no time is left and LR is still in WaitingForPayback state -> borrower can get tokens
+     // back
+     function requestDefault()onlyByLender onlyInState(State.WaitingForPayback){
+          // TODO: check time
+
+          currentState = State.Default; 
      }
 }
