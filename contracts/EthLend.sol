@@ -231,8 +231,10 @@ contract LendingRequest is SafeMath {
                throw;
 
           if(currentState==State.WaitingForLender){
-               // TODO: 
-               // we should return back to Borrower tokens 
+               // return tokens back to Borrower
+               ERC20Token token = ERC20Token(token_smartcontract_address);
+               uint tokenBalance = token.balanceOf(this);
+               token.transfer(borrower,tokenBalance);
           }
           currentState = State.Cancelled;
      }

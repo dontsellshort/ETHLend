@@ -1298,13 +1298,13 @@ describe('Contracts 3 - cancell with refund', function() {
           done();
      })
 
-     it('should move 1 token to LR',function(done){
+     it('should move 10 more token to LR',function(done){
           var lr = ledgerContract.getLrForUser(borrower,0);
 
           // Borrower -> LR contract
           token.transfer(
                lr,
-               1,
+               10,
                {
                     from: borrower,               
                     gas: 2900000 
@@ -1320,58 +1320,15 @@ describe('Contracts 3 - cancell with refund', function() {
           );
      });
 
-     it('should check again if tokens are transferred',function(done){
-          var a = ledgerContract.getLrForUser(borrower,0);
-          var lr = web3.eth.contract(requestAbi).at(a);
-
-          lr.checkTokens(
-               {
-                    from: borrower,               
-                    gas: 2900000 
-               },function(err,result){
-                    assert.equal(err,null);
-
-                    web3.eth.getTransactionReceipt(result, function(err, r2){
-                         assert.equal(err, null);
-
-                         done();
-                    });
-               }
-          );
-     });
-
-     it('should not move into <WaitingForLender> state',function(done){
-          assert.equal(ledgerContract.getLrCountForUser(borrower),1);
+     it('should release tokens back to borrower',function(done){
+          var balance = token.balanceOf(borrower);
+          assert.equal(balance,990);
           
           var a = ledgerContract.getLrForUser(borrower,0);
-          var lr = web3.eth.contract(requestAbi).at(a);
+          var balance2 = token.balanceOf(a);
+          assert.equal(balance2,10);
 
-          var state = lr.getState();
-          // "Waiting for tokens" state
-          assert.equal(state.toString(),1);
           done();
-     })
-
-     it('should move 9 more token to LR',function(done){
-          var lr = ledgerContract.getLrForUser(borrower,0);
-
-          // Borrower -> LR contract
-          token.transfer(
-               lr,
-               9,
-               {
-                    from: borrower,               
-                    gas: 2900000 
-               },function(err,result){
-                    assert.equal(err,null);
-
-                    web3.eth.getTransactionReceipt(result, function(err, r2){
-                         assert.equal(err, null);
-
-                         done();
-                    });
-               }
-          );
      });
 
      it('should check again if tokens are transferred',function(done){
@@ -1407,9 +1364,35 @@ describe('Contracts 3 - cancell with refund', function() {
      })
 
 
-     // TODO: test that tokens are returned to founder
      it('should return tokens to founder',function(done){
-          done();
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          lr.cancell(
+               {
+                    from: borrower,               
+                    gas: 2900000 
+               },function(err,result){
+                    assert.equal(err,null);
+
+                    web3.eth.getTransactionReceipt(result, function(err, r2){
+                         assert.equal(err, null);
+
+                         done();
+                    });
+               }
+          );
      })
+
+     it('should release tokens back to borrower',function(done){
+          var balance = token.balanceOf(borrower);
+          assert.equal(balance,1000);
+          
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var balance2 = token.balanceOf(a);
+          assert.equal(balance2,0);
+
+          done();
+     });
 });
 
