@@ -787,6 +787,78 @@ describe('Contracts 1', function() {
 
           done();
      });
+
+     //////////////////////////////////////////////////////////
+     it('should not move to Finished if not all money is sent',function(done){
+          var amount = web3.toWei(1.0,'ether');
+          var a = ledgerContract.getLrForUser(borrower,0);
+
+          // this should be called by borrower
+          web3.eth.sendTransaction(
+               {
+                    from: borrower,               
+                    //from: creator,      // anyone can send this
+                    to: a,
+                    value: amount,
+                    gas: 2900000 
+               },function(err,result){
+                    assert.notEqual(err,null);
+
+                    done();
+               }
+          );
+     });
+
+     it('should not be in Finished state',function(done){
+          assert.equal(ledgerContract.getLrCountForUser(borrower),1);
+          
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          var state = lr.getState();
+          // still in "Waiting For Payback" state
+          assert.equal(state.toString(),6);
+          done();
+     })
+
+     it('should send money back from borrower',function(done){
+          var amount = web3.toWei(1.0 + 0.2,'ether');
+          var a = ledgerContract.getLrForUser(borrower,0);
+
+          // this should be called by borrower
+          web3.eth.sendTransaction(
+               {
+                    from: borrower,               
+                    //from: creator,      // anyone can send this
+                    to: a,
+                    value: amount,
+                    gas: 2900000 
+               },function(err,result){
+                    assert.equal(err,null);
+
+                    web3.eth.getTransactionReceipt(result, function(err, r2){
+                         assert.equal(err, null);
+
+                         done();
+                    });
+               }
+          );
+     });
+
+     ////////////////////// 
+     it('should be in Finished state',function(done){
+          assert.equal(ledgerContract.getLrCountForUser(borrower),1);
+          
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          var state = lr.getState();
+          // "Finished" state
+          assert.equal(state.toString(),9);
+          done();
+     })
+
+     // TODO: check tokens
 })
 
 

@@ -129,6 +129,8 @@ contract LendingRequest is SafeMath {
           PaybackReceived,
 
           Default,
+
+          // 9
           Finished
      }
 
