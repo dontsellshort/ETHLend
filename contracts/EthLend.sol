@@ -117,16 +117,16 @@ contract LendingRequest is SafeMath {
           WaitingForLender,
 
           // not used
-          WaitingForLoan,
+          //WaitingForLoan,
 
           // not used
-          Funded,
+          //Funded,
 
           // when money received from Lender
           WaitingForPayback,
 
           // not used
-          PaybackReceived,
+          //PaybackReceived,
 
           Default,
 

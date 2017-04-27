@@ -773,7 +773,7 @@ describe('Contracts 1', function() {
 
           var state = lr.getState();
           // "Waiting For Payback" state
-          assert.equal(state.toString(),6);
+          assert.equal(state.toString(),4);
           done();
      })
 
@@ -823,7 +823,7 @@ describe('Contracts 1', function() {
 
           var state = lr.getState();
           // still in "Waiting For Payback" state
-          assert.equal(state.toString(),6);
+          assert.equal(state.toString(),4);
           done();
      })
 
@@ -860,7 +860,7 @@ describe('Contracts 1', function() {
 
           var state = lr.getState();
           // "Finished" state
-          assert.equal(state.toString(),9);
+          assert.equal(state.toString(),6);
           done();
      })
 
@@ -1783,7 +1783,7 @@ describe('Contracts 4 - default', function() {
 
           var state = lr.getState();
           // "Waiting For Payback" state
-          assert.equal(state.toString(),6);
+          assert.equal(state.toString(),4);
           done();
      })
 
@@ -1817,7 +1817,7 @@ describe('Contracts 4 - default', function() {
 
           var state = lr.getState();
           // "Default" state
-          assert.equal(state.toString(),8);
+          assert.equal(state.toString(),5);
           done();
      })
 });
