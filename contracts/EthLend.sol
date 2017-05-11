@@ -54,6 +54,11 @@ contract Ledger is SafeMath {
           whereToSendFee = whereToSendFee_;
      }
 
+     function getFeeSum()constant returns(uint out){
+          out = borrowerFeeAmount;
+          return;
+     }
+
      /// Must be called by Borrower
      function createNewLendingRequest()payable byAnyone returns(address out){
           // 1 - send Fee to wherToSendFee 
@@ -324,6 +329,21 @@ contract LendingRequest is SafeMath {
           // finished
           currentState = State.Finished;
      }
+
+     // How much should lender send
+     function getNeededSumByLender()constant returns(uint out){
+          uint total = safeAdd(wanted_wei,lenderFeeAmount);
+          out = total;
+          return;
+     }
+
+     // How much should borrower return to release tokens
+     function getNeededSumByBorrower()constant returns(uint out){
+          uint total = safeAdd(wanted_wei,premium_wei);
+          out = total;
+          return;
+     }
+
 
      // if no time is left and LR is still in WaitingForPayback state -> borrower can get tokens
      // back
