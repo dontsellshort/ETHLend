@@ -64,7 +64,7 @@ web3.eth.getAccounts(function(err, as) {
                fs.writeFileSync('lr_abi.out',abiJson);
                console.log('Wrote LendingRequest abi to file: lr_abi.out');
 
-               //deployMain(creator,ledgerAbi,ledgerBytecode);
+               deployMain(creator,ledgerAbi,ledgerBytecode);
           });
      });
 });
