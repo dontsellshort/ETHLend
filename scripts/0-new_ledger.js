@@ -79,7 +79,7 @@ function deployMain(creator,ledgerAbi,ledgerBytecode){
           whereToSendMoney,
           {
                from: creator, 
-               gas: 4995000,
+               gas: 4800000,
                data: '0x' + ledgerBytecode 
           }, 
           function(err, c){
