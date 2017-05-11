@@ -164,6 +164,45 @@ contract LendingRequest is SafeMath {
      uint public days_to_lend = 0;
 
      address public lender = 0x0;
+// Access methods:
+     function getBorrower()constant returns(address out){
+          out = borrower;
+     }
+
+     function getWantedWei()constant returns(uint out){
+          out = wanted_wei;
+     }
+
+     function getPremiumWei()constant returns(uint out){
+          out = premium_wei;
+     }
+
+     function getTokenName()constant returns(string out){
+          out = token_name;
+     }
+
+     function getTokenInfoLink()constant returns(string out){
+          out = token_infolink;
+     }
+
+     function getTokenSmartcontractAddress()constant returns(address out){
+          out = token_smartcontract_address;
+     }
+
+     function getDaysToLen()constant returns(uint out){
+          out = days_to_lend;
+     }
+     
+     function getState()constant returns(State out){
+          out = currentState;
+          return;
+     }
+
+     function getLender()constant returns(address out){
+          out = lender;
+     }
+
+///
 
      modifier byAnyone(){
           _;
@@ -220,15 +259,6 @@ contract LendingRequest is SafeMath {
 
      function changeMainAddress(address new_)onlyByMain{
           mainAddress = new_;
-     }
-
-     function getState()constant returns(State out){
-          out = currentState;
-          return;
-     }
-
-     function getLender()constant returns(address out){
-          out = lender;
      }
 
 // 
