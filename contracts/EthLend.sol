@@ -177,6 +177,10 @@ contract LendingRequest is SafeMath {
           out = premium_wei;
      }
 
+     function getTokenAmount()constant returns(uint out){
+          out = token_amount;
+     }
+
      function getTokenName()constant returns(string out){
           out = token_name;
      }
