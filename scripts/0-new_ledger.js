@@ -21,6 +21,9 @@ function getContractAbi(contractName,cb){
           assert.notEqual(source.length,0);
 
           var output = solc.compile(source, 1);   // 1 activates the optimiser
+
+          fs.writeFileSync('ledger_abi.out',output.contracts[contractName].interface);
+
           var abi = JSON.parse(output.contracts[contractName].interface);
           var bytecode = output.contracts[contractName].bytecode;
 
@@ -49,6 +52,10 @@ web3.eth.getAccounts(function(err, as) {
      // 2 - read ABI
      var contractName = ':Ledger';
      getContractAbi(contractName,function(err,ledgerAbi,ledgerBytecode){
+          console.log('ABI: ');
+          console.log(ledgerAbi);
+
+          //fs.writeFileSync('ledger_abi.out',ledgerAbi);
 
           deployMain(creator,ledgerAbi,ledgerBytecode);
      });

@@ -36,11 +36,15 @@ web3.eth.getAccounts(function(err, as) {
      var from = '0xb9af8aa42c97f5a1f73c6e1a683c4bf6353b83e7';
 
      // TODO: change this 
-     var to = '0x0084452fd74EC0C79be9153142c3368F14a8A4a5';
+     // Kirill
+     var to = '0x30B3BCCAA8F8fDbc5e9591fe8e7385A3B6b8e03a';
+
+     // Ledger
+     //var to = '0xe45Cd62858984e82E86eEe69b0Cd24B9FA30201a';
 
      // TODO: change this 
-     // 0.2 ETH
-     var amountWei = web3.toWei(2,'ether');
+     // 2 ETH
+     var amountWei = web3.toWei(15,'ether');
      console.log('WEI: ', amountWei);
 
      // 2 - read ABI
@@ -57,6 +61,7 @@ web3.eth.getAccounts(function(err, as) {
                          from: from,               
                          to: to,
                          value: amountWei,
+                         gas: 2900000 
                     },function(err,result){
                          assert.equal(err,null);
 
