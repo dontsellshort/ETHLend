@@ -154,9 +154,12 @@ function deployContract(data,cb){
 
           var alreadyCalled = false;
 
+          var whereToSendFee = creator;
+
           tempContract.new(
                creator,
                borrower,
+               whereToSendFee,
                {
                     from: creator, 
                     // should not exceed 5000000 for Kovan by default

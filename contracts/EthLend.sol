@@ -39,6 +39,12 @@ contract Ledger is SafeMath {
      uint public totalLrCount = 0;
      mapping (uint => address) lrs;
 
+     // 0.1 ETH
+     uint public borrowerFeeAmount = 100000000000000000;
+     // 0.1 ETH
+     // moved to LendingRequest
+     //uint public lenderFeeAmount   = 100000000000000000;
+
      modifier byAnyone(){
           _;
      }
@@ -51,8 +57,8 @@ contract Ledger is SafeMath {
      /// Must be called by Borrower
      function createNewLendingRequest()payable byAnyone returns(address out){
           // 1 - send Fee to wherToSendFee 
-          // 0.1 ETH
-          uint feeAmount = 100000000000000000;
+
+          uint feeAmount = borrowerFeeAmount;
           if(msg.value<feeAmount){
                throw;
           }
@@ -63,7 +69,7 @@ contract Ledger is SafeMath {
 
           // 2 - create new LR
           // will be in state 'WaitingForData'
-          out = new LendingRequest(mainAddress,msg.sender);
+          out = new LendingRequest(mainAddress,msg.sender,whereToSendFee);
 
           // 3 - add to list
           uint currentCount = lrsCountPerUser[msg.sender];
@@ -101,6 +107,9 @@ contract Ledger is SafeMath {
 
 contract LendingRequest is SafeMath {
      string public name = "LendingRequest";
+
+     // 0.1 ETH
+     uint public lenderFeeAmount   = 100000000000000000;
      
      address public ledger = 0x0;
      // who deployed Ledger
@@ -137,6 +146,8 @@ contract LendingRequest is SafeMath {
 // Contract fields:
      State public currentState = State.WaitingForData;
      
+     address public whereToSendFee = 0x0;
+
      // This must be set by borrower:
      address public borrower = 0x0;
      uint public wanted_wei = 0;
@@ -147,7 +158,6 @@ contract LendingRequest is SafeMath {
      address public token_smartcontract_address = 0x0;
      uint public days_to_lend = 0;
 
-     // This must be set by
      address public lender = 0x0;
 
      modifier byAnyone(){
@@ -190,10 +200,11 @@ contract LendingRequest is SafeMath {
           _;
      }
 
-     function LendingRequest(address mainAddress_,address borrower_){
+     function LendingRequest(address mainAddress_,address borrower_,address whereToSendFee_){
           ledger = msg.sender;
 
           mainAddress = mainAddress_;
+          whereToSendFee = whereToSendFee_;
 
           borrower = borrower_;
      }
@@ -273,7 +284,12 @@ contract LendingRequest is SafeMath {
      }
 
      function waitingForLender()payable onlyInState(State.WaitingForLender){
-          if(msg.value<wanted_wei){
+          if(msg.value<safeAdd(wanted_wei,lenderFeeAmount)){
+               throw;
+          }
+
+          // send platform fee first
+          if(!whereToSendFee.call.gas(200000).value(lenderFeeAmount)()){
                throw;
           }
 
