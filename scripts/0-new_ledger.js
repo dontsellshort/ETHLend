@@ -22,12 +22,12 @@ function getContractAbi(contractName,cb){
 
           var output = solc.compile(source, 1);   // 1 activates the optimiser
 
-          fs.writeFileSync('ledger_abi.out',output.contracts[contractName].interface);
+          var abiJson = output.contracts[contractName].interface;
 
-          var abi = JSON.parse(output.contracts[contractName].interface);
+          var abi = JSON.parse(abiJson);
           var bytecode = output.contracts[contractName].bytecode;
 
-          return cb(null,abi,bytecode);
+          return cb(null,abi,bytecode,abiJson);
      });
 }
 
@@ -51,13 +51,21 @@ web3.eth.getAccounts(function(err, as) {
 
      // 2 - read ABI
      var contractName = ':Ledger';
-     getContractAbi(contractName,function(err,ledgerAbi,ledgerBytecode){
-          console.log('ABI: ');
-          console.log(ledgerAbi);
+     getContractAbi(contractName,function(err,ledgerAbi,ledgerBytecode,abiJson){
+          //console.log('ABI: ');
+          //console.log(ledgerAbi);
 
-          //fs.writeFileSync('ledger_abi.out',ledgerAbi);
+          fs.writeFileSync('ledger_abi.out',abiJson);
+          console.log('Wrote Ledger abi to file: ledger_abi.out');
 
-          deployMain(creator,ledgerAbi,ledgerBytecode);
+          var contractName2 = ':LendingRequest';
+          getContractAbi(contractName2,function(err,lrAbi,bytecode,abiJson){
+          
+               fs.writeFileSync('lr_abi.out',abiJson);
+               console.log('Wrote LendingRequest abi to file: lr_abi.out');
+
+               //deployMain(creator,ledgerAbi,ledgerBytecode);
+          });
      });
 });
 
