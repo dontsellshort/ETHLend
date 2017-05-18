@@ -159,21 +159,11 @@ contract LendingRequest is SafeMath {
           // wneh tokens received from borrower
           WaitingForLender,
 
-          // not used
-          //WaitingForLoan,
-
-          // not used
-          //Funded,
-
           // when money received from Lender
           WaitingForPayback,
 
-          // not used
-          //PaybackReceived,
-
           Default,
 
-          // 9
           Finished
      }
 
@@ -375,6 +365,9 @@ contract LendingRequest is SafeMath {
           start = now;
      }
 
+     // if time hasn't passed yet - Borrower can return loan back
+     // and get his tokens back
+     // 
      // anyone can call this (not only the borrower)
      function waitingForPayback()payable onlyInState(State.WaitingForPayback){
           if(msg.value<safeAdd(wanted_wei,premium_wei)){
@@ -410,13 +403,19 @@ contract LendingRequest is SafeMath {
           return;
      }
 
-
-     // if no time is left and LR is still in WaitingForPayback state -> borrower can get tokens
-     // back
-     function requestDefault()onlyByLender onlyInState(State.WaitingForPayback){
+     // After time has passed but lender hasn't returned the loan ->
+     // move tokens to lender
+     // 
+     // anyone can call this (not only the lender)
+     function requestDefault()onlyInState(State.WaitingForPayback){
           if(now < (start + days_to_lend * 1 days)){
                throw;
           }
+
+          // tokens are released to the lender 
+          ERC20Token token = ERC20Token(token_smartcontract_address);
+          uint tokenBalance = token.balanceOf(this);
+          token.transfer(lender,tokenBalance);
 
           currentState = State.Default; 
      }
