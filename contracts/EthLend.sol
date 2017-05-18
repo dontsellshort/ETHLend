@@ -105,6 +105,35 @@ contract Ledger is SafeMath {
           return;
      }
 
+     function getLrFundedCount()constant returns(uint out){
+          out = 0;
+
+          for(uint i=0; i<totalLrCount; ++i){
+               LendingRequest lr = LendingRequest(lrs[i]);
+               if(lr.getState()==LendingRequest.State.WaitingForPayback){
+                    out++;
+               }
+          }
+
+          return;
+     }
+
+     function getLrFunded(uint index) constant returns (address out){
+          uint indexFound = 0;
+          for(uint i=0; i<totalLrCount; ++i){
+               LendingRequest lr = LendingRequest(lrs[i]);
+               if(lr.getState()==LendingRequest.State.WaitingForPayback){
+                    if(indexFound==index){
+                         out = lrs[i];
+                         return;
+                    }
+
+                    indexFound++;
+               }
+          }
+          return;
+     }
+
      function() payable{
           createNewLendingRequest();
      }
@@ -152,6 +181,7 @@ contract LendingRequest is SafeMath {
      State public currentState = State.WaitingForData;
      
      address public whereToSendFee = 0x0;
+     uint public start = 0;
 
      // This must be set by borrower:
      address public borrower = 0x0;
@@ -341,6 +371,8 @@ contract LendingRequest is SafeMath {
                throw;
           }
           currentState = State.WaitingForPayback;
+
+          start = now;
      }
 
      // anyone can call this (not only the borrower)
@@ -382,7 +414,9 @@ contract LendingRequest is SafeMath {
      // if no time is left and LR is still in WaitingForPayback state -> borrower can get tokens
      // back
      function requestDefault()onlyByLender onlyInState(State.WaitingForPayback){
-          // TODO: check time
+          if(now < (start + days_to_lend * 1 days)){
+               throw;
+          }
 
           currentState = State.Default; 
      }

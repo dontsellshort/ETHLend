@@ -37,39 +37,30 @@ web3.eth.getAccounts(function(err, as) {
 
      // TODO: change this 
      // Kirill
-     var to = '0x30B3BCCAA8F8fDbc5e9591fe8e7385A3B6b8e03a';
+     //var to = '0x30B3BCCAA8F8fDbc5e9591fe8e7385A3B6b8e03a';
+
+     // to Anton's MetaMask account
+     var to = '0x312c43cbf189a4750395ab16fef8227266df8a57';
 
      // Ledger
      //var to = '0xe45Cd62858984e82E86eEe69b0Cd24B9FA30201a';
 
      // TODO: change this 
      // 2 ETH
-     var amountWei = web3.toWei(15,'ether');
+     var amountWei = web3.toWei(8,'ether');
      console.log('WEI: ', amountWei);
 
-     // 2 - read ABI
-     var contractName = ':Ledger';
-     getContractAbi(contractName,function(err,abi){
-          ledgerAbi = abi;
+     web3.eth.sendTransaction(
+          {
+               from: from,               
+               to: to,
+               value: amountWei,
+               gas: 2900000 
+          },function(err,result){
+               assert.equal(err,null);
 
-          contractName = ':LendingRequest';
-          getContractAbi(contractName,function(err,abi){
-               requestAbi = abi;
-
-               web3.eth.sendTransaction(
-                    {
-                         from: from,               
-                         to: to,
-                         value: amountWei,
-                         gas: 2900000 
-                    },function(err,result){
-                         assert.equal(err,null);
-
-                         console.log('TX: ' + result);
-                    }
-               );
-
-          });
-     });
+               console.log('TX: ' + result);
+          }
+     );
 });
 
