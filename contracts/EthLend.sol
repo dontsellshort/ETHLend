@@ -39,8 +39,8 @@ contract Ledger is SafeMath {
      uint public totalLrCount = 0;
      mapping (uint => address) lrs;
 
-     // 0.1 ETH
-     uint public borrowerFeeAmount = 100000000000000000;
+     // 0.01 ETH
+     uint public borrowerFeeAmount = 10000000000000000;
      // 0.1 ETH
      // moved to LendingRequest
      //uint public lenderFeeAmount   = 100000000000000000;
@@ -142,8 +142,8 @@ contract Ledger is SafeMath {
 contract LendingRequest is SafeMath {
      string public name = "LendingRequest";
 
-     // 0.1 ETH
-     uint public lenderFeeAmount   = 100000000000000000;
+     // 0.01 ETH
+     uint public lenderFeeAmount   = 10000000000000000;
      
      address public ledger = 0x0;
      // who deployed Ledger
