@@ -46,9 +46,6 @@ contract Ledger is SafeMath {
 
      // 0.01 ETH
      uint public borrowerFeeAmount = 10000000000000000;
-     // 0.1 ETH
-     // moved to LendingRequest
-     //uint public lenderFeeAmount   = 100000000000000000;
 
      modifier byAnyone(){
           _;
@@ -360,6 +357,16 @@ contract LendingRequest is SafeMath {
           }else if(currentState==State.WaitingForPayback){
                waitingForPayback();
           }
+     }
+
+     // If no lenders -> borrower can cancel the LR
+     function returnTokens() byLedgerMainOrBorrower onlyInState(State.WaitingForLender){
+          // tokens are released back to borrower
+          ERC20Token token = ERC20Token(token_smartcontract_address);
+          uint tokenBalance = token.balanceOf(this);
+          token.transfer(borrower,tokenBalance);
+
+          currentState = State.Finished;
      }
 
      function waitingForLender()payable onlyInState(State.WaitingForLender){
