@@ -90,9 +90,13 @@ function deployLedgerContract(data,cb){
           console.log('Creator: ' + creator);
 
           var whereToSendMoneyTo = feeCollector;
+          var repAddress = 0;
+          var ensRegistryAddress = 0;
 
           tempContract.new(
                whereToSendMoneyTo, 
+               repAddress,
+               ensRegistryAddress,
                {
                     from: creator, 
                     // should not exceed 5000000 for Kovan by default
@@ -155,11 +159,15 @@ function deployContract(data,cb){
           var alreadyCalled = false;
 
           var whereToSendFee = creator;
+          var isEns = false;
+          var ensRegistryAddress = 0;
 
           tempContract.new(
                creator,
                borrower,
                whereToSendFee,
+               isEns,
+               ensRegistryAddress,
                {
                     from: creator, 
                     // should not exceed 5000000 for Kovan by default
@@ -524,6 +532,7 @@ describe('Contracts 1', function() {
                data.token_infolink,
                data.token_smartcontract_address,
                data.days_to_lend,
+               0,
                {
                     from: borrower,               
                     gas: 2900000 
@@ -1242,6 +1251,7 @@ describe('Contracts 3 - cancell with refund', function() {
                data.token_infolink,
                data.token_smartcontract_address,
                data.days_to_lend,
+               0,
                {
                     from: borrower,               
                     gas: 2900000 
@@ -1624,6 +1634,7 @@ describe('Contracts 4 - default', function() {
                data.token_infolink,
                data.token_smartcontract_address,
                data.days_to_lend,
+               0,
                {
                     from: borrower,               
                     gas: 2900000 
