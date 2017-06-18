@@ -285,6 +285,10 @@ contract LendingRequest is SafeMath {
      function isEns()constant returns(bool out){
           out = isCollateralEns;
      }
+
+     function getEnsDomainHash()constant returns(bytes32 out){
+          out = ens_domain_hash;
+     }
 ///
 
      modifier byAnyone(){
