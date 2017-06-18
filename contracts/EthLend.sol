@@ -507,8 +507,8 @@ contract LendingRequest is SafeMath {
 
      function releaseToLender(){
           if(isCollateralEns){
-               // TODO: use ens_domain_hash
-
+               AbstractENS ens = AbstractENS(ensRegistryAddress);
+               ens.setOwner(ens_domain_hash,lender);
           }else{
                ERC20Token token = ERC20Token(token_smartcontract_address);
                uint tokenBalance = token.balanceOf(this);
@@ -518,8 +518,8 @@ contract LendingRequest is SafeMath {
 
      function releaseToBorrower(){
           if(isCollateralEns){
-               // TODO: use ens_domain_hash
-
+               AbstractENS ens = AbstractENS(ensRegistryAddress);
+               ens.setOwner(ens_domain_hash,borrower);
           }else{
                ERC20Token token = ERC20Token(token_smartcontract_address);
                uint tokenBalance = token.balanceOf(this);
