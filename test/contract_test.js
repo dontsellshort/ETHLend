@@ -984,7 +984,7 @@ describe('Contracts 1', function() {
 })
 
 
-describe('Contracts 2 - cancell', function() {
+describe('Contracts 2 - cancel', function() {
      before("Initialize everything", function(done) {
           web3.eth.getAccounts(function(err, as) {
                if(err) {
@@ -1016,9 +1016,27 @@ describe('Contracts 2 - cancell', function() {
           done();
      });
 
+     it('should deploy Rep token contract',function(done){
+          var data = {};
+          deployRepContract(data,function(err){
+               assert.equal(err,null);
+
+               done();
+          });
+     });
+
      it('should deploy Ledger contract',function(done){
           var data = {};
           deployLedgerContract(data,function(err){
+               assert.equal(err,null);
+
+               done();
+          });
+     });
+
+     it('should update creator',function(done){
+          var data = {};
+          updateRepContractCreator(function(err){
                assert.equal(err,null);
 
                done();
@@ -1063,7 +1081,7 @@ describe('Contracts 2 - cancell', function() {
           done();
      })
 
-     it('should cancell LR',function(done){
+     it('should cancel LR',function(done){
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
@@ -1095,7 +1113,7 @@ describe('Contracts 2 - cancell', function() {
           done();
      })
 
-     it('should not cancell LR again',function(done){
+     it('should not cancel LR again',function(done){
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
@@ -1122,7 +1140,7 @@ describe('Contracts 2 - cancell', function() {
      })
 });
 
-describe('Contracts 3 - cancell with refund', function() {
+describe('Contracts 3 - cancel with refund', function() {
      before("Initialize everything", function(done) {
           web3.eth.getAccounts(function(err, as) {
                if(err) {
@@ -1154,9 +1172,27 @@ describe('Contracts 3 - cancell with refund', function() {
           done();
      });
 
+     it('should deploy Rep token contract',function(done){
+          var data = {};
+          deployRepContract(data,function(err){
+               assert.equal(err,null);
+
+               done();
+          });
+     });
+
      it('should deploy Ledger contract',function(done){
           var data = {};
           deployLedgerContract(data,function(err){
+               assert.equal(err,null);
+
+               done();
+          });
+     });
+
+     it('should update creator',function(done){
+          var data = {};
+          updateRepContractCreator(function(err){
                assert.equal(err,null);
 
                done();
@@ -1537,9 +1573,27 @@ describe('Contracts 4 - default', function() {
           done();
      });
 
+     it('should deploy Rep token contract',function(done){
+          var data = {};
+          deployRepContract(data,function(err){
+               assert.equal(err,null);
+
+               done();
+          });
+     });
+
      it('should deploy Ledger contract',function(done){
           var data = {};
           deployLedgerContract(data,function(err){
+               assert.equal(err,null);
+
+               done();
+          });
+     });
+
+     it('should update creator',function(done){
+          var data = {};
+          updateRepContractCreator(function(err){
                assert.equal(err,null);
 
                done();
@@ -1855,12 +1909,13 @@ describe('Contracts 4 - default', function() {
      })
 
      it('should collect money from Lender now',function(done){
-          // 0.2 ETH
-          var wanted_wei = WANTED_WEI;
-          var amount = wanted_wei;
+          var current = web3.eth.getBalance(lender);
 
           var a = ledgerContract.getLrForUser(borrower,0);
-          //var lr = web3.eth.contract(requestAbi).at(a);
+          var lr = web3.eth.contract(requestAbi).at(a);
+          var wanted_wei = lr.getNeededSumByLender();
+          
+          var amount = wanted_wei;
 
           // WARNING: see this
           initialBalanceBorrower = web3.eth.getBalance(borrower);
@@ -1897,7 +1952,7 @@ describe('Contracts 4 - default', function() {
      })
 
      // TODO: now spend some time..
-
+     // TODO: not working...
      it('should request default',function(done){
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
