@@ -33,6 +33,9 @@ var contract;
 var tokenAddress;
 var token;
 
+var repAddress;
+var rep;
+
 var txHash;
 
 var ledgerAbi;
@@ -41,8 +44,8 @@ var requestAbi;
 // init BigNumber
 var unit = new BigNumber(Math.pow(10,18));
 
-var WANTED_WEI = web3.toWei(1,'ether');
-var PREMIUM_WEI = web3.toWei(0.2,'ether');
+var WANTED_WEI = web3.toWei(0.1,'ether');
+var PREMIUM_WEI = web3.toWei(0.1,'ether');
 
 function diffWithGas(mustBe,diff){
      var gasFee = 5000000;
@@ -90,7 +93,6 @@ function deployLedgerContract(data,cb){
           console.log('Creator: ' + creator);
 
           var whereToSendMoneyTo = feeCollector;
-          var repAddress = 0;
           var ensRegistryAddress = 0;
 
           tempContract.new(
@@ -268,6 +270,86 @@ function deployTokenContract(data,cb){
      });
 }
 
+function deployRepContract(data,cb){
+     var file = './contracts/ReputationToken.sol';
+     var contractName = ':ReputationToken';
+
+     fs.readFile(file, function(err, result){
+          assert.equal(err,null);
+
+          var source = result.toString();
+          assert.notEqual(source.length,0);
+
+          assert.equal(err,null);
+
+          var output = solc.compile(source, 0); // 1 activates the optimiser
+
+          //console.log('OUTPUT: ');
+          //console.log(output.contracts);
+
+          var abi = JSON.parse(output.contracts[contractName].interface);
+          var bytecode = output.contracts[contractName].bytecode;
+          var tempContract = web3.eth.contract(abi);
+
+          var alreadyCalled = false;
+
+          tempContract.new(
+               creator,
+               borrower,
+               {
+                    from: creator, 
+                    gas: 4995000,
+                    data: '0x' + bytecode
+               }, 
+               function(err, c){
+                    assert.equal(err, null);
+
+                    console.log('TX HASH: ');
+                    console.log(c.transactionHash);
+
+                    // TX can be processed in 1 minute or in 30 minutes...
+                    // So we can not be sure on this -> result can be null.
+                    web3.eth.getTransactionReceipt(c.transactionHash, function(err, result){
+                         //console.log('RESULT: ');
+                         //console.log(result);
+
+                         assert.equal(err, null);
+                         assert.notEqual(result, null);
+
+                         repAddress = result.contractAddress;
+                         rep = web3.eth.contract(abi).at(repAddress);
+
+                         console.log('Token address: ');
+                         console.log(repAddress);
+
+                         if(!alreadyCalled){
+                              alreadyCalled = true;
+
+                              return cb(null);
+                         }
+                    });
+               });
+     });
+}
+
+function updateRepContractCreator(cb){
+     rep.changeCreator(
+          ledgerContractAddress, 
+          {
+               from: creator,               
+               gas: 2900000 
+          },function(err,result){
+               assert.equal(err,null);
+
+               web3.eth.getTransactionReceipt(result, function(err, r2){
+                    assert.equal(err, null);
+
+                    cb();
+               });
+          }
+     );
+}
+
 describe('Contracts 0 - Deploy Ledger', function() {
      before("Initialize everything", function(done) {
           web3.eth.getAccounts(function(err, as) {
@@ -340,9 +422,27 @@ describe('Contracts 1', function() {
           done();
      });
 
+     it('should deploy Rep token contract',function(done){
+          var data = {};
+          deployRepContract(data,function(err){
+               assert.equal(err,null);
+
+               done();
+          });
+     });
+
      it('should deploy Ledger contract',function(done){
           var data = {};
           deployLedgerContract(data,function(err){
+               assert.equal(err,null);
+
+               done();
+          });
+     });
+
+     it('should update creator',function(done){
+          var data = {};
+          updateRepContractCreator(function(err){
                assert.equal(err,null);
 
                done();
@@ -721,14 +821,14 @@ describe('Contracts 1', function() {
           );
      });
 
-     /*
      it('should collect money from Lender now',function(done){
-          // 0.2 ETH
-          var wanted_wei = WANTED_WEI;
-          var amount = wanted_wei;
+          var current = web3.eth.getBalance(lender);
 
           var a = ledgerContract.getLrForUser(borrower,0);
-          //var lr = web3.eth.contract(requestAbi).at(a);
+          var lr = web3.eth.contract(requestAbi).at(a);
+          var wanted_wei = lr.getNeededSumByLender();
+          
+          var amount = wanted_wei;
 
           // WARNING: see this
           initialBalanceBorrower = web3.eth.getBalance(borrower);
@@ -752,7 +852,6 @@ describe('Contracts 1', function() {
           );
      });
 
-     /*
      it('should get correct lender',function(done){
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
@@ -800,15 +899,17 @@ describe('Contracts 1', function() {
      });
 
      //////////////////////////////////////////////////////////
+     /*
+     // TODO: uncomment...
+
      it('should not move to Finished if not all money is sent',function(done){
-          var amount = web3.toWei(1.0,'ether');
+          var amount = WANTED_WEI; // no premium!
           var a = ledgerContract.getLrForUser(borrower,0);
 
           // this should be called by borrower
           web3.eth.sendTransaction(
                {
                     from: borrower,               
-                    //from: creator,      // anyone can send this
                     to: a,
                     value: amount,
                     gas: 2900000 
@@ -831,19 +932,20 @@ describe('Contracts 1', function() {
           assert.equal(state.toString(),4);
           done();
      })
+     */
 
      it('should send money back from borrower',function(done){
-          var amount = web3.toWei(1.0 + 0.2,'ether');
           var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+          var amount = lr.getNeededSumByBorrower();
 
           // this should be called by borrower
           web3.eth.sendTransaction(
                {
                     from: borrower,               
-                    //from: creator,      // anyone can send this
                     to: a,
                     value: amount,
-                    gas: 2900000 
+                    gas: 3900000 
                },function(err,result){
                     assert.equal(err,null);
 
@@ -879,7 +981,6 @@ describe('Contracts 1', function() {
 
           done();
      });
-     */
 })
 
 

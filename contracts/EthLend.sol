@@ -449,6 +449,7 @@ contract LendingRequest is SafeMath {
           if(!borrower.call.gas(200000).value(wanted_wei)()){
                throw;
           }
+
           currentState = State.WaitingForPayback;
 
           start = now;
