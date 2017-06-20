@@ -36,6 +36,9 @@ var token;
 var repAddress;
 var rep;
 
+var ensContractAddress;
+var ensContract;
+
 var txHash;
 
 var ledgerAbi;
@@ -93,12 +96,11 @@ function deployLedgerContract(data,cb){
           console.log('Creator: ' + creator);
 
           var whereToSendMoneyTo = feeCollector;
-          var ensRegistryAddress = 0;
 
           tempContract.new(
                whereToSendMoneyTo, 
                repAddress,
-               ensRegistryAddress,
+               ensContractAddress,
                {
                     from: creator, 
                     // should not exceed 5000000 for Kovan by default
@@ -270,6 +272,80 @@ function deployTokenContract(data,cb){
      });
 }
 
+function deployEnsContract(data,cb){
+     var file = './contracts/TestENS.sol';
+     var contractName = ':TestENS';
+
+     fs.readFile(file, function(err, result){
+          assert.equal(err,null);
+
+          var source = result.toString();
+          assert.notEqual(source.length,0);
+
+          assert.equal(err,null);
+
+          var output = solc.compile(source, 0); // 1 activates the optimiser
+
+          //console.log('OUTPUT: ');
+          //console.log(output.contracts);
+
+          var abi = JSON.parse(output.contracts[contractName].interface);
+          var bytecode = output.contracts[contractName].bytecode;
+          var tempContract = web3.eth.contract(abi);
+
+          var alreadyCalled = false;
+
+          console.log('Creator: ' + creator);
+
+          var whereToSendMoneyTo = feeCollector;
+          var ensRegistryAddress = 0;
+
+          tempContract.new(
+               {
+                    from: creator, 
+                    // should not exceed 5000000 for Kovan by default
+                    gas: 4995000,
+                    //gasPrice: 120000000000,
+                    data: '0x' + bytecode
+               }, 
+               function(err, c){
+                    if(alreadyCalled){
+                         return;
+                    }
+                    alreadyCalled = true;
+
+                    assert.equal(err, null);
+
+                    console.log('TX HASH: ');
+                    console.log(c.transactionHash);
+
+                    var alreadyCalled2 = false;
+
+                    // TX can be processed in 1 minute or in 30 minutes...
+                    // So we can not be sure on this -> result can be null.
+                    web3.eth.getTransactionReceipt(c.transactionHash, function(err, result){
+                         //console.log('RESULT: ');
+                         //console.log(result);
+
+                         assert.equal(err, null);
+                         assert.notEqual(result, null);
+
+                         ensContractAddress = result.contractAddress;
+                         ensContract = web3.eth.contract(abi).at(ensContractAddress);
+
+                         console.log('ENS contract address: ');
+                         console.log(ensContractAddress);
+
+                         if(!alreadyCalled2){
+                              alreadyCalled2 = true;
+
+                              return cb(null);
+                         }
+                    });
+               });
+     });
+}
+
 function deployRepContract(data,cb){
      var file = './contracts/ReputationToken.sol';
      var contractName = ':ReputationToken';
@@ -331,6 +407,7 @@ function deployRepContract(data,cb){
                });
      });
 }
+
 
 function updateRepContractCreator(cb){
      rep.changeCreator(
@@ -420,6 +497,15 @@ describe('Contracts 1', function() {
 
      after("Deinitialize everything", function(done) {
           done();
+     });
+
+     it('should deploy ENS contract',function(done){
+          var data = {};
+          deployEnsContract(data,function(err){
+               assert.equal(err,null);
+
+               done();
+          });
      });
 
      it('should deploy Rep token contract',function(done){
@@ -1025,6 +1111,15 @@ describe('Contracts 2 - cancel', function() {
           });
      });
 
+     it('should deploy ENS contract',function(done){
+          var data = {};
+          deployEnsContract(data,function(err){
+               assert.equal(err,null);
+
+               done();
+          });
+     });
+
      it('should deploy Ledger contract',function(done){
           var data = {};
           deployLedgerContract(data,function(err){
@@ -1175,6 +1270,15 @@ describe('Contracts 3 - cancel with refund', function() {
      it('should deploy Rep token contract',function(done){
           var data = {};
           deployRepContract(data,function(err){
+               assert.equal(err,null);
+
+               done();
+          });
+     });
+
+     it('should deploy ENS contract',function(done){
+          var data = {};
+          deployEnsContract(data,function(err){
                assert.equal(err,null);
 
                done();
@@ -1576,6 +1680,15 @@ describe('Contracts 4 - default', function() {
      it('should deploy Rep token contract',function(done){
           var data = {};
           deployRepContract(data,function(err){
+               assert.equal(err,null);
+
+               done();
+          });
+     });
+
+     it('should deploy ENS contract',function(done){
+          var data = {};
+          deployEnsContract(data,function(err){
                assert.equal(err,null);
 
                done();
