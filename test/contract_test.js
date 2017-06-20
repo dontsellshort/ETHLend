@@ -286,13 +286,10 @@ function deployEnsContract(data,cb){
 
           var output = solc.compile(source, 0); // 1 activates the optimiser
 
-          //console.log('OUTPUT: ');
-          //console.log(output.contracts);
-
           var abi = JSON.parse(output.contracts[contractName].interface);
           var bytecode = output.contracts[contractName].bytecode;
-          var tempContract = web3.eth.contract(abi);
 
+          var tempContract = web3.eth.contract(abi);
           var alreadyCalled = false;
 
           console.log('Creator: ' + creator);
@@ -312,6 +309,7 @@ function deployEnsContract(data,cb){
                     if(alreadyCalled){
                          return;
                     }
+
                     alreadyCalled = true;
 
                     assert.equal(err, null);

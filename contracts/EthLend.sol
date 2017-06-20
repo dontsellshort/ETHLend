@@ -507,6 +507,11 @@ contract LendingRequest is SafeMath {
 
           // tokens are released to the lender 
           releaseToLender();
+
+          // Only Lender get Reputation tokens
+          Ledger l = Ledger(ledger);
+          l.addRepTokens(lender,wanted_wei);
+
           currentState = State.Default; 
      }
 
