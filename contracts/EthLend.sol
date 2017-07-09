@@ -217,10 +217,6 @@ contract LendingRequest is SafeMath {
      // who deployed Ledger
      address public mainAddress = 0x0;
 
-     bool public isCollateralEns = false;
-
-     bool public isCollateralRep = false;
-     
      enum State {
           WaitingForData,
 
@@ -239,9 +235,17 @@ contract LendingRequest is SafeMath {
           Finished
      }
 
+     enum Type {
+          TokensCollateral,
+          EnsCollateral,
+          RepCollateral
+     }
+
 // Contract fields:
      State public currentState = State.WaitingForData;
-     
+
+     State public currentType = Type.TokensCollateral;
+
      address public whereToSendFee = 0x0;
      uint public start = 0;
 
@@ -358,19 +362,16 @@ contract LendingRequest is SafeMath {
           whereToSendFee = whereToSendFee_;
           borrower = borrower_;
           // collateral: tokens or ENS domain?
-          if (contractType==0){
-               isCollateralEns = false;
-               isCollateralRep = false;
-          } else if (contractType==1){
-               isCollateralEns = true;
-               isCollateralRep = false;
-          } else if (contractType==2){
-               isCollateralEns = false;
-               isCollateralRep = true;
+          if      (contractType==0){
+               currentType = Type.TokensCollateral;
+          }else if(contractType==1){
+               currentType = Type.EnsCollateral;
+          }else if(contractType==2){
+               currentType = Type.RepCollateral;
           } else {
                throw;
           }
-          
+
           ensRegistryAddress = ensRegistryAddress_;
      }
 
@@ -396,8 +397,8 @@ contract LendingRequest is SafeMath {
           days_to_lend = days_to_lend_;
           ens_domain_hash = ens_domain_hash_;
 
-          if(isCollateralRep){
-               l.lockTokens(borrower, wanted_wei);
+          if(currentType==Type.RepCollateral){
+               l.lockRepTokens(borrower, wanted_wei);
                currentState = State.WaitingForLender;
           } else {
                currentState = State.WaitingForTokens;
@@ -419,7 +420,7 @@ contract LendingRequest is SafeMath {
 
      // Should check if tokens are 'trasferred' to this contracts address and controlled
      function checkTokens()byLedgerMainOrBorrower onlyInState(State.WaitingForTokens){
-          if(isCollateralEns || isCollateralRep){
+          if(currentType!=Type.TokensCollateral){
                throw;
           }
 
@@ -434,7 +435,7 @@ contract LendingRequest is SafeMath {
      }
 
      function checkDomain()byLedgerMainOrBorrower onlyInState(State.WaitingForTokens){
-          if(!isCollateralEns){
+          if(currentType!=Type.EnsCollateral){
                throw;
           }
 
@@ -554,11 +555,11 @@ contract LendingRequest is SafeMath {
      }
 
      function releaseToLender(){
-          if(isCollateralEns){
+          if(currentType==Type.EnsCollateral){
                AbstractENS ens = AbstractENS(ensRegistryAddress);
                ens.setOwner(ens_domain_hash,lender);
-          }else if (isCollateralRep){
-               l.burnTokens(borrower);
+          }else if (currentType==Type.RepCollateral){
+               l.burnRepTokens(borrower);
           }else{
                ERC20Token token = ERC20Token(token_smartcontract_address);
                uint tokenBalance = token.balanceOf(this);
@@ -567,11 +568,11 @@ contract LendingRequest is SafeMath {
      }
 
      function releaseToBorrower(){
-          if(isCollateralEns){
+          if(currentType==Type.EnsCollateral){
                AbstractENS ens = AbstractENS(ensRegistryAddress);
                ens.setOwner(ens_domain_hash,borrower);
-          }else if (isCollateralRep){
-               l.unlockTokens(borrower, wanted_wei);
+          }else if (currentType==Type.RepCollateral){
+               l.unlockRepTokens(borrower, wanted_wei);
           }else{
                ERC20Token token = ERC20Token(token_smartcontract_address);
                uint tokenBalance = token.balanceOf(this);
