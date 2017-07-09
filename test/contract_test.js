@@ -110,7 +110,7 @@ function deployLedgerContract(data,cb){
                {
                     from: creator, 
                     // should not exceed 5000000 for Kovan by default
-                    gas: 4995000,
+                    gas: 5995000,
                     //gasPrice: 120000000000,
                     data: '0x' + bytecode
                }, 
@@ -181,7 +181,7 @@ function deployContract(data,cb){
                {
                     from: creator, 
                     // should not exceed 5000000 for Kovan by default
-                    gas: 4995000,
+                    gas: 5995000,
                     //gasPrice: 120000000000,
                     data: '0x' + bytecode
                }, 
@@ -244,7 +244,7 @@ function deployTokenContract(data,cb){
                borrower,
                {
                     from: creator, 
-                    gas: 4995000,
+                    gas: 5995000,
                     data: '0x' + bytecode
                }, 
                function(err, c){
@@ -307,7 +307,7 @@ function deployEnsContract(data,cb){
                {
                     from: creator, 
                     // should not exceed 5000000 for Kovan by default
-                    gas: 4995000,
+                    gas: 5995000,
                     //gasPrice: 120000000000,
                     data: '0x' + bytecode
                }, 
@@ -378,7 +378,7 @@ function deployRepContract(data,cb){
                borrower,
                {
                     from: creator, 
-                    gas: 4995000,
+                    gas: 5995000,
                     data: '0x' + bytecode
                }, 
                function(err, c){
