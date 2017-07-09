@@ -144,7 +144,7 @@ contract ReputationToken is StdToken {
      function burnTokens(address forAddress) returns (bool success){
           if(msg.sender!=creator)throw;
 
-          allSupply-=balances[forAddress]
+          allSupply-=balances[forAddress];
 
           balances[forAddress]=0;
           success = true;

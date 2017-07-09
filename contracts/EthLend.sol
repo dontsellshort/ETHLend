@@ -1,4 +1,4 @@
-pragma solidity ^0.4.4;
+pragma solidity ^0.4.11;
 
 contract SafeMath {
      function safeMul(uint a, uint b) internal returns (uint) {
@@ -30,6 +30,12 @@ contract ERC20Token {
 
 contract ReputationTokenInterface {
      function issueTokens(address forAddress, uint tokenCount) returns (bool success);
+     function burnTokens(address forAddress) returns (bool success);
+     function lockTokens(address forAddress, uint tokenCount) returns (bool success);
+     function unlockTokens(address forAddress, uint tokenCount) returns (bool success);
+
+
+
 }
 
 contract AbstractENS {
@@ -94,15 +100,19 @@ contract Ledger is SafeMath {
      /// Must be called by Borrower
      // tokens as a collateral 
      function createNewLendingRequest()payable byAnyone returns(address out){
-          newLr(false);
+          out = newLr(0);
      }
 
      // domain as a collateral 
      function createNewLendingRequestEns()payable byAnyone returns(address out){
-          newLr(true);
+          out = newLr(1);
+     }
+     // reputation as a collateral
+     function createNewLendingRequestRep()payable byAnyone returns(address out){
+          out = newLr(2);
      }
 
-     function newLr(bool isEns)payable byAnyone returns(address out){
+     function newLr(int collateralType)payable byAnyone returns(address out){
           // 1 - send Fee to wherToSendFee 
           uint feeAmount = borrowerFeeAmount;
           if(msg.value<feeAmount){
@@ -115,7 +125,8 @@ contract Ledger is SafeMath {
 
           // 2 - create new LR
           // will be in state 'WaitingForData'
-          out = new LendingRequest(mainAddress,msg.sender,whereToSendFee,isEns,ensRegistryAddress);
+
+          out = new LendingRequest(mainAddress,msg.sender,whereToSendFee,collateralType,ensRegistryAddress);
 
           // 3 - add to list
           uint currentCount = lrsCountPerUser[msg.sender];
@@ -244,10 +255,12 @@ contract LendingRequest is SafeMath {
 // Contract fields:
      State public currentState = State.WaitingForData;
 
-     State public currentType = Type.TokensCollateral;
+     Type public currentType = Type.TokensCollateral;
 
      address public whereToSendFee = 0x0;
      uint public start = 0;
+
+     Ledger l = Ledger(ledger);
 
      // This must be set by borrower:
      address public borrower = 0x0;
@@ -307,8 +320,13 @@ contract LendingRequest is SafeMath {
      }
 
      function isEns()constant returns(bool out){
-          out = isCollateralEns;
+          out = (currentType==Type.EnsCollateral);
      }
+
+     function isRep()constant returns(bool out){
+          out = (currentType==Type.RepCollateral);
+     }
+
 
      function getEnsDomainHash()constant returns(bytes32 out){
           out = ens_domain_hash;
@@ -355,7 +373,7 @@ contract LendingRequest is SafeMath {
           _;
      }
 
-     function LendingRequest(address mainAddress_,address borrower_,address whereToSendFee_, uint contractType, address ensRegistryAddress_){
+     function LendingRequest(address mainAddress_,address borrower_,address whereToSendFee_, int contractType, address ensRegistryAddress_){
           ledger = msg.sender;
 
           mainAddress = mainAddress_;
@@ -513,7 +531,7 @@ contract LendingRequest is SafeMath {
           releaseToBorrower();
 
           // Borrower and Lender get Reputation tokens
-          Ledger l = Ledger(ledger);
+          
           l.addRepTokens(borrower,wanted_wei);
           l.addRepTokens(lender,wanted_wei);
 
