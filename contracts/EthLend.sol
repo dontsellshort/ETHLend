@@ -183,6 +183,24 @@ contract Ledger is SafeMath {
           repToken.issueTokens(a,repTokens);
      }
 
+     function lockRepTokens(address a, uint weiSum){
+          ReputationTokenInterface repToken = ReputationTokenInterface(repTokenAddress);
+          uint repTokens = (10 * weiSum);
+          repToken.lockTokens(a,repTokens);
+     }
+
+     function unlockRepTokens(address a, uint weiSum){
+          ReputationTokenInterface repToken = ReputationTokenInterface(repTokenAddress);
+          uint repTokens = (10 * weiSum);
+          repToken.unlockTokens(a,repTokens);
+     }
+
+     function burnRepTokens(address a){
+          ReputationTokenInterface repToken = ReputationTokenInterface(repTokenAddress);
+          repToken.burnTokens(a);
+     }
+
+
      function() payable{
           createNewLendingRequest();
      }
@@ -200,6 +218,8 @@ contract LendingRequest is SafeMath {
      address public mainAddress = 0x0;
 
      bool public isCollateralEns = false;
+
+     bool public isCollateralRep = false;
      
      enum State {
           WaitingForData,
@@ -364,7 +384,13 @@ contract LendingRequest is SafeMath {
           days_to_lend = days_to_lend_;
           ens_domain_hash = ens_domain_hash_;
 
-          currentState = State.WaitingForTokens;
+          if(isCollateralRep){
+               l.lockTokens(borrower, wanted_wei);
+               currentState = State.WaitingForLender;
+          } else {
+               currentState = State.WaitingForTokens;
+          }
+
      }
 
      function cancell() byLedgerMainOrBorrower {
@@ -381,7 +407,7 @@ contract LendingRequest is SafeMath {
 
      // Should check if tokens are 'trasferred' to this contracts address and controlled
      function checkTokens()byLedgerMainOrBorrower onlyInState(State.WaitingForTokens){
-          if(isCollateralEns){
+          if(isCollateralEns || isCollateralRep){
                throw;
           }
 
@@ -519,6 +545,8 @@ contract LendingRequest is SafeMath {
           if(isCollateralEns){
                AbstractENS ens = AbstractENS(ensRegistryAddress);
                ens.setOwner(ens_domain_hash,lender);
+          }else if (isCollateralRep){
+               l.burnTokens(borrower);
           }else{
                ERC20Token token = ERC20Token(token_smartcontract_address);
                uint tokenBalance = token.balanceOf(this);
@@ -530,6 +558,8 @@ contract LendingRequest is SafeMath {
           if(isCollateralEns){
                AbstractENS ens = AbstractENS(ensRegistryAddress);
                ens.setOwner(ens_domain_hash,borrower);
+          }else if (isCollateralRep){
+               l.unlockTokens(borrower, wanted_wei);
           }else{
                ERC20Token token = ERC20Token(token_smartcontract_address);
                uint tokenBalance = token.balanceOf(this);
