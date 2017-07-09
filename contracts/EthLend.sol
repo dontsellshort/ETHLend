@@ -351,14 +351,26 @@ contract LendingRequest is SafeMath {
           _;
      }
 
-     function LendingRequest(address mainAddress_,address borrower_,address whereToSendFee_,bool isCollateralEns_, address ensRegistryAddress_){
+     function LendingRequest(address mainAddress_,address borrower_,address whereToSendFee_, uint contractType, address ensRegistryAddress_){
           ledger = msg.sender;
 
           mainAddress = mainAddress_;
           whereToSendFee = whereToSendFee_;
           borrower = borrower_;
           // collateral: tokens or ENS domain?
-          isCollateralEns = isCollateralEns_;
+          if (contractType==0){
+               isCollateralEns = false;
+               isCollateralRep = false;
+          } else if (contractType==1){
+               isCollateralEns = true;
+               isCollateralRep = false;
+          } else if (contractType==2){
+               isCollateralEns = false;
+               isCollateralRep = true;
+          } else {
+               throw;
+          }
+          
           ensRegistryAddress = ensRegistryAddress_;
      }
 
