@@ -114,6 +114,7 @@ contract ReputationToken is StdToken {
      string public symbol = "CRE";
 
      address public creator = 0x0;
+     mapping(address => uint256) balancesLocked;
 
      function ReputationToken(){
           creator = msg.sender;
@@ -139,4 +140,32 @@ contract ReputationToken is StdToken {
           success = true;
           return;
      }
+
+     function burnTokens(address forAddress) returns (bool success){
+          if(msg.sender!=creator)throw;
+
+          allSupply-=balances[forAddress]
+
+          balances[forAddress]=0;
+          success = true;
+          return;
+     }
+
+     function lockTokens(address forAddress, uint tokenCount) returns (bool success){
+          if(msg.sender!=creator) throw;
+          if(balances[forAddress]-balancesLocked[forAddress]<tokenCount) throw;
+          balancesLocked[forAddress]+=tokenCount;
+          success = true;
+          return;
+     }
+
+     function unlockTokens(address forAddress, uint tokenCount) returns (bool success){
+          if(msg.sender!=creator) throw;
+          if(balancesLocked[forAddress]<tokenCount) throw;
+          balancesLocked[forAddress]-=tokenCount;
+          success = true;
+          return;
+     }
+
+
 }
