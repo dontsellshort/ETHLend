@@ -520,23 +520,14 @@ contract LendingRequest is SafeMath {
           if(msg.value<safeAdd(wanted_wei,premium_wei)){
                throw;
           }
-
-          // ETH is sent back to lender in full
-          // with premium!!!
-          if(!lender.call.gas(200000).value(msg.value)()){
+          // ETH is sent back to lender in full with premium!!!
+          if(!lender.call.gas(2000000).value(msg.value)()){
                throw;
           }
 
-          // tokens are released back to borrower
-          releaseToBorrower();
-
-          // Borrower and Lender get Reputation tokens
-          
+          releaseToBorrower(); // tokens are released back to borrower
           l.addRepTokens(borrower,wanted_wei);
-          l.addRepTokens(lender,wanted_wei);
-
-          // finished
-          currentState = State.Finished;
+          currentState = State.Finished; // finished
      }
 
      // How much should lender send
@@ -553,36 +544,34 @@ contract LendingRequest is SafeMath {
           return;
      }
 
-     // After time has passed but lender hasn't returned the loan ->
-     // move tokens to lender
-     // 
+     // After time has passed but lender hasn't returned the loan -> move tokens to lender
      // anyone can call this (not only the lender)
      function requestDefault()onlyInState(State.WaitingForPayback){
           if(now < (start + days_to_lend * 1 days)){
                throw;
           }
 
-          // tokens are released to the lender 
-          releaseToLender();
-
-          // Only Lender get Reputation tokens
-          Ledger l = Ledger(ledger);
-          l.addRepTokens(lender,wanted_wei);
-
+          releaseToLender(); // tokens are released to the lender        
+          l.addRepTokens(lender,wanted_wei); // Only Lender get Reputation tokens
           currentState = State.Default; 
      }
 
      function releaseToLender(){
+    
           if(currentType==Type.EnsCollateral){
                AbstractENS ens = AbstractENS(ensRegistryAddress);
                ens.setOwner(ens_domain_hash,lender);
+
           }else if (currentType==Type.RepCollateral){
-               l.burnRepTokens(borrower);
+               l.unlockRepTokens(borrower, wanted_wei);
+
           }else{
                ERC20Token token = ERC20Token(token_smartcontract_address);
                uint tokenBalance = token.balanceOf(this);
                token.transfer(lender,tokenBalance);
           }
+
+          l.burnRepTokens(borrower);
      }
 
      function releaseToBorrower(){

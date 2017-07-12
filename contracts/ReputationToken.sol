@@ -1,4 +1,4 @@
-pragma solidity ^0.4.4;
+pragma solidity ^0.4.11;
 
 // Standard token interface (ERC 20)
 // https://github.com/ethereum/EIPs/issues/20
@@ -41,7 +41,7 @@ contract Token
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 }
 
-contract StdToken is Token 
+contract StdToken is Token // Transfer functions deleted!
 {
 // Fields:
      mapping(address => uint256) balances;
@@ -167,5 +167,13 @@ contract ReputationToken is StdToken {
           return;
      }
 
+     function transferFrom(address _from, address _to, uint256 _value) returns (bool success){
+          success = false;
+          return;
+     }
 
+     function transfer(address _to, uint256 _value) returns (bool success){
+          success = false;
+          return;      
+     }
 }
