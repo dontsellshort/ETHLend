@@ -223,7 +223,7 @@ contract LendingRequest is SafeMath {
      // 0.01 ETH
      uint public lenderFeeAmount   = 10000000000000000;
      
-     address public ledger = 0x0;
+     Ledger ledger;
 
      // who deployed Ledger
      address public mainAddress = 0x0;
@@ -259,8 +259,6 @@ contract LendingRequest is SafeMath {
 
      address public whereToSendFee = 0x0;
      uint public start = 0;
-
-     Ledger l = Ledger(ledger);
 
      // This must be set by borrower:
      address public borrower = 0x0;
@@ -338,7 +336,7 @@ contract LendingRequest is SafeMath {
      }
 
      modifier onlyByLedger(){
-          if(msg.sender!=ledger)
+          if(Ledger(msg.sender)!=ledger)
                throw;
           _;
      }
@@ -350,13 +348,13 @@ contract LendingRequest is SafeMath {
      }
 
      modifier byLedgerOrMain(){
-          if((msg.sender!=mainAddress) && (msg.sender!=ledger))
+          if((msg.sender!=mainAddress) && (Ledger(msg.sender)!=ledger))
                throw;
           _;
      }
 
      modifier byLedgerMainOrBorrower(){
-          if((msg.sender!=mainAddress) && (msg.sender!=ledger) && (msg.sender!=borrower))
+          if((msg.sender!=mainAddress) && (Ledger(msg.sender)!=ledger) && (msg.sender!=borrower))
                throw;
           _;
      }
@@ -374,7 +372,7 @@ contract LendingRequest is SafeMath {
      }
 
      function LendingRequest(address mainAddress_,address borrower_,address whereToSendFee_, int contractType, address ensRegistryAddress_){
-          ledger = msg.sender;
+          ledger = Ledger(msg.sender);
 
           mainAddress = mainAddress_;
           whereToSendFee = whereToSendFee_;
@@ -394,7 +392,7 @@ contract LendingRequest is SafeMath {
      }
 
      function changeLedgerAddress(address new_)onlyByLedger{
-          ledger = new_;
+          ledger = Ledger(new_);
      }
 
      function changeMainAddress(address new_)onlyByMain{
@@ -416,7 +414,7 @@ contract LendingRequest is SafeMath {
           ens_domain_hash = ens_domain_hash_;
 
           if(currentType==Type.RepCollateral){
-               l.lockRepTokens(borrower, wanted_wei);
+               ledger.lockRepTokens(borrower, wanted_wei);
                currentState = State.WaitingForLender;
           } else {
                currentState = State.WaitingForTokens;
@@ -526,7 +524,7 @@ contract LendingRequest is SafeMath {
           }
 
           releaseToBorrower(); // tokens are released back to borrower
-          l.addRepTokens(borrower,wanted_wei);
+          ledger.addRepTokens(borrower,wanted_wei);
           currentState = State.Finished; // finished
      }
 
@@ -552,7 +550,7 @@ contract LendingRequest is SafeMath {
           }
 
           releaseToLender(); // tokens are released to the lender        
-          l.addRepTokens(lender,wanted_wei); // Only Lender get Reputation tokens
+          ledger.addRepTokens(lender,wanted_wei); // Only Lender get Reputation tokens
           currentState = State.Default; 
      }
 
@@ -563,15 +561,14 @@ contract LendingRequest is SafeMath {
                ens.setOwner(ens_domain_hash,lender);
 
           }else if (currentType==Type.RepCollateral){
-               l.unlockRepTokens(borrower, wanted_wei);
-
+               ledger.unlockRepTokens(borrower, wanted_wei);
           }else{
                ERC20Token token = ERC20Token(token_smartcontract_address);
                uint tokenBalance = token.balanceOf(this);
                token.transfer(lender,tokenBalance);
           }
 
-          l.burnRepTokens(borrower);
+          ledger.burnRepTokens(borrower);
      }
 
      function releaseToBorrower(){
@@ -579,7 +576,7 @@ contract LendingRequest is SafeMath {
                AbstractENS ens = AbstractENS(ensRegistryAddress);
                ens.setOwner(ens_domain_hash,borrower);
           }else if (currentType==Type.RepCollateral){
-               l.unlockRepTokens(borrower, wanted_wei);
+               ledger.unlockRepTokens(borrower, wanted_wei);
           }else{
                ERC20Token token = ERC20Token(token_smartcontract_address);
                uint tokenBalance = token.balanceOf(this);

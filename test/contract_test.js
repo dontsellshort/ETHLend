@@ -994,9 +994,6 @@ describe('Contracts 1', function() {
      });
 
      //////////////////////////////////////////////////////////
-     /*
-     // TODO: uncomment...
-
      it('should not move to Finished if not all money is sent',function(done){
           var amount = WANTED_WEI; // no premium!
           var a = ledgerContract.getLrForUser(borrower,0);
@@ -1027,57 +1024,56 @@ describe('Contracts 1', function() {
           assert.equal(state.toString(),4);
           done();
      })
-     */
 
-     // it('should send money back from borrower',function(done){
-     //      var a = ledgerContract.getLrForUser(borrower,0);
-     //      var lr = web3.eth.contract(requestAbi).at(a);
-     //      var amount = lr.getNeededSumByBorrower();
+     it('should send money back from borrower',function(done){
+           var a = ledgerContract.getLrForUser(borrower,0);
+           var lr = web3.eth.contract(requestAbi).at(a);
+           var amount = lr.getNeededSumByBorrower();
 
-     //      // this should be called by borrower
-     //      web3.eth.sendTransaction(
-     //           {
-     //                from: borrower,               
-     //                to: a,
-     //                value: amount,
-     //                gas: 3900000 
-     //           },function(err,result){
-     //                console.log('Checkpoint...7')
-     //                console.log('error:::', err)
-     //                assert.equal(err,null);
+           // this should be called by borrower
+           web3.eth.sendTransaction(
+               {
+                     from: borrower,               
+                     to: a,
+                     value: amount,
+                     gas: 3900000 
+               },function(err,result){
+                    assert.equal(err,null);
 
-     //                web3.eth.getTransactionReceipt(result, function(err, r2){
-     //                     assert.equal(err, null);
+                    web3.eth.getTransactionReceipt(result, function(err, r2){
+                         assert.equal(err, null);
 
-     //                     done();
-     //                });
-     //           }
-     //      );
-     // });
+                          done();
+                    });
+               }
+          );
+     });
 
+     /*
      ////////////////////// 
-     // it('should be in Finished state',function(done){
-     //      assert.equal(ledgerContract.getLrCountForUser(borrower),1);
+     it('should be in Finished state',function(done){
+          assert.equal(ledgerContract.getLrCountForUser(borrower),1);
           
-     //      var a = ledgerContract.getLrForUser(borrower,0);
-     //      var lr = web3.eth.contract(requestAbi).at(a);
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
 
-     //      var state = lr.getState();
-     //      // "Finished" state
-     //      assert.equal(state.toString(),6);
-     //      done();
-     // })
+          var state = lr.getState();
+          // "Finished" state
+          assert.equal(state.toString(),6);
+          done();
+     })
 
-     // it('should release tokens back to borrower',function(done){
-     //      var balance = token.balanceOf(borrower);
-     //      assert.equal(balance,1000);
+     it('should release tokens back to borrower',function(done){
+          var balance = token.balanceOf(borrower);
+          assert.equal(balance,1000);
           
-     //      var a = ledgerContract.getLrForUser(borrower,0);
-     //      var balance2 = token.balanceOf(a);
-     //      assert.equal(balance2,0);
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var balance2 = token.balanceOf(a);
+          assert.equal(balance2,0);
 
-     //      done();
-     // });
+          done();
+     });
+     */
 })
 
 
