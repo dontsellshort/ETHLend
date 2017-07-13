@@ -1049,7 +1049,6 @@ describe('Contracts 1', function() {
           );
      });
 
-     /*
      ////////////////////// 
      it('should be in Finished state',function(done){
           assert.equal(ledgerContract.getLrCountForUser(borrower),1);
@@ -1073,7 +1072,6 @@ describe('Contracts 1', function() {
 
           done();
      });
-     */
 })
 
 
