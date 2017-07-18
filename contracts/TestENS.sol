@@ -1,28 +1,31 @@
-pragma solidity ^0.4.4;
+pragma solidity ^0.4.11;
 
 contract AbstractENS {
-     function owner(bytes32 node) constant returns(address){
+     function owner(bytes32) constant returns(address){ 
           return 0;
      }
 
-     function resolver(bytes32 node) constant returns(address){
+     function resolver(bytes32) constant returns(address){ 
           return 0;
      }
 
-     function ttl(bytes32 node) constant returns(uint64){
+     function ttl(bytes32) constant returns(uint64){ 
           return 0;
      }
+     function setOwner(bytes32, address){
 
-     function setOwner(bytes32 node, address owner){
      }
 
-     function setSubnodeOwner(bytes32 node, bytes32 label, address owner){
-     }
-     
-     function setResolver(bytes32 node, address resolver){
+     function setSubnodeOwner(bytes32, bytes32, address){
+
      }
 
-     function setTTL(bytes32 node, uint64 ttl){
+     function setResolver(bytes32, address){
+
+     }
+
+     function setTTL(bytes32, uint64){
+          
      }
 
      // Logged when the owner of a node assigns a new owner to a subnode.
@@ -38,16 +41,16 @@ contract AbstractENS {
      event NewTTL(bytes32 indexed node, uint64 ttl);
 }
 
-// this is just a fake contract for tests!
 contract TestENS is AbstractENS {
+
+     mapping (bytes32 => address) hashToOwner;
+
      function owner(bytes32 node) constant returns(address out){
-          out = owner_;
+          out = hashToOwner[node];
           return;
      }
 
      function setOwner(bytes32 node, address o){
-          owner_ = o; 
-     }
-     
-     address public owner_;
+          hashToOwner[node] = o;
+     } 
 }
