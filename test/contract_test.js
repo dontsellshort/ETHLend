@@ -2404,7 +2404,6 @@ describe('Contracts 5 - domain', function() {
           var lr = web3.eth.contract(requestAbi).at(a);
 
           // Borrower -> LR contract
-
           ensContract.setOwner(domainHash, a, {from: creator, gas: 2900000 }, (err,res)=>{
                assert.equal(err, null);
                web3.eth.getTransactionReceipt(res, (err, res2)=>{
