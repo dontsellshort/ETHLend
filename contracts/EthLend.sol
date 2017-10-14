@@ -1,31 +1,44 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.16;
 
-contract SafeMath {
-     function safeMul(uint a, uint b) internal returns (uint) {
-          uint c = a * b;
-          assert(a == 0 || c / a == b);
-          return c;
-     }
+/**
+ * @title SafeMath by OpenZeppelin
+ * @dev Math operations with safety checks that throw on error
+ */
+library SafeMath {
+  function mul(uint256 a, uint256 b) internal constant returns (uint256) {
+    uint256 c = a * b;
+    assert(a == 0 || c / a == b);
+    return c;
+  }
 
-     function safeSub(uint a, uint b) internal returns (uint) {
-          assert(b <= a);
-          return a - b;
-     }
+  function div(uint256 a, uint256 b) internal constant returns (uint256) {
+    // assert(b > 0); // Solidity automatically throws when dividing by 0
+    uint256 c = a / b;
+    // assert(a == b * c + a % b); // There is no case in which this doesn't hold
+    return c;
+  }
 
-     function safeAdd(uint a, uint b) internal returns (uint) {
-          uint c = a + b;
-          assert(c>=a && c>=b);
-          return c;
-     }
+  function sub(uint256 a, uint256 b) internal constant returns (uint256) {
+    assert(b <= a);
+    return a - b;
+  }
 
-     function assert(bool assertion) internal {
-          if (!assertion) throw;
-     }
+  function add(uint256 a, uint256 b) internal constant returns (uint256) {
+    uint256 c = a + b;
+    assert(c >= a);
+    return c;
+  }
 }
 
+/**
+ * @title ERC20 interface, by OpenZeppelin
+ */
 contract ERC20Token {
-     function balanceOf(address _address) constant returns (uint balance);
-     function transfer(address _to, uint _value) returns (bool success);
+     function balanceOf(address who) public constant returns (uint256);
+     function transfer(address to, uint256 value) public returns (bool);
+     function allowance(address owner, address spender) public constant returns (uint256);
+     function transferFrom(address from, address to, uint256 value) public returns (bool);
+     function approve(address spender, uint256 value) public returns (bool);
 }
 
 contract ReputationTokenInterface {
@@ -45,87 +58,71 @@ contract AbstractENS {
      function setSubnodeOwner(bytes32 node, bytes32 label, address owner);
      function setResolver(bytes32 node, address resolver);
      function setTTL(bytes32 node, uint64 ttl);
-
-     // Logged when the owner of a node assigns a new owner to a subnode.
-     event NewOwner(bytes32 indexed node, bytes32 indexed label, address owner);
-
-     // Logged when the owner of a node transfers ownership to a new account.
-     event Transfer(bytes32 indexed node, address owner);
-
-     // Logged when the resolver for a node changes.
-     event NewResolver(bytes32 indexed node, address resolver);
-
-     // Logged when the TTL of a node changes
-     event NewTTL(bytes32 indexed node, uint64 ttl);
 }
 
-contract Ledger is SafeMath {
-     // who deployed Ledger
-     address public mainAddress;
-     address public whereToSendFee;
-     address public repTokenAddress;
-     address public ensRegistryAddress;
+contract Registrar {
+     function transfer(bytes32, address);
+}
 
-     mapping (address => mapping(uint => address)) lrsPerUser;
-     mapping (address => uint) lrsCountPerUser;
 
-     uint public totalLrCount = 0;
-     mapping (uint => address) lrs;
+contract Ledger {     
+     address public mainAddress;             //Contract Owner/Deployer address
+     address public whereToSendFee;          //Platform fee collector address
+     address public repTokenAddress;         //ReputationToken contract address
+     address public ensRegistryAddress;      //ENS Registry address
+     address public registrarAddress;        //Registrar address
 
-     // 0.01 ETH
-     uint public borrowerFeeAmount = 10000000000000000;
+     uint public totalLrCount = 0;           //Total count of LendingRequest created
+     uint public borrowerFeeAmount = 0.01 ether; //Platform fee for Borrower
 
-     modifier byAnyone(){
-          _;
-     }
+     mapping (address => mapping(uint => address)) lrsPerUser; //Mapping of LendingRequests per User
+     mapping (address => uint) lrsCountPerUser;                //Lending request count per User
+     mapping (uint => address) lrs;                            //Lending Requests
 
-     function Ledger(address whereToSendFee_,address repTokenAddress_,address ensRegistryAddress_){
+     
+     function Ledger(address _whereToSendFee,     address _repTokenAddress, 
+                     address _ensRegistryAddress, address _registrarAddress){
           mainAddress = msg.sender;
-          whereToSendFee = whereToSendFee_;
-          repTokenAddress = repTokenAddress_;
-          ensRegistryAddress = ensRegistryAddress_;
+          whereToSendFee = _whereToSendFee;
+          repTokenAddress = _repTokenAddress;
+          ensRegistryAddress = _ensRegistryAddress;
+          registrarAddress = _registrarAddress;
      }
 
-     function getRepTokenAddress()constant returns(address out){
-          out = repTokenAddress;
-          return;
-     }
+     function getFeeSum() constant returns(uint){ return borrowerFeeAmount; }
+     function getRepTokenAddress() constant returns(address){ return repTokenAddress; }
+     function getLrCount() constant returns(uint){ return totalLrCount; }
+     function getLr(uint _index) constant returns (address){ return lrs[_index]; }
+     function getLrCountForUser(address _addr) constant returns(uint){ return lrsCountPerUser[_addr]; }
+     function getLrForUser(address _addr, uint _index) constant returns (address){ return lrsPerUser[_addr][_index]; }
 
-     function getFeeSum()constant returns(uint out){
-          out = borrowerFeeAmount;
-          return;
-     }
-
+     
      /// Must be called by Borrower
      // tokens as a collateral 
-     function createNewLendingRequest()payable byAnyone returns(address out){
-          out = newLr(0);
+     function createNewLendingRequest() payable returns(address){
+          return newLr(0);
      }
 
      // domain as a collateral 
-     function createNewLendingRequestEns()payable byAnyone returns(address out){
-          out = newLr(1);
+     function createNewLendingRequestEns() payable returns(address){
+          return newLr(1);
      }
      // reputation as a collateral
-     function createNewLendingRequestRep()payable byAnyone returns(address out){
-          out = newLr(2);
+     function createNewLendingRequestRep() payable returns(address){
+          return newLr(2);
      }
 
-     function newLr(int collateralType)payable byAnyone returns(address out){
-          // 1 - send Fee to wherToSendFee 
-          uint feeAmount = borrowerFeeAmount;
-          if(msg.value<feeAmount){
-               throw;
+     function newLr(int _collateralType) payable returns(address out){
+          // 1 - send Fee to wherToSendFee           
+          if(msg.value < borrowerFeeAmount){
+               revert();
           }
 
-          if(!whereToSendFee.call.gas(200000).value(feeAmount)()){
-               throw;
-          }
+          whereToSendFee.transfer(borrowerFeeAmount);
 
           // 2 - create new LR
           // will be in state 'WaitingForData'
-
-          out = new LendingRequest(mainAddress,msg.sender,whereToSendFee,collateralType,ensRegistryAddress);
+          out = new LendingRequest(msg.sender, _collateralType);
 
           // 3 - add to list
           uint currentCount = lrsCountPerUser[msg.sender];
@@ -136,32 +133,13 @@ contract Ledger is SafeMath {
           totalLrCount++;
      }
 
-     function getLrCount()constant returns(uint out){
-          out = totalLrCount;
-          return;
-     }
 
-     function getLr(uint index) constant returns (address out){
-          out = lrs[index];  
-          return;
-     }
-
-     function getLrCountForUser(address a)constant returns(uint out){
-          out = lrsCountPerUser[a];
-          return;
-     }
-
-     function getLrForUser(address a,uint index) constant returns (address out){
-          out = lrsPerUser[a][index];  
-          return;
-     }
-
-     function getLrFundedCount()constant returns(uint out){
+     function getLrFundedCount() constant returns(uint out){
           out = 0;
 
           for(uint i=0; i<totalLrCount; ++i){
                LendingRequest lr = LendingRequest(lrs[i]);
-               if(lr.getState()==LendingRequest.State.WaitingForPayback){
+               if(lr.getState() == LendingRequest.State.WaitingForPayback){
                     out++;
                }
           }
@@ -169,64 +147,57 @@ contract Ledger is SafeMath {
           return;
      }
 
-     function getLrFunded(uint index) constant returns (address out){
-          uint indexFound = 0;
-          for(uint i=0; i<totalLrCount; ++i){
-               LendingRequest lr = LendingRequest(lrs[i]);
-               if(lr.getState()==LendingRequest.State.WaitingForPayback){
-                    if(indexFound==index){
-                         out = lrs[i];
-                         return;
-                    }
-
-                    indexFound++;
-               }
+     function getLrFunded(uint index) constant returns (address){          
+          LendingRequest lr = LendingRequest(lrs[index]);
+          if(lr.getState() == LendingRequest.State.WaitingForPayback){
+               return lrs[index];
+          } else {
+               return 0;
           }
-          return;
      }
 
-     function addRepTokens(address potentialBorrower, uint weiSum){
+     function addRepTokens(address _potentialBorrower, uint _weiSum){
           ReputationTokenInterface repToken = ReputationTokenInterface(repTokenAddress);
           LendingRequest lr = LendingRequest(msg.sender);  
           // we`ll check is msg.sender is a real our LendingRequest
-          if(lr.borrower()==potentialBorrower && address(this)==lr.creator()){// we`ll take a lr contract and check address a – is he a borrower for this contract?
-               uint repTokens = (weiSum/10);
-               repToken.issueTokens(potentialBorrower,repTokens);               
+          if(lr.borrower() == _potentialBorrower && address(this) == lr.creator()){// we`ll take a lr contract and check address a – is he a borrower for this contract?
+               uint repTokens = _weiSum / 10;
+               repToken.issueTokens(_potentialBorrower,repTokens);               
           }
      }
 
-     function lockRepTokens(address potentialBorrower, uint weiSum){
+     function lockRepTokens(address _potentialBorrower, uint _weiSum){
           ReputationTokenInterface repToken = ReputationTokenInterface(repTokenAddress);
           LendingRequest lr = LendingRequest(msg.sender);  
           // we`ll check is msg.sender is a real our LendingRequest
-          if(lr.borrower()==potentialBorrower && address(this)==lr.creator()){// we`ll take a lr contract and check address a – is he a borrower for this contract?
-               uint repTokens = (weiSum/10);
-               repToken.lockTokens(potentialBorrower,repTokens);               
+          if(lr.borrower() == _potentialBorrower && address(this)==lr.creator()){// we`ll take a lr contract and check address a – is he a borrower for this contract?
+               uint repTokens = _weiSum;
+               repToken.lockTokens(_potentialBorrower, repTokens);               
           }
      }
 
-     function unlockRepTokens(address potentialBorrower, uint weiSum){
+     function unlockRepTokens(address _potentialBorrower, uint _weiSum){
           ReputationTokenInterface repToken = ReputationTokenInterface(repTokenAddress);
           LendingRequest lr = LendingRequest(msg.sender);
           // we`ll check is msg.sender is a real our LendingRequest
-          if(lr.borrower()==potentialBorrower && address(this)==lr.creator()){// we`ll take a lr contract and check address a – is he a borrower for this contract?
-               uint repTokens = (weiSum/10);
-               repToken.unlockTokens(potentialBorrower,repTokens);               
+          if(lr.borrower() == _potentialBorrower && address(this)==lr.creator()){// we`ll take a lr contract and check address a – is he a borrower for this contract?
+               uint repTokens = _weiSum;
+               repToken.unlockTokens(_potentialBorrower, repTokens);               
           }
      }
 
-     function burnRepTokens(address potentialBorrower){
+     function burnRepTokens(address _potentialBorrower){
           ReputationTokenInterface repToken = ReputationTokenInterface(repTokenAddress);
           LendingRequest lr = LendingRequest(msg.sender);  
           // we`ll check is msg.sender is a real our LendingRequest
-          if(lr.borrower()==potentialBorrower && address(this)==lr.creator()){// we`ll take a lr contract and check address a – is he a borrower for this contract?
-               repToken.burnTokens(potentialBorrower);               
+          if(lr.borrower() == _potentialBorrower && address(this) == lr.creator()){// we`ll take a lr contract and check address a – is he a borrower for this contract?
+               repToken.burnTokens(_potentialBorrower);               
           }
      }     
 
-     function approveRepTokens(address potentialBorrower,uint weiSum) returns (bool success){
+     function approveRepTokens(address _potentialBorrower,uint _weiSum) returns (bool success){
           ReputationTokenInterface repToken = ReputationTokenInterface(repTokenAddress);
-          success = repToken.nonLockedTokensCount(potentialBorrower) >= weiSum;
+          success = repToken.nonLockedTokensCount(_potentialBorrower) >= _weiSum;
           return;             
      } 
 
@@ -235,206 +206,151 @@ contract Ledger is SafeMath {
      }
 }
 
-contract LendingRequest is SafeMath {
-     string public name = "LendingRequest";
-     address public creator = 0x0;
-
-     // 0.01 ETH
-     uint public lenderFeeAmount   = 10000000000000000;
-     
-     Ledger ledger;
-
-     // who deployed Ledger
-     address public mainAddress = 0x0;
-
-
+/*
+ * LendingRequest Contract will be created for each loan request.
+ */
+contract LendingRequest {
+     /* Different states of LendingRequest contract */
      enum State {
-          WaitingForData,
-
-          // borrower set data
-          WaitingForTokens,
-          Cancelled,
-
-          // wneh tokens received from borrower
-          WaitingForLender,
-
-          // when money received from Lender
-          WaitingForPayback,
-
-          Default,
-
-          Finished
+          WaitingForData,     //Initial state
+          WaitingForTokens,   //Waiting for ERC20 tokens from Borrower
+          Cancelled,          //When loan cancelled
+          WaitingForLender,   //When ERC20 tokens received from borrower, now looing for Lender
+          WaitingForPayback,  //When money received from Lender and sent to Borrower
+          Default,            //When loan defaulted by Borrower
+          Finished            //When loan paid in full by Borrower and finished 
      }
 
+     /* Collateral Types */
      enum Type {
-          TokensCollateral,
-          EnsCollateral,
-          RepCollateral
+          TokensCollateral,   //Tokens as a Collateral
+          EnsCollateral,      //ENS Domain as a Collateral
+          RepCollateral       //Reputation tokens as a Collateral
      }
 
-// Contract fields:
-     State public currentState = State.WaitingForData;
+     using SafeMath for uint256;               //SafeMath Library using for uint256
+     Ledger ledger;                            //Ledger Contract
+     address public creator            = 0x0;  //Creator of this contract, always be Ledger's address
+     address public registrarAddress   = 0x0;  //Registrar contract address
+     address public ensRegistryAddress = 0x0;  //This is an address of AbstractENS contract
+     address public mainAddress        = 0x0;  //Who deployed Parent Ledger
+     address public whereToSendFee     = 0x0;  //Platform fee will be sent to this wallet address
 
-     Type public currentType = Type.TokensCollateral;
+     uint public lenderFeeAmount = 0.01 ether;            //Lender's platform fee
+     State public currentState   = State.WaitingForData;  //Initial state WaitingForData
+     Type public currentType     = Type.TokensCollateral; //Initialized with Tokens Collateral 
 
-     address public whereToSendFee = 0x0;
-     uint public start = 0;
-
-     // This must be set by borrower:
-     address public borrower = 0x0;
-     uint public wanted_wei = 0;
-     uint public token_amount = 0;
-     uint public premium_wei = 0;
-     string public token_name = "";
-     bytes32 public ens_domain_hash; 
-     string public token_infolink = "";
-     address public token_smartcontract_address = 0x0;
-     uint public days_to_lend = 0;
-
-     // this is an address of AbstractENS contract
-     address public ensRegistryAddress = 0;
-
-     address public lender = 0x0;
-// Access methods:
-     function getBorrower()constant returns(address out){
-          out = borrower;
-     }
-
-     function getWantedWei()constant returns(uint out){
-          out = wanted_wei;
-     }
-
-     function getPremiumWei()constant returns(uint out){
-          out = premium_wei;
-     }
-
-     function getTokenAmount()constant returns(uint out){
-          out = token_amount;
-     }
-
-     function getTokenName()constant returns(string out){
-          out = token_name;
-     }
-
-     function getTokenInfoLink()constant returns(string out){
-          out = token_infolink;
-     }
-
-     function getTokenSmartcontractAddress()constant returns(address out){
-          out = token_smartcontract_address;
-     }
-
-     function getDaysToLen()constant returns(uint out){
-          out = days_to_lend;
-     }
      
-     function getState()constant returns(State out){
-          out = currentState;
-          return;
-     }
 
-     function getLender()constant returns(address out){
-          out = lender;
-     }
+     /* These variables will be set by borrower: */
+     address public borrower  = 0x0;                     //Borrower's wallet address
+     uint public wanted_wei   = 0;                       //How much wei Borrower request from Lender
+     uint public premium_wei  = 0;                       //How much premium in wei Borrower wants to pay to Lender
+     uint public token_amount = 0;                       //Count of ERC20-tokens Borrower wants to put as collateral
+     uint public days_to_lend = 0;                       //Number of days to lend the loan
+     string public token_name = "";                      //Name of the ERC20-token Borrower putting as a collateral
+     bytes32 public ens_domain_hash;                     //ENS Domain hash which Borrower putting as a collateral
+     string public token_infolink = "";                  //Token info link (optional)
+     address public token_smartcontract_address = 0x0;   //ERC20 Token's contract address
+     
 
-     function isEns()constant returns(bool out){
-          out = (currentType==Type.EnsCollateral);
-     }
-
-     function isRep()constant returns(bool out){
-          out = (currentType==Type.RepCollateral);
-     }
+     /* These variables will be set when Lender is found */
+     uint public start     = 0;    //Holds the startTime of the loan when loan Funded
+     address public lender = 0x0;  //Lender's wallet address
 
 
-     function getEnsDomainHash()constant returns(bytes32 out){
-          out = ens_domain_hash;
-     }
-///
-
-     modifier byAnyone(){
-          _;
-     }
-
+     /* Constants Methods: */
+     function isEns() constant returns(bool){ return (currentType==Type.EnsCollateral); }
+     function isRep() constant returns(bool){ return (currentType==Type.RepCollateral); }
+     function getState() constant returns(State){ return currentState; }
+     function getLender() constant returns(address){ return lender; }     
+     function getBorrower() constant returns(address){ return borrower; }
+     function getWantedWei() constant returns(uint){ return wanted_wei; }
+     function getTokenName() constant returns(string){ return token_name; }
+     function getDaysToLen() constant returns(uint){ return days_to_lend; }
+     function getPremiumWei() constant returns(uint){ return premium_wei; }
+     function getTokenAmount() constant returns(uint){ return token_amount; }     
+     function getTokenInfoLink() constant returns(string){ return token_infolink; }
+     function getEnsDomainHash() constant returns(bytes32){ return ens_domain_hash; }
+     function getTokenSmartcontractAddress() constant returns(address){ return token_smartcontract_address; }
+               
+     
      modifier onlyByLedger(){
-          if(Ledger(msg.sender)!=ledger)
-               throw;
+          require(Ledger(msg.sender) == ledger);
           _;
      }
 
      modifier onlyByMain(){
-          if(msg.sender!=mainAddress)
-               throw;
+          require(msg.sender == mainAddress);
           _;
      }
 
      modifier byLedgerOrMain(){
-          if((msg.sender!=mainAddress) && (Ledger(msg.sender)!=ledger))
-               throw;
+          require(msg.sender == mainAddress || Ledger(msg.sender) == ledger);
           _;
      }
 
      modifier byLedgerMainOrBorrower(){
-          if((msg.sender!=mainAddress) && (Ledger(msg.sender)!=ledger) && (msg.sender!=borrower))
-               throw;
+          require(msg.sender == mainAddress || Ledger(msg.sender) == ledger || msg.sender == borrower);
           _;
      }
 
      modifier onlyByLender(){
-          if(msg.sender!=lender)
-               throw;
+          require(msg.sender == lender);
           _;
      }
 
      modifier onlyInState(State state){
-          if(currentState!=state)
-               throw;
+          require(currentState == state);
           _;
      }
 
-     function LendingRequest(address mainAddress_,address borrower_,address whereToSendFee_, int contractType, address ensRegistryAddress_){
+     function LendingRequest(address _borrower, int _collateralType){
+          creator = msg.sender;
           ledger = Ledger(msg.sender);
 
-          mainAddress = mainAddress_;
-          whereToSendFee = whereToSendFee_;
-          borrower = borrower_;
-          creator = msg.sender;
+          borrower = _borrower;
+          mainAddress = ledger.mainAddress();
+          whereToSendFee = ledger.whereToSendFee();
+          registrarAddress = ledger.registrarAddress();
+          ensRegistryAddress = ledger.ensRegistryAddress();
+                    
           // collateral: tokens or ENS domain?
-          if      (contractType==0){
+          if (_collateralType == 0){
                currentType = Type.TokensCollateral;
-          }else if(contractType==1){
+          } else if(_collateralType == 1){
                currentType = Type.EnsCollateral;
-          }else if(contractType==2){
+          } else if(_collateralType == 2){
                currentType = Type.RepCollateral;
           } else {
-               throw;
+               revert();
           }
-
-          ensRegistryAddress = ensRegistryAddress_;
+          
      }
 
-     function changeLedgerAddress(address new_)onlyByLedger{
-          ledger = Ledger(new_);
+     function changeLedgerAddress(address _new) onlyByLedger{
+          ledger = Ledger(_new);
      }
 
-     function changeMainAddress(address new_)onlyByMain{
-          mainAddress = new_;
+     function changeMainAddress(address _new) onlyByMain{
+          mainAddress = _new;
      }
 
-// 
-     function setData(uint wanted_wei_, uint token_amount_, uint premium_wei_,
-          string token_name_, string token_infolink_, address token_smartcontract_address_, uint days_to_lend_, bytes32 ens_domain_hash_) 
+     function setData(uint _wanted_wei, uint _token_amount, uint _premium_wei,
+                         string _token_name, string _token_infolink, address _token_smartcontract_address, 
+                         uint _days_to_lend, bytes32 _ens_domain_hash) 
                byLedgerMainOrBorrower onlyInState(State.WaitingForData)
      {
-          wanted_wei = wanted_wei_;
-          premium_wei = premium_wei_;
-          token_amount = token_amount_; // will be ZERO if isCollateralEns is true 
-          token_name = token_name_;
-          token_infolink = token_infolink_;
-          token_smartcontract_address = token_smartcontract_address_;
-          days_to_lend = days_to_lend_;
-          ens_domain_hash = ens_domain_hash_;
+          wanted_wei = _wanted_wei;
+          premium_wei = _premium_wei;
+          token_amount = _token_amount; // will be ZERO if isCollateralEns is true 
+          token_name = _token_name;
+          token_infolink = _token_infolink;
+          token_smartcontract_address = _token_smartcontract_address;
+          days_to_lend = _days_to_lend;
+          ens_domain_hash = _ens_domain_hash;
 
-          if(currentType==Type.RepCollateral){
+          if(currentType == Type.RepCollateral){
                if(ledger.approveRepTokens(borrower, wanted_wei)){
                     ledger.lockRepTokens(borrower, wanted_wei);
                     currentState = State.WaitingForLender;
@@ -446,10 +362,10 @@ contract LendingRequest is SafeMath {
 
      function cancell() byLedgerMainOrBorrower {
           // 1 - check current state
-          if((currentState!=State.WaitingForData) && (currentState!=State.WaitingForLender))
-               throw;
+          if((currentState != State.WaitingForData) && (currentState != State.WaitingForLender))
+               revert();
 
-          if(currentState==State.WaitingForLender){
+          if(currentState == State.WaitingForLender){
                // return tokens back to Borrower
                releaseToBorrower();
           }
@@ -457,9 +373,9 @@ contract LendingRequest is SafeMath {
      }
 
      // Should check if tokens are 'trasferred' to this contracts address and controlled
-     function checkTokens()byLedgerMainOrBorrower onlyInState(State.WaitingForTokens){
-          if(currentType!=Type.TokensCollateral){
-               throw;
+     function checkTokens() byLedgerMainOrBorrower onlyInState(State.WaitingForTokens){
+          if(currentType != Type.TokensCollateral){
+               revert();
           }
 
           ERC20Token token = ERC20Token(token_smartcontract_address);
@@ -491,10 +407,12 @@ contract LendingRequest is SafeMath {
      // If someone is sending at least 'wanted_wei' amount of money in WaitingForPayback state
      // -> then it means it's a Borrower returning money back. 
      function() payable {
-          if(currentState==State.WaitingForLender){
+          if(currentState == State.WaitingForLender){
                waitingForLender();
-          }else if(currentState==State.WaitingForPayback){
+          } else if(currentState == State.WaitingForPayback){
                waitingForPayback();
+          } else {
+               revert(); //In any other state, do not accept Ethers
           }
      }
 
@@ -505,24 +423,20 @@ contract LendingRequest is SafeMath {
           currentState = State.Finished;
      }
 
-     function waitingForLender()payable onlyInState(State.WaitingForLender){
-          if(msg.value<safeAdd(wanted_wei,lenderFeeAmount)){
-               throw;
+     function waitingForLender() payable onlyInState(State.WaitingForLender){
+          if(msg.value < wanted_wei.add(lenderFeeAmount)){
+               revert();
           }
 
           // send platform fee first
-          if(!whereToSendFee.call.gas(200000).value(lenderFeeAmount)()){
-               throw;
-          }
+          whereToSendFee.transfer(lenderFeeAmount);
 
           // if you sent this -> you are the lender
           lender = msg.sender;     
 
           // ETH is sent to borrower in full
           // Tokens are kept inside of this contract
-          if(!borrower.call.gas(200000).value(wanted_wei)()){
-               throw;
-          }
+          borrower.transfer(wanted_wei);
 
           currentState = State.WaitingForPayback;
 
@@ -533,14 +447,12 @@ contract LendingRequest is SafeMath {
      // and get his tokens back
      // 
      // anyone can call this (not only the borrower)
-     function waitingForPayback()payable onlyInState(State.WaitingForPayback){
-          if(msg.value<safeAdd(wanted_wei,premium_wei)){
-               throw;
+     function waitingForPayback() payable onlyInState(State.WaitingForPayback){
+          if(msg.value < wanted_wei.add(premium_wei)){
+               revert();
           }
           // ETH is sent back to lender in full with premium!!!
-          if(!lender.call.gas(2000000).value(msg.value)()){
-               throw;
-          }
+          lender.transfer(msg.value);
 
           releaseToBorrower(); // tokens are released back to borrower
           ledger.addRepTokens(borrower,wanted_wei);
@@ -548,24 +460,20 @@ contract LendingRequest is SafeMath {
      }
 
      // How much should lender send
-     function getNeededSumByLender()constant returns(uint out){
-          uint total = safeAdd(wanted_wei,lenderFeeAmount);
-          out = total;
-          return;
+     function getNeededSumByLender() constant returns(uint){
+          return wanted_wei.add(lenderFeeAmount);
      }
 
      // How much should borrower return to release tokens
-     function getNeededSumByBorrower()constant returns(uint out){
-          uint total = safeAdd(wanted_wei,premium_wei);
-          out = total;
-          return;
+     function getNeededSumByBorrower()constant returns(uint){
+          return wanted_wei.add(premium_wei);
      }
 
      // After time has passed but lender hasn't returned the loan -> move tokens to lender
      // anyone can call this (not only the lender)
-     function requestDefault()onlyInState(State.WaitingForPayback){
+     function requestDefault() onlyInState(State.WaitingForPayback){
           if(now < (start + days_to_lend * 1 days)){
-               throw;
+               revert();
           }
 
           releaseToLender(); // tokens are released to the lender        
@@ -577,7 +485,10 @@ contract LendingRequest is SafeMath {
     
           if(currentType==Type.EnsCollateral){
                AbstractENS ens = AbstractENS(ensRegistryAddress);
+               Registrar registrar = Registrar(registrarAddress);
+
                ens.setOwner(ens_domain_hash,lender);
+               registrar.transfer(ens_domain_hash,lender);
 
           }else if (currentType==Type.RepCollateral){
                ledger.unlockRepTokens(borrower, wanted_wei);
@@ -593,7 +504,10 @@ contract LendingRequest is SafeMath {
      function releaseToBorrower() internal {
           if(currentType==Type.EnsCollateral){
                AbstractENS ens = AbstractENS(ensRegistryAddress);
+               Registrar registrar = Registrar(registrarAddress);
                ens.setOwner(ens_domain_hash,borrower);
+               registrar.transfer(ens_domain_hash,borrower);
+
           }else if (currentType==Type.RepCollateral){
                ledger.unlockRepTokens(borrower, wanted_wei);
           }else{
@@ -603,3 +517,4 @@ contract LendingRequest is SafeMath {
           }
      }
 }
+
