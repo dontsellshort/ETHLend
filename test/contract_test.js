@@ -39,6 +39,9 @@ var rep;
 var ensContractAddress;
 var ensContract;
 
+var registrarContractAddress;
+var registrarContract;
+
 var txHash;
 
 var ledgerAbi;
@@ -83,7 +86,7 @@ function deployLedgerContract(data,cb){
 
           assert.equal(err,null);
 
-          var output = solc.compile(source, 0); // 1 activates the optimiser
+          var output = solc.compile(source, 1); // 1 activates the optimiser
 
           //console.log('OUTPUT: ');
           //console.log(output.contracts);
@@ -101,12 +104,14 @@ function deployLedgerContract(data,cb){
           console.log('whereToSendMoneyTo:', whereToSendMoneyTo); 
           console.log('repAddress:', repAddress);
           console.log('ensContractAddress:', ensContractAddress);
+          console.log('registrarContractAddress:', registrarContractAddress);
           console.log('Checkpoint...6')
 
           tempContract.new(
                whereToSendMoneyTo, 
                repAddress,
                ensContractAddress,
+               registrarContractAddress,
                {
                     from: creator, 
                     // should not exceed 5000000 for Kovan by default
@@ -178,6 +183,7 @@ function deployContract(data,cb){
                whereToSendFee,
                collateralType,
                ensRegistryAddress,
+               registrarContractAddress,
                {
                     from: creator, 
                     // should not exceed 5000000 for Kovan by default
@@ -350,6 +356,77 @@ function deployEnsContract(data,cb){
      });
 }
 
+
+function deployRegistrarContract(data,cb){
+     var file = './contracts/TestRegistrar.sol';
+     var contractName = ':Registrar';
+
+     fs.readFile(file, function(err, result){
+          assert.equal(err,null);
+
+          var source = result.toString();
+          assert.notEqual(source.length,0);
+
+          assert.equal(err,null);
+
+          var output = solc.compile(source, 0); // 1 activates the optimiser
+
+          var abi = JSON.parse(output.contracts[contractName].interface);
+          var bytecode = output.contracts[contractName].bytecode;
+
+          var tempContract = web3.eth.contract(abi);
+          var alreadyCalled = false;
+
+          console.log('Creator: ' + creator);
+
+          tempContract.new(
+               {
+                    from: creator, 
+                    // should not exceed 5000000 for Kovan by default
+                    gas: 5995000,
+                    //gasPrice: 120000000000,
+                    data: '0x' + bytecode
+               }, 
+               function(err, c){
+                    if(alreadyCalled){
+                         return;
+                    }
+
+                    alreadyCalled = true;
+
+                    assert.equal(err, null);
+
+                    console.log('TX HASH: ');
+                    console.log(c.transactionHash);
+
+                    var alreadyCalled2 = false;
+
+                    // TX can be processed in 1 minute or in 30 minutes...
+                    // So we can not be sure on this -> result can be null.
+                    web3.eth.getTransactionReceipt(c.transactionHash, function(err, result){
+                         //console.log('RESULT: ');
+                         //console.log(result);
+
+                         assert.equal(err, null);
+                         assert.notEqual(result, null);
+
+                         registrarContractAddress = result.contractAddress;
+                         registrarContract = web3.eth.contract(abi).at(registrarContractAddress);
+
+                         console.log('Registrar contract address: ');
+                         console.log(registrarContractAddress);
+
+                         if(!alreadyCalled2){
+                              alreadyCalled2 = true;
+
+                              return cb(null);
+                         }
+                    });
+               });
+     });
+}
+
+
 function deployRepContract(data,cb){
      var file = './contracts/ReputationToken.sol';
      var contractName = ':ReputationToken';
@@ -516,6 +593,16 @@ describe('Contracts 1', function() {
                done();
           });
      });
+
+     it('should deploy Registrar contract',function(done){
+          var data = {};
+          deployRegistrarContract(data,function(err){
+               assert.equal(err,null);
+
+               done();
+          });
+     });
+
 
      it('should deploy Rep token contract',function(done){
           var data = {};
