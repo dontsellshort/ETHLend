@@ -303,7 +303,7 @@ contract LendingRequest {
      function getTokenInfoLink() constant returns(string){ return token_infolink; }
      function getEnsDomainHash() constant returns(bytes32){ return ens_domain_hash; }
      function getTokenSmartcontractAddress() constant returns(address){ return token_smartcontract_address; }
-     function getLedger() constant returns(address){ return ledger; }
+    
 
      modifier onlyByLedger(){
           require(Ledger(msg.sender) == ledger);
