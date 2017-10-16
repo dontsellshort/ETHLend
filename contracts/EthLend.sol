@@ -100,19 +100,48 @@ contract Ledger {
      /// Must be called by Borrower
      // tokens as a collateral 
      function createNewLendingRequest() payable returns(address){
-          return newLr(0);
+          //return newLr(0);
      }
 
      // domain as a collateral 
      function createNewLendingRequestEns() payable returns(address){
-          return newLr(1);
+          //return newLr(1);
      }
      // reputation as a collateral
      function createNewLendingRequestRep() payable returns(address){
-          return newLr(2);
+          //return newLr(2);
      }
+     
+     // new ledger request and set data
+     function newLrAndSetData(int _collateralType, uint _wanted_wei, uint _token_amount, uint _premium_wei,
+                         string _token_name, string _token_infolink, address _token_smartcontract_address, 
+                         uint _days_to_lend, bytes32 _ens_domain_hash) payable returns(address)
+     {
+          if(msg.value < borrowerFeeAmount){
+               revert();
+          }
 
-     function newLr(int _collateralType) payable returns(address out){
+          // 1 - send Fee to wherToSendFee
+          whereToSendFee.transfer(borrowerFeeAmount);
+
+          // 2 - create new LR
+          // will be in state 'WaitingForData'
+          LendingRequest lending_request = new LendingRequest(msg.sender, _collateralType);
+          lending_request.setData(_wanted_wei, _token_amount, _premium_wei, _token_name, _token_infolink, _token_smartcontract_address, _days_to_lend, _ens_domain_hash);
+          
+          // 3 - add to list
+          uint currentCount = lrsCountPerUser[msg.sender];
+          lrsPerUser[msg.sender][currentCount] = lending_request;
+          lrsCountPerUser[msg.sender]++;
+
+          lrs[totalLrCount] = lending_request;
+          totalLrCount++;
+
+          return lending_request;
+
+}
+
+     /*function newLr(int _collateralType) payable returns(address out){
           // 1 - send Fee to wherToSendFee           
           if(msg.value < borrowerFeeAmount){
                revert();
@@ -123,6 +152,7 @@ contract Ledger {
           // 2 - create new LR
           // will be in state 'WaitingForData'
           out = new LendingRequest(msg.sender, _collateralType);
+          
 
           // 3 - add to list
           uint currentCount = lrsCountPerUser[msg.sender];
@@ -131,7 +161,7 @@ contract Ledger {
 
           lrs[totalLrCount] = out;
           totalLrCount++;
-     }
+     }*/
 
 
      function getLrFundedCount() constant returns(uint out){
@@ -201,9 +231,9 @@ contract Ledger {
           return;             
      } 
 
-     function() payable{
+     /*function() payable {
           createNewLendingRequest();
-     }
+     }*/
 }
 
 /*
@@ -273,8 +303,8 @@ contract LendingRequest {
      function getTokenInfoLink() constant returns(string){ return token_infolink; }
      function getEnsDomainHash() constant returns(bytes32){ return ens_domain_hash; }
      function getTokenSmartcontractAddress() constant returns(address){ return token_smartcontract_address; }
-               
-     
+     function getLedger() constant returns(address){ return ledger; }
+
      modifier onlyByLedger(){
           require(Ledger(msg.sender) == ledger);
           _;
@@ -314,7 +344,7 @@ contract LendingRequest {
           whereToSendFee = ledger.whereToSendFee();
           registrarAddress = ledger.registrarAddress();
           ensRegistryAddress = ledger.ensRegistryAddress();
-                    
+    
           // collateral: tokens or ENS domain?
           if (_collateralType == 0){
                currentType = Type.TokensCollateral;
