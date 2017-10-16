@@ -102,12 +102,12 @@ contract ReputationToken is StdToken {
           creator = msg.sender;
      }
 
-     function changeCreator(address newCreator) isCreator public{
+     function changeCreator(address newCreator) onlyCreator public{
 
           creator = newCreator;
      }
 
-     function issueTokens(address forAddress, uint tokenCount) public isCreator returns (bool success){
+     function issueTokens(address forAddress, uint tokenCount) public onlyCreator returns (bool success){
 
           if(tokenCount==0) {
                success = false;
@@ -121,7 +121,7 @@ contract ReputationToken is StdToken {
           return;
      }
 
-     function burnTokens(address forAddress) public isCreator returns (bool success){
+     function burnTokens(address forAddress) public onlyCreator returns (bool success){
 
           allSupply-=balances[forAddress];
 
@@ -130,7 +130,7 @@ contract ReputationToken is StdToken {
           return;
      }
 
-     function lockTokens(address forAddress, uint tokenCount) public isCreator returns (bool success){
+     function lockTokens(address forAddress, uint tokenCount) public onlyCreator returns (bool success){
           if(balances[forAddress]-balancesLocked[forAddress]<tokenCount){
               revert(); 
           }
@@ -139,7 +139,7 @@ contract ReputationToken is StdToken {
           return;
      }
 
-     function unlockTokens(address forAddress, uint tokenCount) public isCreator returns (bool success){
+     function unlockTokens(address forAddress, uint tokenCount) public onlyCreator returns (bool success){
           if(balancesLocked[forAddress]<tokenCount){
               revert();
           }
@@ -169,7 +169,7 @@ contract ReputationToken is StdToken {
           return;      
      }
      
-     modifier isCreator(){
+     modifier onlyCreator(){
          require(msg.sender==creator);
          _;
      }
