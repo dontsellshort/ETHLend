@@ -95,22 +95,6 @@ contract Ledger {
      function getLr(uint _index) constant returns (address){ return lrs[_index]; }
      function getLrCountForUser(address _addr) constant returns(uint){ return lrsCountPerUser[_addr]; }
      function getLrForUser(address _addr, uint _index) constant returns (address){ return lrsPerUser[_addr][_index]; }
-
-     
-     /// Must be called by Borrower
-     // tokens as a collateral 
-     function createNewLendingRequest() payable returns(address){
-          //return newLr(0);
-     }
-
-     // domain as a collateral 
-     function createNewLendingRequestEns() payable returns(address){
-          //return newLr(1);
-     }
-     // reputation as a collateral
-     function createNewLendingRequestRep() payable returns(address){
-          //return newLr(2);
-     }
      
      // new ledger request and set data
      function newLrAndSetData(int _collateralType, uint _wanted_wei, uint _token_amount, uint _premium_wei,
@@ -125,7 +109,7 @@ contract Ledger {
           whereToSendFee.transfer(borrowerFeeAmount);
 
           // 2 - create new LR
-          // will be in state 'WaitingForData'
+          // will be in state 'Init'
           LendingRequest lending_request = new LendingRequest(msg.sender, _collateralType);
           lending_request.setData(_wanted_wei, _token_amount, _premium_wei, _token_name, _token_infolink, _token_smartcontract_address, _days_to_lend, _ens_domain_hash);
           
@@ -139,29 +123,8 @@ contract Ledger {
 
           return lending_request;
 
-}
+      }
 
-     /*function newLr(int _collateralType) payable returns(address out){
-          // 1 - send Fee to wherToSendFee           
-          if(msg.value < borrowerFeeAmount){
-               revert();
-          }
-
-          whereToSendFee.transfer(borrowerFeeAmount);
-
-          // 2 - create new LR
-          // will be in state 'WaitingForData'
-          out = new LendingRequest(msg.sender, _collateralType);
-          
-
-          // 3 - add to list
-          uint currentCount = lrsCountPerUser[msg.sender];
-          lrsPerUser[msg.sender][currentCount] = out;
-          lrsCountPerUser[msg.sender]++;
-
-          lrs[totalLrCount] = out;
-          totalLrCount++;
-     }*/
 
 
      function getLrFundedCount() constant returns(uint out){
@@ -241,8 +204,8 @@ contract Ledger {
  */
 contract LendingRequest {
      /* Different states of LendingRequest contract */
-     enum State {
-          WaitingForData,     //Initial state
+     enum State {  
+          Init,   //Initial state
           WaitingForTokens,   //Waiting for ERC20 tokens from Borrower
           Cancelled,          //When loan cancelled
           WaitingForLender,   //When ERC20 tokens received from borrower, now looing for Lender
@@ -267,7 +230,7 @@ contract LendingRequest {
      address public whereToSendFee     = 0x0;  //Platform fee will be sent to this wallet address
 
      uint public lenderFeeAmount = 0.01 ether;            //Lender's platform fee
-     State public currentState   = State.WaitingForData;  //Initial state WaitingForData
+     State public currentState   = State.Init;  //Initial state WaitingForData
      Type public currentType     = Type.TokensCollateral; //Initialized with Tokens Collateral 
 
      
@@ -369,7 +332,7 @@ contract LendingRequest {
      function setData(uint _wanted_wei, uint _token_amount, uint _premium_wei,
                          string _token_name, string _token_infolink, address _token_smartcontract_address, 
                          uint _days_to_lend, bytes32 _ens_domain_hash) 
-               byLedgerMainOrBorrower onlyInState(State.WaitingForData)
+               byLedgerMainOrBorrower onlyInState(State.Init)
      {
           wanted_wei = _wanted_wei;
           premium_wei = _premium_wei;
@@ -392,7 +355,7 @@ contract LendingRequest {
 
      function cancell() byLedgerMainOrBorrower {
           // 1 - check current state
-          if((currentState != State.WaitingForData) && (currentState != State.WaitingForLender))
+          if((currentState != State.WaitingForTokens) && (currentState != State.WaitingForLender))
                revert();
 
           if(currentState == State.WaitingForLender){
