@@ -712,14 +712,37 @@ describe('Contracts 1', function() {
           done();
      });
 
-     it('should issue new LR',function(done){
+
+     it('should create new LendingRequest and set data',function(done){
           // 0.2 ETH
           var amount = 200000000000000000;
 
-          web3.eth.sendTransaction(
+          var data = {
+               wanted_wei: WANTED_WEI,
+               token_amount: 10,
+               premium_wei: PREMIUM_WEI,
+
+               token_name: 'SampleContract',
+               token_infolink: 'https://some-sample-ico.network',
+
+               // see that?
+               token_smartcontract_address: tokenAddress,
+               days_to_lend: 10
+          };
+
+          // this is set by creator (from within platform)
+          ledgerContract.newLrAndSetData(
+               0,
+               data.wanted_wei,
+               data.token_amount,
+               data.premium_wei,
+               data.token_name,
+               data.token_infolink,
+               data.token_smartcontract_address,
+               data.days_to_lend,
+               0,
                {
                     from: borrower,               
-                    to: ledgerContractAddress,
                     value: amount,
                     gas: 2900000 
                },function(err,result){
@@ -733,6 +756,7 @@ describe('Contracts 1', function() {
                }
           );
      });
+
 
      it('should get updated count of LR',function(done){
           var count = ledgerContract.getLrCount();
@@ -771,8 +795,8 @@ describe('Contracts 1', function() {
           var lr = web3.eth.contract(requestAbi).at(a);
 
           var state = lr.getState();
-          // "Waiting for data" state
-          assert.equal(state.toString(),0);
+          // "Waiting for Tokens" state
+          assert.equal(state.toString(),1);
           done();
      })
 
@@ -783,52 +807,11 @@ describe('Contracts 1', function() {
           var lr = web3.eth.contract(requestAbi).at(a);
 
           var state = lr.getState();
-          // "Waiting for data" state
-          assert.equal(state.toString(),0);
+          // "Waiting for Token" state
+          assert.equal(state.toString(),1);
           done();
      })
 
-     it('should set data',function(done){
-          var data = {
-               wanted_wei: WANTED_WEI,
-               token_amount: 10,
-               premium_wei: PREMIUM_WEI,
-
-               token_name: 'SampleContract',
-               token_infolink: 'https://some-sample-ico.network',
-
-               // see that?
-               token_smartcontract_address: tokenAddress,
-               days_to_lend: 10
-          };
-
-          var a = ledgerContract.getLrForUser(borrower,0);
-          var lr = web3.eth.contract(requestAbi).at(a);
-
-          // this is set by creator (from within platform)
-          lr.setData(
-               data.wanted_wei,
-               data.token_amount,
-               data.premium_wei,
-               data.token_name,
-               data.token_infolink,
-               data.token_smartcontract_address,
-               data.days_to_lend,
-               0,
-               {
-                    from: borrower,               
-                    gas: 2900000 
-               },function(err,result){
-                    assert.equal(err,null);
-
-                    web3.eth.getTransactionReceipt(result, function(err, r2){
-                         assert.equal(err, null);
-
-                         done();
-                    });
-               }
-          );
-     });
 
      it('should move to Waiting for tokens state',function(done){
           assert.equal(ledgerContract.getLrCountForUser(borrower),1);
@@ -1230,26 +1213,47 @@ describe('Contracts 2 - cancel', function() {
           });
      });
 
-     it('should issue new LR',function(done){
+     it('should issue new LR and set data',function(done){
           // 0.2 ETH
           var amount = 200000000000000000;
-
-          web3.eth.sendTransaction(
+          
+          var data = {
+               wanted_wei: WANTED_WEI,
+               token_amount: 10,
+               premium_wei: PREMIUM_WEI,
+          
+               token_name: 'SampleContract',
+               token_infolink: 'https://some-sample-ico.network',
+          
+               // see that?
+               token_smartcontract_address: tokenAddress,
+               days_to_lend: 10
+          };
+          
+          // this is set by creator (from within platform)
+          ledgerContract.newLrAndSetData(
+               0,
+               data.wanted_wei,
+               data.token_amount,
+               data.premium_wei,
+               data.token_name,
+               data.token_infolink,
+               data.token_smartcontract_address,
+               data.days_to_lend,
+               0,
                {
                     from: borrower,               
-                    to: ledgerContractAddress,
                     value: amount,
                     gas: 2900000 
-               },function(err,result){
-                    assert.equal(err,null);
-
-                    web3.eth.getTransactionReceipt(result, function(err, r2){
-                         assert.equal(err, null);
-
-                         done();
-                    });
-               }
-          );
+                    },function(err,result){
+                         assert.equal(err,null);
+          
+                         web3.eth.getTransactionReceipt(result, function(err, r2){
+                              assert.equal(err, null);
+                                   done();
+                              });
+                         }
+                    );
      });
 
      it('should get updated count of LR',function(done){
@@ -1263,8 +1267,8 @@ describe('Contracts 2 - cancel', function() {
           var lr = web3.eth.contract(requestAbi).at(a);
 
           var state = lr.getState();
-          // "Waiting for data" state
-          assert.equal(state.toString(),0);
+          // "Waiting for Tokens" state
+          assert.equal(state.toString(),1);
           done();
      })
 
@@ -1476,23 +1480,45 @@ describe('Contracts 3 - cancel with refund', function() {
           done();
      });
 
-     it('should issue new LR',function(done){
+     it('should issue new LR and set data',function(done){
           // 0.2 ETH
           var amount = 200000000000000000;
-
-          web3.eth.sendTransaction(
+          
+          var data = {
+               wanted_wei: WANTED_WEI,
+               token_amount: 10,
+               premium_wei: PREMIUM_WEI,
+          
+               token_name: 'SampleContract',
+               token_infolink: 'https://some-sample-ico.network',
+          
+               // see that?
+               token_smartcontract_address: tokenAddress,
+               days_to_lend: 10
+          };
+          
+          // this is set by creator (from within platform)
+          ledgerContract.newLrAndSetData(
+               0,
+               data.wanted_wei,
+               data.token_amount,
+               data.premium_wei,
+               data.token_name,
+               data.token_infolink,
+               data.token_smartcontract_address,
+               data.days_to_lend,
+               0,
                {
                     from: borrower,               
-                    to: ledgerContractAddress,
                     value: amount,
                     gas: 2900000 
                },function(err,result){
                     assert.equal(err,null);
-
+          
                     web3.eth.getTransactionReceipt(result, function(err, r2){
                          assert.equal(err, null);
-
-                         done();
+          
+                              done();
                     });
                }
           );
@@ -1535,8 +1561,8 @@ describe('Contracts 3 - cancel with refund', function() {
           var lr = web3.eth.contract(requestAbi).at(a);
 
           var state = lr.getState();
-          // "Waiting for data" state
-          assert.equal(state.toString(),0);
+          // "Waiting for Tokens" state
+          assert.equal(state.toString(),1);
           done();
      })
 
@@ -1547,52 +1573,10 @@ describe('Contracts 3 - cancel with refund', function() {
           var lr = web3.eth.contract(requestAbi).at(a);
 
           var state = lr.getState();
-          // "Waiting for data" state
-          assert.equal(state.toString(),0);
+          // "Waiting for Tokens" state
+          assert.equal(state.toString(),1);
           done();
      })
-
-     it('should set data',function(done){
-          var data = {
-               wanted_wei: WANTED_WEI,
-               token_amount: 10,
-               premium_wei: PREMIUM_WEI,
-
-               token_name: 'SampleContract',
-               token_infolink: 'https://some-sample-ico.network',
-
-               // see that?
-               token_smartcontract_address: tokenAddress,
-               days_to_lend: 10
-          };
-
-          var a = ledgerContract.getLrForUser(borrower,0);
-          var lr = web3.eth.contract(requestAbi).at(a);
-
-          // this is set by creator (from within platform)
-          lr.setData(
-               data.wanted_wei,
-               data.token_amount,
-               data.premium_wei,
-               data.token_name,
-               data.token_infolink,
-               data.token_smartcontract_address,
-               data.days_to_lend,
-               0,
-               {
-                    from: borrower,               
-                    gas: 2900000 
-               },function(err,result){
-                    assert.equal(err,null);
-
-                    web3.eth.getTransactionReceipt(result, function(err, r2){
-                         assert.equal(err, null);
-
-                         done();
-                    });
-               }
-          );
-     });
 
      it('should move to Waiting for tokens state',function(done){
           assert.equal(ledgerContract.getLrCountForUser(borrower),1);
@@ -1604,7 +1588,7 @@ describe('Contracts 3 - cancel with refund', function() {
           // "Waiting for tokens" state
           assert.equal(state.toString(),1);
           done();
-     })
+     });
 
      it('should check if tokens are transferred',function(done){
           var a = ledgerContract.getLrForUser(borrower,0);
@@ -1886,26 +1870,48 @@ describe('Contracts 4 - default', function() {
           done();
      });
 
-     it('should issue new LR',function(done){
-          // 0.2 ETH
-          var amount = 200000000000000000;
-
-          web3.eth.sendTransaction(
-               {
-                    from: borrower,               
-                    to: ledgerContractAddress,
-                    value: amount,
-                    gas: 2900000 
-               },function(err,result){
-                    assert.equal(err,null);
-
-                    web3.eth.getTransactionReceipt(result, function(err, r2){
-                         assert.equal(err, null);
-
-                         done();
-                    });
-               }
-          );
+     it('should issue new LR and set data',function(done){
+      // 0.2 ETH
+      var amount = 200000000000000000;
+      
+     var data = {
+          wanted_wei: WANTED_WEI,
+          token_amount: 10,
+          premium_wei: PREMIUM_WEI,
+      
+          token_name: 'SampleContract',
+          token_infolink: 'https://some-sample-ico.network',
+      
+                     // see that?
+          token_smartcontract_address: tokenAddress,
+          days_to_lend: 10
+     };
+          
+     // this is set by creator (from within platform)
+     ledgerContract.newLrAndSetData(
+          0,
+          data.wanted_wei,
+          data.token_amount,
+          data.premium_wei,
+          data.token_name,
+          data.token_infolink,
+          data.token_smartcontract_address,
+          data.days_to_lend,
+          0,
+          {
+               from: borrower,               
+               value: amount,
+               gas: 2900000 
+          },function(err,result){
+               assert.equal(err,null);
+      
+               web3.eth.getTransactionReceipt(result, function(err, r2){
+                    assert.equal(err, null);
+      
+                    done();
+               });
+          }
+     );
      });
 
      it('should get updated count of LR',function(done){
@@ -1945,8 +1951,8 @@ describe('Contracts 4 - default', function() {
           var lr = web3.eth.contract(requestAbi).at(a);
 
           var state = lr.getState();
-          // "Waiting for data" state
-          assert.equal(state.toString(),0);
+          // "Waiting for Tokens" state
+          assert.equal(state.toString(),1);
           done();
      })
 
@@ -1957,52 +1963,12 @@ describe('Contracts 4 - default', function() {
           var lr = web3.eth.contract(requestAbi).at(a);
 
           var state = lr.getState();
-          // "Waiting for data" state
-          assert.equal(state.toString(),0);
+          // "Waiting for Tokens" state
+          assert.equal(state.toString(),1);
           done();
      })
 
-     it('should set data',function(done){
-          var data = {
-               wanted_wei: WANTED_WEI,
-               token_amount: 10,
-               premium_wei: PREMIUM_WEI,
-
-               token_name: 'SampleContract',
-               token_infolink: 'https://some-sample-ico.network',
-
-               // see that?
-               token_smartcontract_address: tokenAddress,
-               days_to_lend: 10
-          };
-
-          var a = ledgerContract.getLrForUser(borrower,0);
-          var lr = web3.eth.contract(requestAbi).at(a);
-
-          // this is set by creator (from within platform)
-          lr.setData(
-               data.wanted_wei,
-               data.token_amount,
-               data.premium_wei,
-               data.token_name,
-               data.token_infolink,
-               data.token_smartcontract_address,
-               data.days_to_lend,
-               0,
-               {
-                    from: borrower,               
-                    gas: 2900000 
-               },function(err,result){
-                    assert.equal(err,null);
-
-                    web3.eth.getTransactionReceipt(result, function(err, r2){
-                         assert.equal(err, null);
-
-                         done();
-                    });
-               }
-          );
-     });
+     
 
      it('should move to Waiting for tokens state',function(done){
           assert.equal(ledgerContract.getLrCountForUser(borrower),1);
@@ -2334,14 +2300,50 @@ describe('Contracts 5 - domain', function() {
      });
 
      it('should issue new ENS LR',function(done){
-          var params = {from: borrower,to: ledgerContractAddress, value: 200000000000000000, gas: 2900000} 
-          ledgerContract.createNewLendingRequestEns(params, (err,res)=>{
-               assert.equal(err, null);
-               web3.eth.getTransactionReceipt(res, (err, res2)=>{
-                    assert.equal(err, null);
-                    done();
-               });                   
-          });
+      var amount = 200000000000000000;
+      
+      var data = {
+            wanted_wei: WANTED_WEI,
+            token_amount: 0,
+            premium_wei: PREMIUM_WEI,
+
+            token_name: '',
+            token_infolink: 'https://some-sample-ico.network',
+
+            // see that?
+            token_smartcontract_address: 0,
+            days_to_lend: 10,
+            ens_domain_hash: domainHash
+       };
+      
+          //var a = ledgerContract.getLrForUser(borrower,0);
+          //var lr = web3.eth.contract(requestAbi).at(a);
+
+          // this is set by creator (from within platform)
+      ledgerContract.newLrAndSetData(
+         1,
+         data.wanted_wei,
+         data.token_amount,
+         data.premium_wei,
+         data.token_name,
+         data.token_infolink,
+         data.token_smartcontract_address,
+         data.days_to_lend,
+         data.ens_domain_hash,
+         {
+              from: borrower,               
+              value: amount,
+              gas: 2900000 
+         },function(err,result){
+              assert.equal(err,null);
+
+              web3.eth.getTransactionReceipt(result, function(err, r2){
+                   assert.equal(err, null);
+
+                   done();
+              });
+         }
+      );
      });
 
      it('should get updated count of LR',function(done){
@@ -2381,8 +2383,8 @@ describe('Contracts 5 - domain', function() {
           var lr = web3.eth.contract(requestAbi).at(a);
 
           var state = lr.getState();
-          // "Waiting for data" state
-          assert.equal(state.toString(),0);
+          // "Waiting for domain" state
+          assert.equal(state.toString(),1);
           done();
      })
 
@@ -2393,54 +2395,10 @@ describe('Contracts 5 - domain', function() {
           var lr = web3.eth.contract(requestAbi).at(a);
 
           var state = lr.getState();
-          // "Waiting for data" state
-          assert.equal(state.toString(),0);
+          // "Waiting for domain" state
+          assert.equal(state.toString(),1);
           done();
      })
-
-     it('should set data',function(done){
-          var data = {
-               wanted_wei: WANTED_WEI,
-               token_amount: 0,
-               premium_wei: PREMIUM_WEI,
-
-               token_name: '',
-               token_infolink: 'https://some-sample-ico.network',
-
-               // see that?
-               token_smartcontract_address: 0,
-               days_to_lend: 10,
-               ens_domain_hash: domainHash
-          };
-
-          var a = ledgerContract.getLrForUser(borrower,0);
-          var lr = web3.eth.contract(requestAbi).at(a);
-
-
-          // this is set by creator (from within platform)
-          lr.setData(
-               data.wanted_wei,
-               data.token_amount,
-               data.premium_wei,
-               data.token_name,
-               data.token_infolink,
-               data.token_smartcontract_address,
-               data.days_to_lend,
-               data.ens_domain_hash,
-               {
-                    from: borrower,               
-                    gas: 2900000 
-               },function(err,result){
-                    assert.equal(err,null);
-
-                    web3.eth.getTransactionReceipt(result, function(err, r2){
-                         assert.equal(err, null);
-
-                         done();
-                    });
-               }
-          );
-     });
 
      it('should move to Waiting for domain state',function(done){
           assert.equal(ledgerContract.getLrCountForUser(borrower),1);
@@ -2598,4 +2556,3 @@ describe('Contracts 5 - domain', function() {
           done();
      })
 });
-
