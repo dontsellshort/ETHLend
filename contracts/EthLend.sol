@@ -132,7 +132,7 @@ contract Ledger {
 
           for(uint i=0; i<totalLrCount; ++i){
                LendingRequest lr = LendingRequest(lrs[i]);
-               if(lr.getState() == LendingRequest.State.WaitingForPayback){
+               if(lr.getCurrentState() == LendingRequest.State.WaitingForPayback){
                     out++;
                }
           }
@@ -142,7 +142,7 @@ contract Ledger {
 
      function getLrFunded(uint index) constant returns (address){          
           LendingRequest lr = LendingRequest(lrs[index]);
-          if(lr.getState() == LendingRequest.State.WaitingForPayback){
+          if(lr.getCurrentState() == LendingRequest.State.WaitingForPayback){
                return lrs[index];
           } else {
                return 0;
@@ -255,7 +255,6 @@ contract LendingRequest {
      /* Constants Methods: */
      function isEns() constant returns(bool){ return (currentType==Type.EnsCollateral); }
      function isRep() constant returns(bool){ return (currentType==Type.RepCollateral); }
-     function getState() constant returns(State){ return currentState; }
      function getLender() constant returns(address){ return lender; }     
      function getBorrower() constant returns(address){ return borrower; }
      function getWantedWei() constant returns(uint){ return wanted_wei; }
