@@ -321,22 +321,30 @@ contract LendingRequest {
      }
 
      function getCurrentState() constant returns(State){
-       if(currentState == State.WaitingForTokens){
-         if(currentType != Type.TokensCollateral){
-               revert();
-          }
+        if(currentState == State.WaitingForTokens){
+          if(currentType == Type.TokensCollateral){
+            ERC20Token token = ERC20Token(token_smartcontract_address);
 
-          ERC20Token token = ERC20Token(token_smartcontract_address);
-
-          uint tokenBalance = token.balanceOf(this);
-          if(tokenBalance >= token_amount){
+            uint tokenBalance = token.balanceOf(this);
+            if(tokenBalance >= token_amount){
                // we are ready to search someone 
                // to give us the money
                return State.WaitingForLender;
+            }   
+          }else if(currentType == Type.EnsCollateral){
+            AbstractENS ens = AbstractENS(ensRegistryAddress);
+            if(ens.owner(ens_domain_hash)==address(this)){
+               // we are ready to search someone 
+               // to give us the money
+               return State.WaitingForLender;
+               return;
+            }
+          }else{
+            return currentState;
           }
-       }else{
-         return currentState;
-       }
+        }else{
+          return currentState;
+        }
 
      }
 
@@ -382,17 +390,6 @@ contract LendingRequest {
                releaseToBorrower();
           }
           currentState = State.Cancelled;
-     }
-
-     function checkDomain() onlyInState(State.WaitingForTokens){
-          // Use 'ens_domain_hash' to check whether this domain is transferred to this address
-          AbstractENS ens = AbstractENS(ensRegistryAddress);
-          if(ens.owner(ens_domain_hash)==address(this)){
-               // we are ready to search someone 
-               // to give us the money
-               currentState = State.WaitingForLender;
-               return;
-          }
      }
 
      // This function is called when someone sends money to this contract directly.
