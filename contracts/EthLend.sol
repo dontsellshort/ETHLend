@@ -337,7 +337,6 @@ contract LendingRequest {
                // we are ready to search someone 
                // to give us the money
                return State.WaitingForLender;
-               return;
             }
           }else{
             return currentState;
