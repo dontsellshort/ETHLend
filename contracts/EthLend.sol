@@ -132,7 +132,7 @@ contract Ledger {
 
           for(uint i=0; i<totalLrCount; ++i){
                LendingRequest lr = LendingRequest(lrs[i]);
-               if(lr.getState() == LendingRequest.State.WaitingForPayback){
+               if(lr.getCurrentState() == LendingRequest.State.WaitingForPayback){
                     out++;
                }
           }
@@ -142,7 +142,7 @@ contract Ledger {
 
      function getLrFunded(uint index) constant returns (address){          
           LendingRequest lr = LendingRequest(lrs[index]);
-          if(lr.getState() == LendingRequest.State.WaitingForPayback){
+          if(lr.getCurrentState() == LendingRequest.State.WaitingForPayback){
                return lrs[index];
           } else {
                return 0;
@@ -230,7 +230,7 @@ contract LendingRequest {
      address public whereToSendFee     = 0x0;  //Platform fee will be sent to this wallet address
 
      uint public lenderFeeAmount = 0.01 ether;            //Lender's platform fee
-     State public currentState   = State.Init;  //Initial state WaitingForData
+     State private currentState   = State.Init;  //Initial state WaitingForData
      Type public currentType     = Type.TokensCollateral; //Initialized with Tokens Collateral 
 
      
@@ -255,7 +255,6 @@ contract LendingRequest {
      /* Constants Methods: */
      function isEns() constant returns(bool){ return (currentType==Type.EnsCollateral); }
      function isRep() constant returns(bool){ return (currentType==Type.RepCollateral); }
-     function getState() constant returns(State){ return currentState; }
      function getLender() constant returns(address){ return lender; }     
      function getBorrower() constant returns(address){ return borrower; }
      function getWantedWei() constant returns(uint){ return wanted_wei; }
@@ -294,7 +293,7 @@ contract LendingRequest {
      }
 
      modifier onlyInState(State state){
-          require(currentState == state);
+          require(getCurrentState() == state);
           _;
      }
 
@@ -319,6 +318,33 @@ contract LendingRequest {
                revert();
           }
           
+     }
+
+     function getCurrentState() constant returns(State){
+        if(currentState == State.WaitingForTokens){
+          if(currentType == Type.TokensCollateral){
+            ERC20Token token = ERC20Token(token_smartcontract_address);
+
+            uint tokenBalance = token.balanceOf(this);
+            if(tokenBalance >= token_amount){
+               // we are ready to search someone 
+               // to give us the money
+               return State.WaitingForLender;
+            }   
+          }else if(currentType == Type.EnsCollateral){
+            AbstractENS ens = AbstractENS(ensRegistryAddress);
+            if(ens.owner(ens_domain_hash)==address(this)){
+               // we are ready to search someone 
+               // to give us the money
+               return State.WaitingForLender;
+            }
+          }else{
+            return currentState;
+          }
+        }else{
+          return currentState;
+        }
+
      }
 
      function changeLedgerAddress(address _new) onlyByLedger{
@@ -355,41 +381,14 @@ contract LendingRequest {
 
      function cancell() byLedgerMainOrBorrower {
           // 1 - check current state
-          if((currentState != State.WaitingForTokens) && (currentState != State.WaitingForLender))
+          if((getCurrentState() != State.WaitingForTokens) && (getCurrentState() != State.WaitingForLender))
                revert();
 
-          if(currentState == State.WaitingForLender){
+          if(getCurrentState() == State.WaitingForLender){
                // return tokens back to Borrower
                releaseToBorrower();
           }
           currentState = State.Cancelled;
-     }
-
-     // Should check if tokens are 'trasferred' to this contracts address and controlled
-     function checkTokens() byLedgerMainOrBorrower onlyInState(State.WaitingForTokens){
-          if(currentType != Type.TokensCollateral){
-               revert();
-          }
-
-          ERC20Token token = ERC20Token(token_smartcontract_address);
-
-          uint tokenBalance = token.balanceOf(this);
-          if(tokenBalance >= token_amount){
-               // we are ready to search someone 
-               // to give us the money
-               currentState = State.WaitingForLender;
-          }
-     }
-
-     function checkDomain() onlyInState(State.WaitingForTokens){
-          // Use 'ens_domain_hash' to check whether this domain is transferred to this address
-          AbstractENS ens = AbstractENS(ensRegistryAddress);
-          if(ens.owner(ens_domain_hash)==address(this)){
-               // we are ready to search someone 
-               // to give us the money
-               currentState = State.WaitingForLender;
-               return;
-          }
      }
 
      // This function is called when someone sends money to this contract directly.
@@ -400,9 +399,9 @@ contract LendingRequest {
      // If someone is sending at least 'wanted_wei' amount of money in WaitingForPayback state
      // -> then it means it's a Borrower returning money back. 
      function() payable {
-          if(currentState == State.WaitingForLender){
+          if(getCurrentState() == State.WaitingForLender){
                waitingForLender();
-          } else if(currentState == State.WaitingForPayback){
+          } else if(getCurrentState() == State.WaitingForPayback){
                waitingForPayback();
           } else {
                revert(); //In any other state, do not accept Ethers
@@ -510,4 +509,3 @@ contract LendingRequest {
           }
      }
 }
-
