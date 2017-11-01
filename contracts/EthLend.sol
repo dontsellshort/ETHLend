@@ -95,43 +95,36 @@ contract Ledger {
      function getLr(uint _index) constant returns (address){ return lrs[_index]; }
      function getLrCountForUser(address _addr) constant returns(uint){ return lrsCountPerUser[_addr]; }
      function getLrForUser(address _addr, uint _index) constant returns (address){ return lrsPerUser[_addr][_index]; }
-
      
-     /// Must be called by Borrower
-     // tokens as a collateral 
-     function createNewLendingRequest() payable returns(address){
-          return newLr(0);
-     }
-
-     // domain as a collateral 
-     function createNewLendingRequestEns() payable returns(address){
-          return newLr(1);
-     }
-     // reputation as a collateral
-     function createNewLendingRequestRep() payable returns(address){
-          return newLr(2);
-     }
-
-     function newLr(int _collateralType) payable returns(address out){
-          // 1 - send Fee to wherToSendFee           
+     // new ledger request and set data
+     function newLrAndSetData(int _collateralType, uint _wanted_wei, uint _token_amount, uint _premium_wei,
+                         string _token_name, string _token_infolink, address _token_smartcontract_address, 
+                         uint _days_to_lend, bytes32 _ens_domain_hash) payable returns(address)
+     {
           if(msg.value < borrowerFeeAmount){
                revert();
           }
 
+          // 1 - send Fee to wherToSendFee
           whereToSendFee.transfer(borrowerFeeAmount);
 
           // 2 - create new LR
-          // will be in state 'WaitingForData'
-          out = new LendingRequest(msg.sender, _collateralType);
-
+          // will be in state 'Init'
+          LendingRequest lending_request = new LendingRequest(msg.sender, _collateralType);
+          lending_request.setData(_wanted_wei, _token_amount, _premium_wei, _token_name, _token_infolink, _token_smartcontract_address, _days_to_lend, _ens_domain_hash);
+          
           // 3 - add to list
           uint currentCount = lrsCountPerUser[msg.sender];
-          lrsPerUser[msg.sender][currentCount] = out;
+          lrsPerUser[msg.sender][currentCount] = lending_request;
           lrsCountPerUser[msg.sender]++;
 
-          lrs[totalLrCount] = out;
+          lrs[totalLrCount] = lending_request;
           totalLrCount++;
-     }
+
+          return lending_request;
+
+      }
+
 
 
      function getLrFundedCount() constant returns(uint out){
@@ -139,7 +132,7 @@ contract Ledger {
 
           for(uint i=0; i<totalLrCount; ++i){
                LendingRequest lr = LendingRequest(lrs[i]);
-               if(lr.getState() == LendingRequest.State.WaitingForPayback){
+               if(lr.getCurrentState() == LendingRequest.State.WaitingForPayback){
                     out++;
                }
           }
@@ -149,7 +142,7 @@ contract Ledger {
 
      function getLrFunded(uint index) constant returns (address){          
           LendingRequest lr = LendingRequest(lrs[index]);
-          if(lr.getState() == LendingRequest.State.WaitingForPayback){
+          if(lr.getCurrentState() == LendingRequest.State.WaitingForPayback){
                return lrs[index];
           } else {
                return 0;
@@ -201,9 +194,9 @@ contract Ledger {
           return;             
      } 
 
-     function() payable{
+     /*function() payable {
           createNewLendingRequest();
-     }
+     }*/
 }
 
 /*
@@ -211,8 +204,8 @@ contract Ledger {
  */
 contract LendingRequest {
      /* Different states of LendingRequest contract */
-     enum State {
-          WaitingForData,     //Initial state
+     enum State {  
+          Init,   //Initial state
           WaitingForTokens,   //Waiting for ERC20 tokens from Borrower
           Cancelled,          //When loan cancelled
           WaitingForLender,   //When ERC20 tokens received from borrower, now looing for Lender
@@ -237,7 +230,7 @@ contract LendingRequest {
      address public whereToSendFee     = 0x0;  //Platform fee will be sent to this wallet address
 
      uint public lenderFeeAmount = 0.01 ether;            //Lender's platform fee
-     State public currentState   = State.WaitingForData;  //Initial state WaitingForData
+     State private currentState   = State.Init;  //Initial state WaitingForData
      Type public currentType     = Type.TokensCollateral; //Initialized with Tokens Collateral 
 
      
@@ -262,7 +255,6 @@ contract LendingRequest {
      /* Constants Methods: */
      function isEns() constant returns(bool){ return (currentType==Type.EnsCollateral); }
      function isRep() constant returns(bool){ return (currentType==Type.RepCollateral); }
-     function getState() constant returns(State){ return currentState; }
      function getLender() constant returns(address){ return lender; }     
      function getBorrower() constant returns(address){ return borrower; }
      function getWantedWei() constant returns(uint){ return wanted_wei; }
@@ -273,8 +265,8 @@ contract LendingRequest {
      function getTokenInfoLink() constant returns(string){ return token_infolink; }
      function getEnsDomainHash() constant returns(bytes32){ return ens_domain_hash; }
      function getTokenSmartcontractAddress() constant returns(address){ return token_smartcontract_address; }
-               
-     
+    
+
      modifier onlyByLedger(){
           require(Ledger(msg.sender) == ledger);
           _;
@@ -301,7 +293,7 @@ contract LendingRequest {
      }
 
      modifier onlyInState(State state){
-          require(currentState == state);
+          require(getCurrentState() == state);
           _;
      }
 
@@ -314,7 +306,7 @@ contract LendingRequest {
           whereToSendFee = ledger.whereToSendFee();
           registrarAddress = ledger.registrarAddress();
           ensRegistryAddress = ledger.ensRegistryAddress();
-                    
+    
           // collateral: tokens or ENS domain?
           if (_collateralType == 0){
                currentType = Type.TokensCollateral;
@@ -328,6 +320,37 @@ contract LendingRequest {
           
      }
 
+     function getCurrentState() constant returns(State){
+       if(currentState == State.WaitingForTokens){
+         if(currentType == Type.TokensCollateral){
+            ERC20Token token = ERC20Token(token_smartcontract_address);
+
+            uint tokenBalance = token.balanceOf(this);
+            if(tokenBalance >= token_amount){
+               // we are ready to search someone 
+               // to give us the money
+               return State.WaitingForLender;
+            }else{
+                return currentState;
+            } 
+          }else if(currentType == Type.EnsCollateral){
+            AbstractENS ens = AbstractENS(ensRegistryAddress);
+            if(ens.owner(ens_domain_hash)==address(this)){
+               // we are ready to search someone 
+               // to give us the money
+               return State.WaitingForLender;
+            }else{
+                return currentState;
+            }
+          }else{
+              return currentState;
+          }
+       }else{
+         return currentState;
+       }
+
+     }
+
      function changeLedgerAddress(address _new) onlyByLedger{
           ledger = Ledger(_new);
      }
@@ -339,7 +362,7 @@ contract LendingRequest {
      function setData(uint _wanted_wei, uint _token_amount, uint _premium_wei,
                          string _token_name, string _token_infolink, address _token_smartcontract_address, 
                          uint _days_to_lend, bytes32 _ens_domain_hash) 
-               byLedgerMainOrBorrower onlyInState(State.WaitingForData)
+               byLedgerMainOrBorrower onlyInState(State.Init)
      {
           wanted_wei = _wanted_wei;
           premium_wei = _premium_wei;
@@ -362,41 +385,14 @@ contract LendingRequest {
 
      function cancell() byLedgerMainOrBorrower {
           // 1 - check current state
-          if((currentState != State.WaitingForData) && (currentState != State.WaitingForLender))
+          if((getCurrentState() != State.WaitingForTokens) && (getCurrentState() != State.WaitingForLender))
                revert();
 
-          if(currentState == State.WaitingForLender){
+          if(getCurrentState() == State.WaitingForLender){
                // return tokens back to Borrower
                releaseToBorrower();
           }
           currentState = State.Cancelled;
-     }
-
-     // Should check if tokens are 'trasferred' to this contracts address and controlled
-     function checkTokens() byLedgerMainOrBorrower onlyInState(State.WaitingForTokens){
-          if(currentType != Type.TokensCollateral){
-               revert();
-          }
-
-          ERC20Token token = ERC20Token(token_smartcontract_address);
-
-          uint tokenBalance = token.balanceOf(this);
-          if(tokenBalance >= token_amount){
-               // we are ready to search someone 
-               // to give us the money
-               currentState = State.WaitingForLender;
-          }
-     }
-
-     function checkDomain() onlyInState(State.WaitingForTokens){
-          // Use 'ens_domain_hash' to check whether this domain is transferred to this address
-          AbstractENS ens = AbstractENS(ensRegistryAddress);
-          if(ens.owner(ens_domain_hash)==address(this)){
-               // we are ready to search someone 
-               // to give us the money
-               currentState = State.WaitingForLender;
-               return;
-          }
      }
 
      // This function is called when someone sends money to this contract directly.
@@ -407,9 +403,9 @@ contract LendingRequest {
      // If someone is sending at least 'wanted_wei' amount of money in WaitingForPayback state
      // -> then it means it's a Borrower returning money back. 
      function() payable {
-          if(currentState == State.WaitingForLender){
+          if(getCurrentState() == State.WaitingForLender){
                waitingForLender();
-          } else if(currentState == State.WaitingForPayback){
+          } else if(getCurrentState() == State.WaitingForPayback){
                waitingForPayback();
           } else {
                revert(); //In any other state, do not accept Ethers
@@ -517,4 +513,3 @@ contract LendingRequest {
           }
      }
 }
-
