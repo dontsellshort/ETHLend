@@ -794,7 +794,7 @@ describe('Contracts 1', function() {
           var a = ledgerContract.getLr(0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          var state = lr.getState();
+          var state = lr.getCurrentState();
           // "Waiting for Tokens" state
           assert.equal(state.toString(),1);
           done();
@@ -806,7 +806,7 @@ describe('Contracts 1', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          var state = lr.getState();
+          var state = lr.getCurrentState();
           // "Waiting for Token" state
           assert.equal(state.toString(),1);
           done();
@@ -819,7 +819,7 @@ describe('Contracts 1', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          var state = lr.getState();
+          var state = lr.getCurrentState();
           // "Waiting for tokens" state
           assert.equal(state.toString(),1);
           done();
@@ -829,20 +829,10 @@ describe('Contracts 1', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          lr.checkTokens(
-               {
-                    from: borrower,               
-                    gas: 2900000 
-               },function(err,result){
-                    assert.equal(err,null);
-
-                    web3.eth.getTransactionReceipt(result, function(err, r2){
-                         assert.equal(err, null);
-
-                         done();
-                    });
-               }
-          );
+          var state = lr.getCurrentState();
+          // "Waiting for tokens" state
+          assert.equal(state.toString(),1);
+          done();
      });
 
      it('should not move into <WaitingForLender> state',function(done){
@@ -851,7 +841,7 @@ describe('Contracts 1', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          var state = lr.getState();
+          var state = lr.getCurrentState();
           // "Waiting for tokens" state
           assert.equal(state.toString(),1);
           done();
@@ -883,20 +873,10 @@ describe('Contracts 1', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          lr.checkTokens(
-               {
-                    from: borrower,               
-                    gas: 2900000 
-               },function(err,result){
-                    assert.equal(err,null);
-
-                    web3.eth.getTransactionReceipt(result, function(err, r2){
-                         assert.equal(err, null);
-
-                         done();
-                    });
-               }
-          );
+          var state = lr.getCurrentState();
+          // "Waiting for tokens" state
+          assert.equal(state.toString(),1);
+          done();
      });
 
      it('should not move into <WaitingForLender> state',function(done){
@@ -905,7 +885,7 @@ describe('Contracts 1', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          var state = lr.getState();
+          var state = lr.getCurrentState();
           // "Waiting for tokens" state
           assert.equal(state.toString(),1);
           done();
@@ -943,20 +923,10 @@ describe('Contracts 1', function() {
           var balance2 = token.balanceOf(a);
           assert.equal(balance2,10);
 
-          lr.checkTokens(
-               {
-                    from: borrower,               
-                    gas: 2900000 
-               },function(err,result){
-                    assert.equal(err,null);
-
-                    web3.eth.getTransactionReceipt(result, function(err, r2){
-                         assert.equal(err, null);
-
-                         done();
-                    });
-               }
-          );
+          var state = lr.getCurrentState();
+          // "Waiting for tokens" state
+          assert.equal(state.toString(),3);
+          done();
      });
 
      it('should move into <WaitingForLender> state',function(done){
@@ -965,7 +935,7 @@ describe('Contracts 1', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          var state = lr.getState();
+          var state = lr.getCurrentState();
           // "Waiting for lender" state
           assert.equal(state.toString(),3);
           done();
@@ -975,15 +945,10 @@ describe('Contracts 1', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          lr.checkTokens(
-               {
-                    from: borrower,               
-                    gas: 2900000 
-               },function(err,result){
-                    // TODO: why fails?
-                    done();
-               }
-          );
+          var state = lr.getCurrentState();
+          // "Waiting for tokens" state
+          assert.equal(state.toString(),3);
+          done();
      });
 
      it('should collect money from Lender now',function(done){
@@ -1040,7 +1005,7 @@ describe('Contracts 1', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          var state = lr.getState();
+          var state = lr.getCurrentState();
           // "Waiting For Payback" state
           assert.equal(state.toString(),4);
           done();
@@ -1089,7 +1054,7 @@ describe('Contracts 1', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          var state = lr.getState();
+          var state = lr.getCurrentState();
           // still in "Waiting For Payback" state
           assert.equal(state.toString(),4);
           done();
@@ -1126,7 +1091,7 @@ describe('Contracts 1', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          var state = lr.getState();
+          var state = lr.getCurrentState();
           // "Finished" state
           assert.equal(state.toString(),6);
           done();
@@ -1266,7 +1231,7 @@ describe('Contracts 2 - cancel', function() {
           var a = ledgerContract.getLr(0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          var state = lr.getState();
+          var state = lr.getCurrentState();
           // "Waiting for Tokens" state
           assert.equal(state.toString(),1);
           done();
@@ -1298,7 +1263,7 @@ describe('Contracts 2 - cancel', function() {
           var a = ledgerContract.getLr(0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          var state = lr.getState();
+          var state = lr.getCurrentState();
           // "Cancelled" state
           assert.equal(state.toString(),2);
           done();
@@ -1324,7 +1289,7 @@ describe('Contracts 2 - cancel', function() {
           var a = ledgerContract.getLr(0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          var state = lr.getState();
+          var state = lr.getCurrentState();
           // "Cancelled" state
           assert.equal(state.toString(),2);
           done();
@@ -1560,7 +1525,7 @@ describe('Contracts 3 - cancel with refund', function() {
           var a = ledgerContract.getLr(0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          var state = lr.getState();
+          var state = lr.getCurrentState();
           // "Waiting for Tokens" state
           assert.equal(state.toString(),1);
           done();
@@ -1572,7 +1537,7 @@ describe('Contracts 3 - cancel with refund', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          var state = lr.getState();
+          var state = lr.getCurrentState();
           // "Waiting for Tokens" state
           assert.equal(state.toString(),1);
           done();
@@ -1584,7 +1549,7 @@ describe('Contracts 3 - cancel with refund', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          var state = lr.getState();
+          var state = lr.getCurrentState();
           // "Waiting for tokens" state
           assert.equal(state.toString(),1);
           done();
@@ -1594,20 +1559,10 @@ describe('Contracts 3 - cancel with refund', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          lr.checkTokens(
-               {
-                    from: borrower,               
-                    gas: 2900000 
-               },function(err,result){
-                    assert.equal(err,null);
-
-                    web3.eth.getTransactionReceipt(result, function(err, r2){
-                         assert.equal(err, null);
-
-                         done();
-                    });
-               }
-          );
+          var state = lr.getCurrentState();
+          // "Waiting for tokens" state
+          assert.equal(state.toString(),1);
+          done();
      });
 
      it('should not move into <WaitingForLender> state',function(done){
@@ -1616,7 +1571,7 @@ describe('Contracts 3 - cancel with refund', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          var state = lr.getState();
+          var state = lr.getCurrentState();
           // "Waiting for tokens" state
           assert.equal(state.toString(),1);
           done();
@@ -1659,20 +1614,10 @@ describe('Contracts 3 - cancel with refund', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          lr.checkTokens(
-               {
-                    from: borrower,               
-                    gas: 2900000 
-               },function(err,result){
-                    assert.equal(err,null);
-
-                    web3.eth.getTransactionReceipt(result, function(err, r2){
-                         assert.equal(err, null);
-
-                         done();
-                    });
-               }
-          );
+          var state = lr.getCurrentState();
+          // "Waiting for tokens" state
+          assert.equal(state.toString(),3);
+          done();
      });
 
      it('should move into <WaitingForLender> state',function(done){
@@ -1681,7 +1626,7 @@ describe('Contracts 3 - cancel with refund', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          var state = lr.getState();
+          var state = lr.getCurrentState();
           // "Waiting for lender" state
           assert.equal(state.toString(),3);
           done();
@@ -1950,7 +1895,7 @@ describe('Contracts 4 - default', function() {
           var a = ledgerContract.getLr(0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          var state = lr.getState();
+          var state = lr.getCurrentState();
           // "Waiting for Tokens" state
           assert.equal(state.toString(),1);
           done();
@@ -1962,7 +1907,7 @@ describe('Contracts 4 - default', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          var state = lr.getState();
+          var state = lr.getCurrentState();
           // "Waiting for Tokens" state
           assert.equal(state.toString(),1);
           done();
@@ -1976,7 +1921,7 @@ describe('Contracts 4 - default', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          var state = lr.getState();
+          var state = lr.getCurrentState();
           // "Waiting for tokens" state
           assert.equal(state.toString(),1);
           done();
@@ -1986,20 +1931,10 @@ describe('Contracts 4 - default', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          lr.checkTokens(
-               {
-                    from: borrower,               
-                    gas: 2900000 
-               },function(err,result){
-                    assert.equal(err,null);
-
-                    web3.eth.getTransactionReceipt(result, function(err, r2){
-                         assert.equal(err, null);
-
-                         done();
-                    });
-               }
-          );
+          var state = lr.getCurrentState();
+          // "Waiting for tokens" state
+          assert.equal(state.toString(),1);
+          done();
      });
 
      it('should not move into <WaitingForLender> state',function(done){
@@ -2008,7 +1943,7 @@ describe('Contracts 4 - default', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          var state = lr.getState();
+          var state = lr.getCurrentState();
           // "Waiting for tokens" state
           assert.equal(state.toString(),1);
           done();
@@ -2051,20 +1986,10 @@ describe('Contracts 4 - default', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          lr.checkTokens(
-               {
-                    from: borrower,               
-                    gas: 2900000 
-               },function(err,result){
-                    assert.equal(err,null);
-
-                    web3.eth.getTransactionReceipt(result, function(err, r2){
-                         assert.equal(err, null);
-
-                         done();
-                    });
-               }
-          );
+          var state = lr.getCurrentState();
+          // "Waiting for tokens" state
+          assert.equal(state.toString(),3);
+          done();
      });
 
      it('should move into <WaitingForLender> state',function(done){
@@ -2073,7 +1998,7 @@ describe('Contracts 4 - default', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          var state = lr.getState();
+          var state = lr.getCurrentState();
           // "Waiting for lender" state
           assert.equal(state.toString(),3);
           done();
@@ -2116,7 +2041,7 @@ describe('Contracts 4 - default', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          var state = lr.getState();
+          var state = lr.getCurrentState();
           // "Waiting For Payback" state
           assert.equal(state.toString(),4);
           done();
@@ -2382,7 +2307,7 @@ describe('Contracts 5 - domain', function() {
           var a = ledgerContract.getLr(0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          var state = lr.getState();
+          var state = lr.getCurrentState();
           // "Waiting for domain" state
           assert.equal(state.toString(),1);
           done();
@@ -2394,7 +2319,7 @@ describe('Contracts 5 - domain', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          var state = lr.getState();
+          var state = lr.getCurrentState();
           // "Waiting for domain" state
           assert.equal(state.toString(),1);
           done();
@@ -2406,7 +2331,7 @@ describe('Contracts 5 - domain', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          var state = lr.getState();
+          var state = lr.getCurrentState();
           // "Waiting for domain" state
           assert.equal(state.toString(),1);
           done();
@@ -2416,20 +2341,10 @@ describe('Contracts 5 - domain', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          lr.checkDomain(
-               {
-                    from: borrower,               
-                    gas: 2900000 
-               },function(err,result){
-                    assert.equal(err,null);
-
-                    web3.eth.getTransactionReceipt(result, function(err, r2){
-                         assert.equal(err, null);
-
-                         done();
-                    });
-               }
-          );
+          var state = lr.getCurrentState();
+          // "Waiting for tokens" state
+          assert.equal(state.toString(),1);
+          done();
      });
 
      it('should not move into <WaitingForLender> state',function(done){
@@ -2438,7 +2353,7 @@ describe('Contracts 5 - domain', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          var state = lr.getState();
+          var state = lr.getCurrentState();
           // "Waiting for tokens" state
           assert.equal(state.toString(),1);
           done();
@@ -2463,20 +2378,10 @@ describe('Contracts 5 - domain', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          lr.checkDomain(
-               {
-                    from: borrower,               
-                    gas: 2900000 
-               },function(err,result){
-                    assert.equal(err,null);
-
-                    web3.eth.getTransactionReceipt(result, function(err, r2){
-                         assert.equal(err, null);
-
-                         done();
-                    });
-               }
-          );
+          var state = lr.getCurrentState();
+          // "Waiting for tokens" state
+          assert.equal(state.toString(),3);
+          done();
      });
 
 
@@ -2486,7 +2391,7 @@ describe('Contracts 5 - domain', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          var state = lr.getState();
+          var state = lr.getCurrentState();
           // "Waiting for tokens" state
           assert.equal(state.toString(),3);
           done();
@@ -2550,7 +2455,7 @@ describe('Contracts 5 - domain', function() {
           var a = ledgerContract.getLrForUser(borrower,0);
           var lr = web3.eth.contract(requestAbi).at(a);
 
-          var state = lr.getState();
+          var state = lr.getCurrentState();
           // "Waiting For Payback" state
           assert.equal(state.toString(),4);
           done();
