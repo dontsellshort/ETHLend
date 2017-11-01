@@ -321,8 +321,8 @@ contract LendingRequest {
      }
 
      function getCurrentState() constant returns(State){
-        if(currentState == State.WaitingForTokens){
-          if(currentType == Type.TokensCollateral){
+       if(currentState == State.WaitingForTokens){
+         if(currentType == Type.TokensCollateral){
             ERC20Token token = ERC20Token(token_smartcontract_address);
 
             uint tokenBalance = token.balanceOf(this);
@@ -330,20 +330,24 @@ contract LendingRequest {
                // we are ready to search someone 
                // to give us the money
                return State.WaitingForLender;
-            }   
+            }else{
+                return currentState;
+            } 
           }else if(currentType == Type.EnsCollateral){
             AbstractENS ens = AbstractENS(ensRegistryAddress);
             if(ens.owner(ens_domain_hash)==address(this)){
                // we are ready to search someone 
                // to give us the money
                return State.WaitingForLender;
+            }else{
+                return currentState;
             }
           }else{
-            return currentState;
+              return currentState;
           }
-        }else{
-          return currentState;
-        }
+       }else{
+         return currentState;
+       }
 
      }
 
