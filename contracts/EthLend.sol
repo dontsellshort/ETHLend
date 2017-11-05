@@ -140,10 +140,10 @@ contract Ledger {
           return;
      }
 
-     function getLrFunded(uint index) constant returns (address){          
-          LendingRequest lr = LendingRequest(lrs[index]);
+     function getLrFunded(uint _index) constant returns (address){          
+          LendingRequest lr = LendingRequest(lrs[_index]);
           if(lr.getCurrentState() == LendingRequest.State.WaitingForPayback){
-               return lrs[index];
+               return lrs[_index];
           } else {
                return 0;
           }
@@ -292,8 +292,8 @@ contract LendingRequest {
           _;
      }
 
-     modifier onlyInState(State state){
-          require(getCurrentState() == state);
+     modifier onlyInState(State _state){
+          require(getCurrentState() == _state);
           _;
      }
 
@@ -359,19 +359,19 @@ contract LendingRequest {
           mainAddress = _new;
      }
 
-     function setData(uint _wanted_wei, uint _token_amount, uint _premium_wei,
-                         string _token_name, string _token_infolink, address _token_smartcontract_address, 
-                         uint _days_to_lend, bytes32 _ens_domain_hash) 
+     function setData(uint _wantedWei, uint _tokenAmount, uint _premiumWei,
+                         string _tokenName, string _tokenInfolink, address _tokenSmartContractAddress, 
+                         uint _daysToLend, bytes32 _ensDomainHash) 
                byLedgerMainOrBorrower onlyInState(State.Init)
      {
-          wanted_wei = _wanted_wei;
-          premium_wei = _premium_wei;
-          token_amount = _token_amount; // will be ZERO if isCollateralEns is true 
-          token_name = _token_name;
-          token_infolink = _token_infolink;
-          token_smartcontract_address = _token_smartcontract_address;
-          days_to_lend = _days_to_lend;
-          ens_domain_hash = _ens_domain_hash;
+          wanted_wei = _wantedWei;
+          premium_wei = _premiumWei;
+          token_amount = _tokenAmount; // will be ZERO if isCollateralEns is true 
+          token_name = _tokenName;
+          token_infolink = _tokenInfolink;
+          token_smartcontract_address = _tokenSmartContractAddress;
+          days_to_lend = _daysToLend;
+          ens_domain_hash = _ensDomainHash;
 
           if(currentType == Type.RepCollateral){
                if(ledger.approveRepTokens(borrower, wanted_wei)){
