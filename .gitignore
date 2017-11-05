@@ -5,3 +5,6 @@ npm-debug.log
 .idea
 
 *.ls
+package-lock.json
+
+package.json
