@@ -733,6 +733,7 @@ describe('Contracts 1', function() {
           // this is set by creator (from within platform)
           ledgerContract.newLrAndSetData(
                0,
+               0,
                data.wanted_wei,
                data.token_amount,
                data.premium_wei,
@@ -1198,6 +1199,7 @@ describe('Contracts 2 - cancel', function() {
           // this is set by creator (from within platform)
           ledgerContract.newLrAndSetData(
                0,
+               0,
                data.wanted_wei,
                data.token_amount,
                data.premium_wei,
@@ -1464,6 +1466,7 @@ describe('Contracts 3 - cancel with refund', function() {
           
           // this is set by creator (from within platform)
           ledgerContract.newLrAndSetData(
+               0,
                0,
                data.wanted_wei,
                data.token_amount,
@@ -1834,6 +1837,7 @@ describe('Contracts 4 - default', function() {
           
      // this is set by creator (from within platform)
      ledgerContract.newLrAndSetData(
+          0,
           0,
           data.wanted_wei,
           data.token_amount,
@@ -2247,6 +2251,7 @@ describe('Contracts 5 - domain', function() {
           // this is set by creator (from within platform)
       ledgerContract.newLrAndSetData(
          1,
+         0,
          data.wanted_wei,
          data.token_amount,
          data.premium_wei,

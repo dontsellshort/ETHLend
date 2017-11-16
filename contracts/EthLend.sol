@@ -54,10 +54,10 @@ contract AbstractENS {
      function owner(bytes32 node) constant returns(address);
      function resolver(bytes32 node) constant returns(address);
      function ttl(bytes32 node) constant returns(uint64);
-     function setOwner(bytes32 node, address owner);
-     function setSubnodeOwner(bytes32 node, bytes32 label, address owner);
-     function setResolver(bytes32 node, address resolver);
-     function setTTL(bytes32 node, uint64 ttl);
+     function setOwner(bytes32 node, address ownerVal);
+     function setSubnodeOwner(bytes32 node, bytes32 label, address ownerVal);
+     function setResolver(bytes32 node, address resolverVal);
+     function setTTL(bytes32 node, uint64 ttlVal);
 }
 
 contract Registrar {
@@ -97,7 +97,7 @@ contract Ledger {
      function getLrForUser(address _addr, uint _index) constant returns (address){ return lrsPerUser[_addr][_index]; }
      
      // new ledger request and set data
-     function newLrAndSetData(int _collateralType, uint _wanted_wei, uint _token_amount, uint _premium_wei,
+     function newLrAndSetData(int _collateralType, uint _currency, uint _wanted_wei, uint _token_amount, uint _premium_wei,
                          string _token_name, string _token_infolink, address _token_smartcontract_address, 
                          uint _days_to_lend, bytes32 _ens_domain_hash) payable returns(address)
      {
@@ -110,7 +110,7 @@ contract Ledger {
 
           // 2 - create new LR
           // will be in state 'Init'
-          LendingRequest lending_request = new LendingRequest(msg.sender, _collateralType);
+          LendingRequest lending_request = new LendingRequest(msg.sender, _collateralType, _currency);
           lending_request.setData(_wanted_wei, _token_amount, _premium_wei, _token_name, _token_infolink, _token_smartcontract_address, _days_to_lend, _ens_domain_hash);
           
           // 3 - add to list
@@ -221,6 +221,11 @@ contract LendingRequest {
           RepCollateral       //Reputation tokens as a Collateral
      }
 
+     enum Currency {
+          EthCurrency,
+          UsdCurrency
+     }
+
      using SafeMath for uint256;               //SafeMath Library using for uint256
      Ledger ledger;                            //Ledger Contract
      address public creator            = 0x0;  //Creator of this contract, always be Ledger's address
@@ -232,13 +237,12 @@ contract LendingRequest {
      uint public lenderFeeAmount = 0.01 ether;            //Lender's platform fee
      State private currentState   = State.Init;  //Initial state WaitingForData
      Type public currentType     = Type.TokensCollateral; //Initialized with Tokens Collateral 
-
-     
+     Currency public currency    = Currency.EthCurrency;
 
      /* These variables will be set by borrower: */
      address public borrower  = 0x0;                     //Borrower's wallet address
-     uint public wanted_wei   = 0;                       //How much wei Borrower request from Lender
-     uint public premium_wei  = 0;                       //How much premium in wei Borrower wants to pay to Lender
+     uint wanted_wei   = 0;                       //How much wei Borrower request from Lender
+     uint premium_wei  = 0;                       //How much premium in wei Borrower wants to pay to Lender
      uint public token_amount = 0;                       //Count of ERC20-tokens Borrower wants to put as collateral
      uint public days_to_lend = 0;                       //Number of days to lend the loan
      string public token_name = "";                      //Name of the ERC20-token Borrower putting as a collateral
@@ -257,15 +261,17 @@ contract LendingRequest {
      function isRep() constant returns(bool){ return (currentType==Type.RepCollateral); }
      function getLender() constant returns(address){ return lender; }     
      function getBorrower() constant returns(address){ return borrower; }
-     function getWantedWei() constant returns(uint){ return wanted_wei; }
      function getTokenName() constant returns(string){ return token_name; }
      function getDaysToLen() constant returns(uint){ return days_to_lend; }
-     function getPremiumWei() constant returns(uint){ return premium_wei; }
      function getTokenAmount() constant returns(uint){ return token_amount; }     
      function getTokenInfoLink() constant returns(string){ return token_infolink; }
      function getEnsDomainHash() constant returns(bytes32){ return ens_domain_hash; }
      function getTokenSmartcontractAddress() constant returns(address){ return token_smartcontract_address; }
     
+     // TODO: update for USD
+     function getWantedWei() constant returns(uint){ return wanted_wei; }
+     // TODO: update for USD
+     function getPremiumWei() constant returns(uint){ return premium_wei; }
 
      modifier onlyByLedger(){
           require(Ledger(msg.sender) == ledger);
@@ -297,7 +303,7 @@ contract LendingRequest {
           _;
      }
 
-     function LendingRequest(address _borrower, int _collateralType){
+     function LendingRequest(address _borrower, int _collateralType, uint _currency){
           creator = msg.sender;
           ledger = Ledger(msg.sender);
 
@@ -317,7 +323,14 @@ contract LendingRequest {
           } else {
                revert();
           }
-          
+
+          if (_currency ==0){
+               currency = Currency.EthCurrency;
+          } else if(_currency == 1){
+               currency = Currency.UsdCurrency;
+          } else {
+               revert();
+          }
      }
 
      function getCurrentState() constant returns(State){
