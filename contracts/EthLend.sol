@@ -1,5 +1,9 @@
 pragma solidity ^0.4.16;
 
+// https://github.com/oraclize/ethereum-api/blob/master/oraclizeAPI_0.4.sol
+//import "./oraclizeAPI_0.4.sol";
+
+
 /**
  * @title SafeMath by OpenZeppelin
  * @dev Math operations with safety checks that throw on error
@@ -97,6 +101,7 @@ contract Ledger {
      function getLrForUser(address _addr, uint _index) constant returns (address){ return lrsPerUser[_addr][_index]; }
      
      // new ledger request and set data
+     // if currency is USD - then _wanted_wei is in cents
      function newLrAndSetData(int _collateralType, uint _currency, uint _wanted_wei, uint _token_amount, uint _premium_wei,
                          string _token_name, string _token_infolink, address _token_smartcontract_address, 
                          uint _days_to_lend, bytes32 _ens_domain_hash) payable returns(address)
@@ -208,7 +213,7 @@ contract LendingRequest {
           Init,   //Initial state
           WaitingForTokens,   //Waiting for ERC20 tokens from Borrower
           Cancelled,          //When loan cancelled
-          WaitingForLender,   //When ERC20 tokens received from borrower, now looing for Lender
+          WaitingForLender,   //When ERC20 tokens received from borrower, now looking for Lender
           WaitingForPayback,  //When money received from Lender and sent to Borrower
           Default,            //When loan defaulted by Borrower
           Finished            //When loan paid in full by Borrower and finished 
@@ -241,8 +246,12 @@ contract LendingRequest {
 
      /* These variables will be set by borrower: */
      address public borrower  = 0x0;                     //Borrower's wallet address
+
+     // if currency is USD - then is in cents
      uint wanted_wei   = 0;                       //How much wei Borrower request from Lender
+     // if currency is USD - then is in cents
      uint premium_wei  = 0;                       //How much premium in wei Borrower wants to pay to Lender
+
      uint public token_amount = 0;                       //Count of ERC20-tokens Borrower wants to put as collateral
      uint public days_to_lend = 0;                       //Number of days to lend the loan
      string public token_name = "";                      //Name of the ERC20-token Borrower putting as a collateral
@@ -269,8 +278,11 @@ contract LendingRequest {
      function getTokenSmartcontractAddress() constant returns(address){ return token_smartcontract_address; }
     
      // TODO: update for USD
+     // if currency is USD - then is in cents
      function getWantedWei() constant returns(uint){ return wanted_wei; }
+
      // TODO: update for USD
+     // if currency is USD - then is in cents
      function getPremiumWei() constant returns(uint){ return premium_wei; }
 
      modifier onlyByLedger(){
@@ -372,6 +384,7 @@ contract LendingRequest {
           mainAddress = _new;
      }
 
+     // if currency is USD - then _wanted_wei is in cents
      function setData(uint _wantedWei, uint _tokenAmount, uint _premiumWei,
                          string _tokenName, string _tokenInfolink, address _tokenSmartContractAddress, 
                          uint _daysToLend, bytes32 _ensDomainHash) 
