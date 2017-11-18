@@ -112,6 +112,7 @@ function deployLedgerContract(data,cb){
                repAddress,
                ensContractAddress,
                registrarContractAddress,
+               300, 
                {
                     from: creator, 
                     // should not exceed 5000000 for Kovan by default
