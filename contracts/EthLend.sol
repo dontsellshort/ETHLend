@@ -1308,6 +1308,7 @@ contract LendingRequest {
      address public mainAddress        = 0x0;  //Who deployed Parent Ledger
      address public whereToSendFee     = 0x0;  //Platform fee will be sent to this wallet address
 
+     // if currency in USD - still in ETH!
      uint public lenderFeeAmount = 0.01 ether;            //Lender's platform fee
      State private currentState   = State.Init;  //Initial state WaitingForData
      Type public currentType     = Type.TokensCollateral; //Initialized with Tokens Collateral 
@@ -1317,9 +1318,9 @@ contract LendingRequest {
      address public borrower  = 0x0;                     //Borrower's wallet address
 
      // if currency is USD - then is in cents
-     uint wanted_wei   = 0;                       //How much wei Borrower request from Lender
+     uint public wanted_wei   = 0;                       //How much wei Borrower request from Lender
      // if currency is USD - then is in cents
-     uint premium_wei  = 0;                       //How much premium in wei Borrower wants to pay to Lender
+     uint public premium_wei  = 0;                       //How much premium in wei Borrower wants to pay to Lender
 
      uint public token_amount = 0;                       //Count of ERC20-tokens Borrower wants to put as collateral
      uint public days_to_lend = 0;                       //Number of days to lend the loan
@@ -1346,14 +1347,6 @@ contract LendingRequest {
      function getEnsDomainHash() constant returns(bytes32){ return ens_domain_hash; }
      function getTokenSmartcontractAddress() constant returns(address){ return token_smartcontract_address; }
     
-     // TODO: update for USD
-     // if currency is USD - then is in cents
-     function getWantedWei() constant returns(uint){ return wanted_wei; }
-
-     // TODO: update for USD
-     // if currency is USD - then is in cents
-     function getPremiumWei() constant returns(uint){ return premium_wei; }
-
      modifier onlyByLedger(){
           require(Ledger(msg.sender) == ledger);
           _;
@@ -1469,8 +1462,9 @@ contract LendingRequest {
           ens_domain_hash = _ensDomainHash;
 
           if(currentType == Type.RepCollateral){
-               if(ledger.approveRepTokens(borrower, wanted_wei)){
-                    ledger.lockRepTokens(borrower, wanted_wei);
+               uint val = convertToEth(wanted_wei);
+               if(ledger.approveRepTokens(borrower, val)){
+                    ledger.lockRepTokens(borrower, val);
                     currentState = State.WaitingForLender;
                }
           } else {
@@ -1515,9 +1509,8 @@ contract LendingRequest {
      }
 
      function waitingForLender() payable onlyInState(State.WaitingForLender){
-          if(msg.value < wanted_wei.add(lenderFeeAmount)){
-               revert();
-          }
+          uint neededWei = getNeededSumByLender(); 
+          require(msg.value >= neededWei);
 
           // send platform fee first
           whereToSendFee.transfer(lenderFeeAmount);
@@ -1527,7 +1520,9 @@ contract LendingRequest {
 
           // ETH is sent to borrower in full
           // Tokens are kept inside of this contract
-          borrower.transfer(wanted_wei);
+
+          uint val = convertToEth(wanted_wei);
+          borrower.transfer(val);
 
           currentState = State.WaitingForPayback;
 
@@ -1539,25 +1534,29 @@ contract LendingRequest {
      // 
      // anyone can call this (not only the borrower)
      function waitingForPayback() payable onlyInState(State.WaitingForPayback){
-          if(msg.value < wanted_wei.add(premium_wei)){
-               revert();
-          }
+          require(msg.value>=getNeededSumByBorrower());
+
           // ETH is sent back to lender in full with premium!!!
           lender.transfer(msg.value);
 
           releaseToBorrower(); // tokens are released back to borrower
-          ledger.addRepTokens(borrower,wanted_wei);
+
+          uint val = convertToEth(wanted_wei);
+          ledger.addRepTokens(borrower,val);
           currentState = State.Finished; // finished
      }
 
      // How much should lender send
-     function getNeededSumByLender() constant returns(uint){
-          return wanted_wei.add(lenderFeeAmount);
+     function getNeededSumByLender() public constant returns(uint){
+          uint val = convertToEth(wanted_wei);
+          return val.add(lenderFeeAmount);
      }
 
      // How much should borrower return to release tokens
-     function getNeededSumByBorrower()constant returns(uint){
-          return wanted_wei.add(premium_wei);
+     function getNeededSumByBorrower() public constant returns(uint){
+          uint val = convertToEth(wanted_wei);
+          uint val2 = convertToEth(premium_wei);
+          return val.add(val2);
      }
 
      // After time has passed but lender hasn't returned the loan -> move tokens to lender
@@ -1582,7 +1581,8 @@ contract LendingRequest {
                registrar.transfer(ens_domain_hash,lender);
 
           }else if (currentType==Type.RepCollateral){
-               ledger.unlockRepTokens(borrower, wanted_wei);
+               uint val = convertToEth(wanted_wei);
+               ledger.unlockRepTokens(borrower, val);
           }else{
                ERC20Token token = ERC20Token(token_smartcontract_address);
                uint tokenBalance = token.balanceOf(this);
@@ -1600,11 +1600,17 @@ contract LendingRequest {
                registrar.transfer(ens_domain_hash,borrower);
 
           }else if (currentType==Type.RepCollateral){
-               ledger.unlockRepTokens(borrower, wanted_wei);
+               uint val = convertToEth(wanted_wei);
+               ledger.unlockRepTokens(borrower, val);
           }else{
                ERC20Token token = ERC20Token(token_smartcontract_address);
                uint tokenBalance = token.balanceOf(this);
                token.transfer(borrower,tokenBalance);
           }
+     }
+
+     function convertToEth(uint weiOrCents) public constant returns(uint){
+          // type is ETH
+          return weiOrCents;
      }
 }
