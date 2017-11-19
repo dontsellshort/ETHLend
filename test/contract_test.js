@@ -112,7 +112,7 @@ function deployLedgerContract(data,cb){
                repAddress,
                ensContractAddress,
                registrarContractAddress,
-               300, 
+               500, 
                {
                     from: creator, 
                     // should not exceed 5000000 for Kovan by default
@@ -2612,9 +2612,9 @@ describe('Contracts 6 - USD', function() {
      it('should issue new ENS LR',function(done){
           var amount = 200000000000000000;
       
-          // 100 cents
-          var wantedWei = 100;
-          // 100 cents
+          // 10 dollars 
+          var wantedWei = 1000;
+          // 1 dollar 
           var premiumWei = 100;
 
           var data = {
@@ -2678,10 +2678,11 @@ describe('Contracts 6 - USD', function() {
           var lr = web3.eth.contract(requestAbi).at(a);
 
           var state = lr.getCurrentState();
+          assert.equal(ledgerContract.isNeedToUpdateEthToUsdRate(),false);
           // "Waiting for domain" state
           assert.equal(state.toString(),1);
           assert.equal(lr.currency(),1);
-          assert.equal(lr.wanted_wei(),100);
+          assert.equal(lr.wanted_wei(),1000);
           assert.equal(lr.premium_wei(),100);
 
           done();
@@ -2744,10 +2745,24 @@ describe('Contracts 6 - USD', function() {
           var state = lr.getCurrentState();
           // "Waiting for lender" state
           assert.equal(state.toString(),3);
+
+          // exchange rate update is not needed
+          assert.equal(ledgerContract.isNeedToUpdateEthToUsdRate(),false);
+          // 1000 cents at $500 = 0.02 ETH 
+          var shouldBe = new BigNumber(1000000000000000000 * 0.02);
+          var fee = new BigNumber(1000000000000000000 * 0.01);
+          // 100 cents at $500 = 0.002 ETH 
+          var premium = new BigNumber(1000000000000000000 * 0.002);
+          assert.equal(lr.convertToEth(1000),shouldBe.toString(10));
+
+          var neededByLender = fee.plus(shouldBe);
+          var neededByBorrower = premium.plus(shouldBe);
+          assert.equal(lr.getNeededSumByLender().toString(10),neededByLender.toString(10));
+          assert.equal(lr.getNeededSumByBorrower().toString(10),neededByBorrower.toString(10));
+
           done();
      })
 
-     /*
      it('should get money from Lender now',function(done){
           var current = web3.eth.getBalance(lender);
 
@@ -2755,7 +2770,9 @@ describe('Contracts 6 - USD', function() {
           var lr = web3.eth.contract(requestAbi).at(a);
           var wanted_wei = lr.getNeededSumByLender();
           
-          var amount = wanted_wei;
+          var shouldBe = new BigNumber(1000000000000000000 * 0.02);
+          var fee = new BigNumber(1000000000000000000 * 0.01);
+          var amount = fee.plus(shouldBe);
 
           // WARNING: see this
           initialBalanceBorrower = web3.eth.getBalance(borrower);
@@ -2790,5 +2807,4 @@ describe('Contracts 6 - USD', function() {
           assert.equal(state.toString(),4);
           done();
      })
-     */
 });

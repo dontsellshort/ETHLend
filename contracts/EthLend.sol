@@ -1,5 +1,8 @@
 pragma solidity ^0.4.16;
 
+// TODO: move to separate file and include like this:
+//import "github.com/oraclize/ethereum-api/oraclizeAPI.sol";
+
 contract OraclizeI {
     address public cbAddress;
     function query(uint _timestamp, string _datasource, string _arg) payable returns (bytes32 _id);
@@ -999,6 +1002,91 @@ contract usingOraclize {
 }
 // </ORACLIZE_API>
 
+contract EthTicker is usingOraclize {
+// Fields:
+     bool oraclizeLoaded = false;
+     uint64 lastTimeRateUpdated = 0;
+     string public ethPriceInUsd = "";
+     uint public ethPriceInUsdInt = 0;
+     uint public oraclizePrice = 0;
+
+     event newOraclizeQuery(string description);
+     event priceReceived(string price);
+
+// Functions
+     function initEthTicker(uint _currentUsdToEthRate) internal {
+          require(0==lastTimeRateUpdated);
+
+          lastTimeRateUpdated = uint64(now);
+          ethPriceInUsdInt = _currentUsdToEthRate;
+     }
+
+     // This should be called from Oraclize
+     function __callback(bytes32 myid, string result, bytes proof) {
+          require(msg.sender==oraclize_cbAddress());
+
+          ethPriceInUsd = result;
+          ethPriceInUsdInt = parseUInt(ethPriceInUsd);
+
+          // send an event
+          priceReceived(ethPriceInUsd);
+
+          lastTimeRateUpdated = uint64(now);
+     }
+
+     function parseUInt(string self) internal constant returns (uint) {
+          return parseUInt(self, 0);
+     }
+
+     function parseUInt(string self, uint _b) internal constant returns (uint) {
+          bytes memory bresult = bytes(self);
+          uint mint = 0;
+          bool decimals = false;
+          for (uint i=0; i<bresult.length; i++){
+               if ((bresult[i] >= 48)&&(bresult[i] <= 57)){
+                    if (decimals){
+                         if (_b == 0) break;
+                         else _b--;
+                    }
+                    mint *= 10;
+                    mint += uint(bresult[i]) - 48;
+               } else if (bresult[i] == 46) decimals = true;
+          }
+          if (_b > 0) mint *= 10**_b;
+          return mint;
+     }
+
+     function getEthToUsdRate() public returns(uint){
+          require(!isNeedToUpdateEthToUsdRate());
+          return ethPriceInUsdInt;
+     }
+
+     function updateEthToUsdRate() public payable {
+          if(!oraclizeLoaded){
+               oraclize_setProof(proofType_TLSNotary | proofStorage_IPFS);
+               oraclizeLoaded = true;
+          }
+
+          // update each time (price can change)
+          oraclizePrice = oraclize.getPrice("URL");
+
+          string memory url = "json(https://api.kraken.com/0/public/Ticker?pair=ETHUSD).result.XETHZUSD.c.0";
+
+          // update max each 1 minute 
+          oraclize_query(60, "URL", url);
+
+          // send an event
+          newOraclizeQuery("Oraclize query was sent, standing by for the answer..");
+     }
+
+     function isNeedToUpdateEthToUsdRate() public constant returns(bool){
+          // if more than 1h elapsed -> need update!
+          uint64 oneHourPassed = lastTimeRateUpdated + 1 hours;  
+          return (uint(now) > oneHourPassed);
+     }
+}
+
+
 /**
  * @title SafeMath by OpenZeppelin
  * @dev Math operations with safety checks that throw on error
@@ -1064,7 +1152,7 @@ contract Registrar {
 }
 
 
-contract Ledger is usingOraclize {     
+contract Ledger is EthTicker {     
      address public mainAddress;             //Contract Owner/Deployer address
      address public whereToSendFee;          //Platform fee collector address
      address public repTokenAddress;         //ReputationToken contract address
@@ -1073,15 +1161,6 @@ contract Ledger is usingOraclize {
 
      uint public totalLrCount = 0;           //Total count of LendingRequest created
      uint public borrowerFeeAmount = 0.01 ether; //Platform fee for Borrower
-
-     bool oraclizeLoaded = false;
-     uint64 lastTimeRateUpdated = 0;
-     string public ethPriceInUsd = "";
-     uint public ethPriceInUsdInt = 0;
-     uint public oraclizePrice = 0;
-
-     event newOraclizeQuery(string description);
-     event priceReceived(string price);
 
      mapping (address => mapping(uint => address)) lrsPerUser; //Mapping of LendingRequests per User
      mapping (address => uint) lrsCountPerUser;                //Lending request count per User
@@ -1097,8 +1176,7 @@ contract Ledger is usingOraclize {
           ensRegistryAddress = _ensRegistryAddress;
           registrarAddress = _registrarAddress;
 
-          lastTimeRateUpdated = uint64(now);
-          ethPriceInUsdInt = _currentUsdToEthRate;
+          initEthTicker(_currentUsdToEthRate);
      }
 
      function getFeeSum() constant returns(uint){ return borrowerFeeAmount; }
@@ -1210,67 +1288,6 @@ contract Ledger is usingOraclize {
      /*function() payable {
           createNewLendingRequest();
      }*/
-
-     function getEthToUsdRate() public returns(uint){
-          // if more than 1h elapsed -> need update!
-          uint64 oneHourPassed = lastTimeRateUpdated + 1 hours;  
-          require(uint(now) <= oneHourPassed);
-
-          return ethPriceInUsdInt;
-     }
-
-     function updateEthToUsdRate() public payable {
-          if(!oraclizeLoaded){
-               oraclize_setProof(proofType_TLSNotary | proofStorage_IPFS);
-               oraclizeLoaded = true;
-          }
-
-          // update each time (price can change)
-          oraclizePrice = oraclize.getPrice("URL");
-
-          string memory url = "json(https://api.kraken.com/0/public/Ticker?pair=ETHUSD).result.XETHZUSD.c.0";
-
-          // update max each 1 minute 
-          oraclize_query(60, "URL", url);
-
-          // send an event
-          newOraclizeQuery("Oraclize query was sent, standing by for the answer..");
-     }
-
-     // This should be called from Oraclize
-     function __callback(bytes32 myid, string result, bytes proof) {
-          require(msg.sender==oraclize_cbAddress());
-
-          ethPriceInUsd = result;
-          ethPriceInUsdInt = parseUInt(ethPriceInUsd);
-
-          // send an event
-          priceReceived(ethPriceInUsd);
-
-          lastTimeRateUpdated = uint64(now);
-     }
-
-     function parseUInt(string self) internal constant returns (uint) {
-          return parseUInt(self, 0);
-     }
-
-     function parseUInt(string self, uint _b) internal constant returns (uint) {
-          bytes memory bresult = bytes(self);
-          uint mint = 0;
-          bool decimals = false;
-          for (uint i=0; i<bresult.length; i++){
-               if ((bresult[i] >= 48)&&(bresult[i] <= 57)){
-                    if (decimals){
-                         if (_b == 0) break;
-                         else _b--;
-                    }
-                    mint *= 10;
-                    mint += uint(bresult[i]) - 48;
-               } else if (bresult[i] == 46) decimals = true;
-          }
-          if (_b > 0) mint *= 10**_b;
-          return mint;
-     }
 }
 
 /*
@@ -1520,7 +1537,6 @@ contract LendingRequest {
 
           // ETH is sent to borrower in full
           // Tokens are kept inside of this contract
-
           uint val = convertToEth(wanted_wei);
           borrower.transfer(val);
 
@@ -1548,12 +1564,14 @@ contract LendingRequest {
 
      // How much should lender send
      function getNeededSumByLender() public constant returns(uint){
+          // can throw if USD/ETH rate is not updated
           uint val = convertToEth(wanted_wei);
           return val.add(lenderFeeAmount);
      }
 
      // How much should borrower return to release tokens
      function getNeededSumByBorrower() public constant returns(uint){
+          // can throw if USD/ETH rate is not updated
           uint val = convertToEth(wanted_wei);
           uint val2 = convertToEth(premium_wei);
           return val.add(val2);
@@ -1572,14 +1590,12 @@ contract LendingRequest {
      }
 
      function releaseToLender() internal {
-    
           if(currentType==Type.EnsCollateral){
                AbstractENS ens = AbstractENS(ensRegistryAddress);
                Registrar registrar = Registrar(registrarAddress);
 
                ens.setOwner(ens_domain_hash,lender);
                registrar.transfer(ens_domain_hash,lender);
-
           }else if (currentType==Type.RepCollateral){
                uint val = convertToEth(wanted_wei);
                ledger.unlockRepTokens(borrower, val);
@@ -1610,6 +1626,12 @@ contract LendingRequest {
      }
 
      function convertToEth(uint weiOrCents) public constant returns(uint){
+          // type is USD 
+          if(Currency.UsdCurrency==currency){
+               uint usdPerEth = ledger.getEthToUsdRate();
+               return (weiOrCents * (1 ether)) / (usdPerEth * 100);
+          }
+
           // type is ETH
           return weiOrCents;
      }
