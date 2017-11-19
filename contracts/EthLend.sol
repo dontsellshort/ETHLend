@@ -1005,10 +1005,11 @@ contract usingOraclize {
 contract EthTicker is usingOraclize {
 // Fields:
      bool oraclizeLoaded = false;
-     uint64 lastTimeRateUpdated = 0;
+
+     uint64 public lastTimeRateUpdated = 0;
      string public ethPriceInUsd = "";
      uint public ethPriceInUsdInt = 0;
-     uint public oraclizePrice = 0;
+     uint public oraclizeFee = 0;
 
      event newOraclizeQuery(string description);
      event priceReceived(string price);
@@ -1061,6 +1062,7 @@ contract EthTicker is usingOraclize {
           return ethPriceInUsdInt;
      }
 
+     // send the fee
      function updateEthToUsdRate() public payable {
           if(!oraclizeLoaded){
                oraclize_setProof(proofType_TLSNotary | proofStorage_IPFS);
@@ -1068,7 +1070,8 @@ contract EthTicker is usingOraclize {
           }
 
           // update each time (price can change)
-          oraclizePrice = oraclize.getPrice("URL");
+          oraclizeFee = oraclize.getPrice("URL");
+          require(msg.value>=oraclizeFee);
 
           string memory url = "json(https://api.kraken.com/0/public/Ticker?pair=ETHUSD).result.XETHZUSD.c.0";
 
@@ -1082,7 +1085,11 @@ contract EthTicker is usingOraclize {
      function isNeedToUpdateEthToUsdRate() public constant returns(bool){
           // if more than 1h elapsed -> need update!
           uint64 oneHourPassed = lastTimeRateUpdated + 1 hours;  
-          return (uint(now) > oneHourPassed);
+          return (uint64(now) > oneHourPassed);
+     }
+
+     function getNow() public constant returns(uint){
+          return uint64(now);
      }
 }
 

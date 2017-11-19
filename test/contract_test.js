@@ -2808,3 +2808,283 @@ describe('Contracts 6 - USD', function() {
           done();
      })
 });
+
+describe('Contracts 7 - USD 2', function() {
+     before("Initialize everything", function(done) {
+          web3.eth.getAccounts(function(err, as) {
+               if(err) {
+                    done(err);
+                    return;
+               }
+
+               accounts = as;
+               creator = accounts[0];
+               borrower = accounts[1];
+               feeCollector = accounts[2];
+               lender = accounts[3];
+
+               var contractName = ':Ledger';
+               getContractAbi(contractName,function(err,abi){
+                    ledgerAbi = abi;
+
+                    contractName = ':LendingRequest';
+                    getContractAbi(contractName,function(err,abi){
+                         requestAbi = abi;
+
+                         done();
+                    });
+               });
+          });
+     });
+
+     after("Deinitialize everything", function(done) {
+          done();
+     });
+
+     it('should deploy Rep token contract',function(done){
+          var data = {};
+          deployRepContract(data,function(err){
+               assert.equal(err,null);
+
+               done();
+          });
+     });
+
+     it('should deploy ENS contract',function(done){
+          var data = {};
+          deployEnsContract(data,function(err){
+               assert.equal(err,null);
+
+               done();
+          });
+     });
+
+     it('should deploy Ledger contract',function(done){
+          var data = {};
+          deployLedgerContract(data,function(err){
+               assert.equal(err,null);
+
+               done();
+          });
+     });
+
+     it('should update creator',function(done){
+          var data = {};
+          updateRepContractCreator(function(err){
+               assert.equal(err,null);
+
+               assert.notEqual(ledgerContract.lastTimeRateUpdated(),0);
+               console.log('LTRU: ',ledgerContract.lastTimeRateUpdated().toString(10));
+               console.log('NOW: ',ledgerContract.getNow().toString(10));
+
+               done();
+          });
+     });
+
+     it('should deploy Sample token contract',function(done){
+          var data = {};
+          deployTokenContract(data,function(err){
+               assert.equal(err,null);
+
+               done();
+          });
+     });
+
+     it('should get initial creator balance',function(done){
+          initialBalanceCreator = web3.eth.getBalance(creator);
+
+          console.log('Creator initial balance is: ');
+          console.log(initialBalanceCreator.toString(10));
+
+          done();
+     });
+
+     it('should get initial borrower balance',function(done){
+          initialBalanceBorrower = web3.eth.getBalance(borrower);
+
+          console.log('Borrower initial balance is: ');
+          console.log(initialBalanceCreator.toString(10));
+
+          done();
+     });
+
+     it('should get initial feeCollector balance',function(done){
+          initialBalanceFeeCollector = web3.eth.getBalance(feeCollector);
+
+          console.log('FeeCollector initial balance is: ');
+          console.log(initialBalanceFeeCollector.toString(10));
+          done();
+     });
+
+     it('should get initial lender balance',function(done){
+          initialBalanceLender = web3.eth.getBalance(lender);
+
+          console.log('Lender initial balance is: ');
+          console.log(initialBalanceLender.toString(10));
+          done();
+     });
+
+     it('should get current count of LR',function(done){
+          var count = ledgerContract.getLrCount();
+          assert.equal(count,0);
+          done();
+     })
+
+     it('should get intial count of LR for borrower',function(done){
+          var count = ledgerContract.getLrCountForUser(borrower);
+          assert.equal(count,0);
+          done();
+     })
+
+     it('should set domain-hash to borrower',function(done){
+          ensContract.setOwner(domainHash, borrower, {from: creator, gas: 2900000 }, (err,res)=>{
+               assert.equal(err, null);
+               web3.eth.getTransactionReceipt(res, (err, res2)=>{
+                    assert.equal(err, null);
+                    done();
+               });             
+          });
+     });
+
+     it('should return borrower as owner of domain',function(done){
+          ensContract.owner(domainHash, (err,res)=>{
+               assert.equal(borrower,res);
+               done();
+          });
+     });
+
+     it('should issue new ENS LR',function(done){
+          var amount = 200000000000000000;
+      
+          // 10 dollars 
+          var wantedWei = 1000;
+          // 1 dollar 
+          var premiumWei = 100;
+
+          var data = {
+               wanted_wei: wantedWei,
+               token_amount: 0,
+               premium_wei: premiumWei,
+
+               token_name: '',
+               token_infolink: 'https://some-sample-ico.network',
+
+               // see that?
+               token_smartcontract_address: 0,
+               days_to_lend: 10,
+               ens_domain_hash: domainHash
+          };
+      
+          //var a = ledgerContract.getLrForUser(borrower,0);
+          //var lr = web3.eth.contract(requestAbi).at(a);
+
+          // this is set by creator (from within platform)
+          ledgerContract.newLrAndSetData(
+               1,
+               1,    // usd!
+               data.wanted_wei,
+               data.token_amount,
+               data.premium_wei,
+               data.token_name,
+               data.token_infolink,
+               data.token_smartcontract_address,
+               data.days_to_lend,
+               data.ens_domain_hash,
+               {
+                   from: borrower,               
+                   value: amount,
+                   gas: 2900000 
+               },function(err,result){
+                   assert.equal(err,null);
+
+                   web3.eth.getTransactionReceipt(result, function(err, r2){
+                        assert.equal(err, null);
+
+                        done();
+                   });
+               }
+          );
+     });
+
+     it('should get updated feeCollector balance',function(done){
+          var current = web3.eth.getBalance(feeCollector);
+          var feeAmount = 10000000000000000;
+
+          var diff = current - initialBalanceFeeCollector;
+          assert.equal(diff.toString(10),feeAmount);
+          done();
+     });
+
+     it('should move to Waiting for domain state',function(done){
+          assert.equal(ledgerContract.getLrCountForUser(borrower),1);
+          
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          var state = lr.getCurrentState();
+          assert.equal(ledgerContract.isNeedToUpdateEthToUsdRate(),false);
+          // "Waiting for domain" state
+          assert.equal(state.toString(),1);
+          assert.equal(lr.currency(),1);
+          assert.equal(lr.wanted_wei(),1000);
+          assert.equal(lr.premium_wei(),100);
+
+          done();
+     })
+
+     it('should move time',function(done){
+          // 2 hours
+          var hours = 2;
+          var seconds = 60 * 60 * hours;
+
+          web3.currentProvider.sendAsync({
+               jsonrpc: '2.0', 
+               method: 'evm_increaseTime',
+               params: [seconds],       
+               id: new Date().getTime() 
+          }, function(err) {
+               done(err);
+          });
+     });
+
+     it('should move domain to LR',function(done){
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          // Borrower -> LR contract
+          ensContract.setOwner(domainHash, a, {from: creator, gas: 2900000 }, (err,res)=>{
+               assert.equal(err, null);
+               web3.eth.getTransactionReceipt(res, (err, res2)=>{
+                    assert.equal(err, null);
+                    done();
+               });             
+          });
+     });
+
+     it('should require USD/ETH update',function(done){
+          assert.equal(ledgerContract.getLrCountForUser(borrower),1);
+          
+          var a = ledgerContract.getLrForUser(borrower,0);
+          var lr = web3.eth.contract(requestAbi).at(a);
+
+          var state = lr.getCurrentState();
+          // "Waiting for lender" state
+          assert.equal(state.toString(),3);
+
+          console.log('LTRU: ',ledgerContract.lastTimeRateUpdated().toString(10));
+          console.log('NOW: ',ledgerContract.getNow().toString(10));
+
+          // exchange rate update is not needed
+          assert.notEqual(ledgerContract.lastTimeRateUpdated(),0);
+          assert.equal(ledgerContract.isNeedToUpdateEthToUsdRate(),true);
+
+          try {
+               // should throw!
+               lr.getNeededSumByLender();
+               assert.equal(0,1);
+          }catch(err){
+          }
+
+          done();
+     })
+});
