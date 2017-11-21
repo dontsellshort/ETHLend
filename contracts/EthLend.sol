@@ -1193,12 +1193,20 @@ contract Ledger is EthTicker {
      function getLrCountForUser(address _addr) constant returns(uint){ return lrsCountPerUser[_addr]; }
      function getLrForUser(address _addr, uint _index) constant returns (address){ return lrsPerUser[_addr][_index]; }
      
-     // new ledger request and set data
-     // if currency is USD - then _wanted_wei is in cents
+     // if currency is USD - then _wanted_wei and _premium_wei are in cents
      function newLrAndSetData(int _collateralType, uint _currency, uint _wanted_wei, uint _token_amount, uint _premium_wei,
                          string _token_name, string _token_infolink, address _token_smartcontract_address, 
                          uint _days_to_lend, bytes32 _ens_domain_hash) payable returns(address)
      {
+          // will be in state 'Init'
+          LendingRequest lr = LendingRequest(newLr(_collateralType, _currency));
+          lr.setData(_wanted_wei, _token_amount, _premium_wei, _token_name, _token_infolink, _token_smartcontract_address, _days_to_lend, _ens_domain_hash);
+
+          return lr;
+     }
+
+     // if currency is USD - then _wanted_wei and _premium_wei are in cents
+     function newLr(int _collateralType, uint _currency) payable public returns(address){
           if(msg.value < borrowerFeeAmount){
                revert();
           }
@@ -1209,8 +1217,7 @@ contract Ledger is EthTicker {
           // 2 - create new LR
           // will be in state 'Init'
           LendingRequest lending_request = new LendingRequest(msg.sender, _collateralType, _currency);
-          lending_request.setData(_wanted_wei, _token_amount, _premium_wei, _token_name, _token_infolink, _token_smartcontract_address, _days_to_lend, _ens_domain_hash);
-          
+
           // 3 - add to list
           uint currentCount = lrsCountPerUser[msg.sender];
           lrsPerUser[msg.sender][currentCount] = lending_request;
@@ -1220,9 +1227,7 @@ contract Ledger is EthTicker {
           totalLrCount++;
 
           return lending_request;
-
-      }
-
+     }
 
 
      function getLrFundedCount() constant returns(uint out){
