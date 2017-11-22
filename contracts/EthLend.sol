@@ -1057,7 +1057,7 @@ contract EthTicker is usingOraclize {
           return mint;
      }
 
-     function getEthToUsdRate() public returns(uint){
+     function getEthToUsdRate() public constant returns(uint){
           require(!isNeedToUpdateEthToUsdRate());
           return ethPriceInUsdInt;
      }
