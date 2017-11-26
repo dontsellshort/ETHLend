@@ -732,16 +732,8 @@ describe('Contracts 1', function() {
           };
 
           // this is set by creator (from within platform)
-          ledgerContract.newLrAndSetData(
+          ledgerContract.newLr(
                0,
-               0,
-               data.wanted_wei,
-               data.token_amount,
-               data.premium_wei,
-               data.token_name,
-               data.token_infolink,
-               data.token_smartcontract_address,
-               data.days_to_lend,
                0,
                {
                     from: borrower,               
@@ -753,12 +745,38 @@ describe('Contracts 1', function() {
                     web3.eth.getTransactionReceipt(result, function(err, r2){
                          assert.equal(err, null);
 
-                         done();
+                         var count = ledgerContract.getLrCount();
+                         assert.equal(count,1);
+
+                         var a = ledgerContract.getLr(0);
+                         var lr = web3.eth.contract(requestAbi).at(a);
+
+                         lr.setData(
+                              data.wanted_wei,
+                              data.token_amount,
+                              data.premium_wei,
+                              data.token_name,
+                              data.token_infolink,
+                              data.token_smartcontract_address,
+                              data.days_to_lend,
+                              0,
+                              {
+                                   from: borrower,               
+                                   //value: amount,
+                                   gas: 2900000 
+                              },function(err,result){
+                                   assert.equal(err,null);
+
+                                   var state = lr.getCurrentState();
+                                   assert.equal(state,1);
+
+                                   done();
+                              }
+                         );
                     });
                }
           );
      });
-
 
      it('should get updated count of LR',function(done){
           var count = ledgerContract.getLrCount();
